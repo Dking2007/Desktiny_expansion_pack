@@ -1,0 +1,53 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tính hạn giải quyết</title>
+    <link rel="stylesheet" href="chung.css" />
+  </head>
+  <body>
+    <h1>Tính hạn giải quyết theo ngày làm việc</h1>
+    <p class="muted">Không tính thứ Bảy, Chủ nhật và ngày nghỉ lễ; ngày làm bù vẫn tính. Tính ngay trên trang, không gửi dữ liệu đi đâu.</p>
+    <div class="grid">
+      <label>Ngày tiếp nhận <input id="from" type="date" /></label>
+      <label>Số ngày làm việc <input id="days" type="number" min="0" max="365" value="5" /></label>
+    </div>
+    <p id="out" class="card" aria-live="polite"></p>
+    <h2>Đếm ngày làm việc giữa hai ngày</h2>
+    <div class="grid">
+      <label>Từ ngày <input id="a" type="date" /></label>
+      <label>Đến ngày <input id="b" type="date" /></label>
+    </div>
+    <p id="between" aria-live="polite"></p>
+    <h2>Ngày nghỉ lễ và ngày làm bù</h2>
+    <div class="grid">
+      <label>Ngày nghỉ (mỗi dòng một ngày) <textarea id="holidays" rows="8"></textarea></label>
+      <label>Ngày làm bù (thứ Bảy, Chủ nhật đi làm) <textarea id="workdays" rows="8"></textarea></label>
+    </div>
+    <p class="muted">Sửa ở đây chỉ có tác dụng trên trang đang mở. Danh sách mặc định nằm trong tệp ngay-lam-viec.js của plugin; sửa tệp đó rồi đóng gói lại để cả cơ quan dùng.</p>
+    <script type="module">
+      import { connect } from './desktiny-plugin-sdk.js'
+      import { HOLIDAYS, WORKDAYS, addWorkingDays, iso, workingDaysBetween } from './ngay-lam-viec.js'
+      connect()
+      const $ = (id) => document.getElementById(id)
+      const today = iso(new Date())
+      $('from').value = $('a').value = $('b').value = today
+      $('holidays').value = Object.values(HOLIDAYS).flat().join('\n')
+      $('workdays').value = WORKDAYS.join('\n')
+      const days = (id) => new Set($(id).value.split(/\s+/).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)))
+      const long = (date) => date.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' })
+      function update() {
+        const count = Number($('days').value)
+        if (!$('from').value || !(count >= 0 && count <= 365)) return ($('out').textContent = 'Nhập ngày tiếp nhận và số ngày từ 0 đến 365.')
+        const due = addWorkingDays($('from').value, count, days('holidays'), days('workdays'))
+        $('out').replaceChildren('Hạn trả kết quả: ', Object.assign(document.createElement('strong'), { textContent: long(due) }), count === 0 ? ' (trong ngày)' : '')
+        if ($('a').value && $('b').value) $('between').textContent = `${workingDaysBetween($('a').value, $('b').value, days('holidays'), days('workdays'))} ngày làm việc.`
+      }
+      for (const id of ['from', 'days', 'a', 'b', 'holidays', 'workdays']) $(id).addEventListener('input', update)
+      update()
+    </script>
+  </body>
+</html>

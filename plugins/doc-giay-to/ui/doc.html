@@ -1,0 +1,105 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Đọc giấy tờ</title>
+    <link rel="stylesheet" href="chung.css" />
+  </head>
+  <body>
+    <p class="muted">Chọn tài liệu để đọc, hoặc dán nội dung chữ (từ ứng dụng quét trên điện thoại). Kiểm từng giá trị trước khi ghi.</p>
+    <div id="files" class="row"></div>
+    <label>Nội dung chữ <textarea id="text" rows="6" style="width: 100%"></textarea></label>
+    <div class="row"><button id="read" type="button" class="secondary">Nhận dạng nội dung</button></div>
+    <table>
+      <thead><tr><th></th><th>Trường</th><th>Đề xuất</th><th>Đang có</th></tr></thead>
+      <tbody id="rows"><tr><td colspan="4" class="muted">Chưa đọc.</td></tr></tbody>
+    </table>
+    <div class="row"><button id="write" type="button" disabled>Ghi vào hồ sơ</button><button id="close" type="button" class="secondary">Đóng</button></div>
+    <p id="status" aria-live="polite"></p>
+    <script type="module">
+      import { connect } from './desktiny-plugin-sdk.js'
+      import { FIELDS, recognize, textOf } from './nhan-dang.js'
+      const desktiny = connect()
+      const $ = (id) => document.getElementById(id)
+      const status = (text, cls = '') => Object.assign($('status'), { textContent: text, className: cls })
+      const context = await desktiny.context
+      const caseId = context.record.case_id
+      let dossier, me
+      try {
+        ;[dossier, me] = await Promise.all([desktiny.api(`/cases/${caseId}`), desktiny.api('/me')])
+      } catch (error) {
+        status(error.message, 'bad')
+      }
+      // Only fields this dossier's form has and the administrator let the plugin write.
+      const writable = new Set((dossier?.form.fields ?? []).map((f) => f.key).filter((k) => (me?.fields ?? []).includes(k)))
+      const files = await desktiny.api(`/cases/${caseId}/files`).then((r) => r.items).catch(() => [])
+      for (const file of files) {
+        const button = Object.assign(document.createElement('button'), { type: 'button', className: 'secondary', textContent: `Đọc ${file.name}` })
+        button.addEventListener('click', async () => {
+          status(`Đang đọc ${file.name}…`)
+          try {
+            const session = await desktiny.token()
+            const response = await fetch(new URL(file.content_url, session.api_base).href, { headers: { Authorization: `Bearer ${session.token}` } })
+            if (!response.ok) throw new Error(`Không tải được tệp (${response.status}).`)
+            const text = await textOf(new Uint8Array(await response.arrayBuffer()), file.type, file.name)
+            $('text').value = text.trim()
+            status(text.trim() ? 'Đã đọc; bấm “Nhận dạng nội dung”.' : 'Tệp không có lớp chữ (ảnh quét): dán nội dung chữ vào ô bên dưới.', text.trim() ? 'ok' : 'bad')
+            if (text.trim()) show()
+          } catch (error) {
+            status(error.message, 'bad')
+          }
+        })
+        $('files').append(button)
+      }
+      if (!files.length) status('Hồ sơ chưa có tài liệu; có thể dán nội dung chữ.', 'muted')
+      let proposal = {}
+      function show() {
+        proposal = recognize($('text').value)
+        const keys = Object.keys(FIELDS).filter((k) => k in proposal)
+        $('rows').replaceChildren(
+          ...(keys.length ? keys : ['']).map((key) => {
+            const row = document.createElement('tr')
+            if (!key) {
+              row.append(Object.assign(document.createElement('td'), { colSpan: 4, className: 'muted', textContent: 'Không nhận ra thông tin nào.' }))
+              return row
+            }
+            const box = Object.assign(document.createElement('input'), { type: 'checkbox', checked: writable.has(key), disabled: !writable.has(key) })
+            box.dataset.key = key
+            const input = Object.assign(document.createElement('input'), { value: proposal[key] })
+            input.dataset.value = key
+            const cells = [box, FIELDS[key] + (writable.has(key) ? '' : ' (biểu mẫu không có trường này)'), input, String(dossier?.payload?.[key] ?? '—')]
+            for (const cell of cells) {
+              const td = document.createElement('td')
+              td.append(cell)
+              row.append(td)
+            }
+            return row
+          }),
+        )
+        $('write').disabled = !keys.some((k) => writable.has(k))
+      }
+      $('read').addEventListener('click', show)
+      $('close').addEventListener('click', () => desktiny.close(null))
+      $('write').addEventListener('click', async () => {
+        const values = {}
+        for (const box of document.querySelectorAll('input[type=checkbox][data-key]:checked')) {
+          const key = box.dataset.key
+          values[key] = document.querySelector(`input[data-value="${key}"]`).value.trim()
+        }
+        if (!Object.keys(values).length) return status('Chọn ít nhất một trường.', 'bad')
+        if (!(await desktiny.confirm(`Ghi ${Object.keys(values).length} trường vào hồ sơ?`))) return
+        try {
+          await desktiny.api(`/cases/${caseId}/plugin-fields`, { method: 'PATCH', body: { values } })
+          desktiny.toast('Đã ghi thông tin vào hồ sơ.')
+          desktiny.refresh()
+          desktiny.close(values)
+        } catch (error) {
+          status(error.message, 'bad')
+        }
+      })
+    </script>
+  </body>
+</html>

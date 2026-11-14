@@ -1,0 +1,38 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hạn giải quyết</title>
+    <link rel="stylesheet" href="chung.css" />
+  </head>
+  <body>
+    <div id="out" class="muted">Đang tính…</div>
+    <script type="module">
+      import { connect } from './desktiny-plugin-sdk.js'
+      import { addWorkingDays, iso, parseDay, timeLimitFor, workingDaysBetween } from './ngay-lam-viec.js'
+      const desktiny = connect()
+      const out = document.getElementById('out')
+      const line = (text, cls = '') => Object.assign(document.createElement('div'), { textContent: text, className: cls })
+      try {
+        const context = await desktiny.context
+        const dossier = await desktiny.api(`/cases/${context.record.case_id}`)
+        const received = parseDay(dossier.created_at)
+        const limit = timeLimitFor(`${dossier.form?.name ?? ''} ${dossier.title}`, dossier.payload)
+        const due = dossier.due_at ? parseDay(dossier.due_at) : addWorkingDays(received, limit)
+        const closed = ['approved', 'rejected', 'cancelled'].includes(dossier.status)
+        const left = workingDaysBetween(iso(new Date()), iso(due))
+        const tone = closed ? 'muted' : left < 0 ? 'bad' : left <= 1 ? 'bad' : 'ok'
+        out.replaceChildren(
+          line(`Hạn: ${due.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' })}`, 'big'),
+          line(dossier.due_at ? 'Theo hạn đặt trên hồ sơ.' : `Tiếp nhận ${received.toLocaleDateString('vi-VN', { timeZone: 'UTC' })}, thời hạn ${limit === 0 ? 'trong ngày' : limit + ' ngày làm việc'}.`, 'muted'),
+          line(closed ? 'Hồ sơ đã kết thúc.' : left < 0 ? `Quá hạn ${-left} ngày làm việc.` : left === 0 ? 'Hết hạn hôm nay.' : `Còn ${left} ngày làm việc.`, tone),
+        )
+      } catch (error) {
+        out.textContent = error.message
+      }
+    </script>
+  </body>
+</html>
