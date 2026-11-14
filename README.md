@@ -131,7 +131,7 @@ deploy/             Dockerfile, Docker Compose
 ```sh
 make test          # Python 3.11+, pytest
 make test-js       # Node 22
-make test-desktiny DESKTINY_DIR=../Desktiny   # cài mọi gói và plugin vào Desktiny thật (bộ test của Desktiny), chạy luồng qua máy chủ plugin
+make test-desktiny   # (Desktiny là thư mục cha) cài mọi gói và plugin vào Desktiny thật (bộ test của Desktiny), chạy luồng qua máy chủ plugin
 make lint
 ```
 
