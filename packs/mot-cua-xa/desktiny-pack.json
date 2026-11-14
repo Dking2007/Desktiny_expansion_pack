@@ -1,0 +1,87 @@
+{
+  "schema": "desktiny-pack/1",
+  "id": "vn.mo-rong.mot-cua-xa",
+  "name": "Một cửa cấp xã",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "authors": [
+    "Desktiny Expansion Pack contributors"
+  ],
+  "description": "Gói cho bộ phận một cửa của UBND cấp xã: giao diện đỏ – vàng, từ ngữ hành chính; quy trình đăng ký khai sinh, kết hôn, khai tử, chứng thực bản sao, xác nhận tình trạng hôn nhân, hoà giải ở cơ sở; hướng dẫn tiếp nhận và thời hạn giải quyết cho trợ lý AI. Dùng cùng các plugin Tiếp nhận trực tuyến, Đọc giấy tờ, Tính hạn, Sổ văn bản, Ký số. Tên xã là tên giả.",
+  "requires": {
+    "desktiny": ">=0.2.0"
+  },
+  "appearance": {
+    "app_name": "Một cửa điện tử",
+    "org_name": "UBND xã Mẫu",
+    "logo": "assets/logo.svg",
+    "favicon": "assets/logo.svg",
+    "colors": {
+      "light": {
+        "teal": "#9b1c1c",
+        "teal-strong": "#7f1515",
+        "teal-soft": "#fbeaea",
+        "teal-ink": "#9b1c1c",
+        "teal-line": "#f0c7c7"
+      },
+      "dark": {
+        "teal": "#f08a8a",
+        "teal-ink": "#f6b0b0",
+        "teal-soft": "#3a1a1a"
+      }
+    },
+    "font": "be-vietnam-pro",
+    "density": "comfortable",
+    "radius": "small",
+    "login": {
+      "style": "framed",
+      "title": "Bộ phận Một cửa điện tử",
+      "subtitle": "Tiếp nhận · Xử lý · Trả kết quả",
+      "ground": "#6e1414",
+      "ground_to": "#2b0707",
+      "button_label": "Đăng nhập cán bộ",
+      "note": "Dành cho cán bộ, công chức. Người dân nộp và tra cứu hồ sơ ở cổng trực tuyến của xã."
+    },
+    "terminology": {
+      "Hồ sơ": "Hồ sơ thủ tục",
+      "Phòng ban": "Bộ phận",
+      "Cần phê duyệt": "Chờ ký duyệt"
+    },
+    "menu": {
+      "hide": [
+        "chat"
+      ],
+      "order": [
+        "home",
+        "cases",
+        "approvals",
+        "tasks",
+        "drive",
+        "feed",
+        "reports"
+      ]
+    },
+    "home": [
+      "cases.recent",
+      "plugins.widgets",
+      "tasks.today",
+      "quick.start"
+    ]
+  },
+  "processes": [
+    "processes/chung-thuc-ban-sao.json",
+    "processes/hoa-giai.json",
+    "processes/ket-hon.json",
+    "processes/khai-sinh.json",
+    "processes/khai-tu.json",
+    "processes/xac-nhan-hon-nhan.json"
+  ],
+  "templates": [
+    "templates/lay-y-kien-ban-nganh.json"
+  ],
+  "knowledge": [
+    "knowledge/huong-dan-tiep-nhan.md",
+    "knowledge/thoi-han-giai-quyet.md",
+    "knowledge/nop-truc-tuyen.md"
+  ]
+}

@@ -1,0 +1,154 @@
+{
+  "name": "Đăng ký làm thêm giờ",
+  "description": "Quản lý trực tiếp duyệt; trên 4 giờ trong ngày thì Giám đốc duyệt tiếp.",
+  "form": {
+    "name": "Đăng ký làm thêm giờ",
+    "description": "Thời gian và nội dung công việc làm thêm.",
+    "fields": [
+      {
+        "key": "ngay",
+        "label": "Ngày làm thêm",
+        "type": "date",
+        "required": true
+      },
+      {
+        "key": "tu_gio",
+        "label": "Từ giờ (HH:MM)",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "den_gio",
+        "label": "Đến giờ (HH:MM)",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "so_gio",
+        "label": "Số giờ",
+        "type": "number",
+        "required": true
+      },
+      {
+        "key": "noi_dung",
+        "label": "Nội dung công việc",
+        "type": "textarea",
+        "required": true
+      }
+    ]
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "event": "case.submitted",
+          "form_id": null,
+          "required_documents": []
+        }
+      },
+      {
+        "id": "quan_ly",
+        "type": "approval",
+        "label": "Quản lý trực tiếp duyệt",
+        "position": {
+          "x": 320,
+          "y": 0
+        },
+        "data": {
+          "resolver": "department_manager",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 1,
+          "instructions": ""
+        }
+      },
+      {
+        "id": "nhieu_gio",
+        "type": "if",
+        "label": "Trên 4 giờ?",
+        "position": {
+          "x": 680,
+          "y": 0
+        },
+        "data": {
+          "mode": "all",
+          "conditions": [
+            {
+              "field": "form.so_gio",
+              "operator": "gt",
+              "value": 4
+            }
+          ]
+        }
+      },
+      {
+        "id": "giam_doc",
+        "type": "approval",
+        "label": "Giám đốc duyệt",
+        "position": {
+          "x": 1040,
+          "y": -80
+        },
+        "data": {
+          "resolver": "role",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 1,
+          "instructions": "",
+          "role": "director",
+          "role_scope": "organization"
+        }
+      },
+      {
+        "id": "xong",
+        "type": "finish",
+        "label": "Hoàn tất",
+        "position": {
+          "x": 1040,
+          "y": 120
+        },
+        "data": {
+          "result": "approved",
+          "message": "Làm thêm từ 4 giờ trở xuống, quản lý trực tiếp duyệt là đủ."
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "trigger->quan_ly",
+        "source": "trigger",
+        "target": "quan_ly",
+        "branch": null
+      },
+      {
+        "id": "quan_ly:approve->nhieu_gio",
+        "source": "quan_ly",
+        "target": "nhieu_gio",
+        "branch": "approve"
+      },
+      {
+        "id": "nhieu_gio:true->giam_doc",
+        "source": "nhieu_gio",
+        "target": "giam_doc",
+        "branch": "true"
+      },
+      {
+        "id": "nhieu_gio:false->xong",
+        "source": "nhieu_gio",
+        "target": "xong",
+        "branch": "false"
+      }
+    ]
+  },
+  "allowed_roles": [],
+  "required_file_count": 0
+}

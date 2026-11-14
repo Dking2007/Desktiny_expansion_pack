@@ -1,0 +1,185 @@
+{
+  "name": "Đăng ký kết hôn",
+  "description": "Tiếp nhận, kiểm tra điều kiện kết hôn, lãnh đạo ký giấy chứng nhận kết hôn. Đánh dấu “Cần xác minh thêm” để người kiểm tra biết hồ sơ cần xác minh trước khi trình ký.",
+  "form": {
+    "name": "Tờ khai đăng ký kết hôn",
+    "description": "Thông tin người yêu cầu và nội dung đề nghị.",
+    "fields": [
+      {
+        "key": "ho_ten",
+        "label": "Họ và tên người yêu cầu",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "ngay_sinh",
+        "label": "Ngày sinh",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "so_cccd",
+        "label": "Số định danh cá nhân",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "noi_thuong_tru",
+        "label": "Nơi thường trú",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "so_dien_thoai",
+        "label": "Số điện thoại",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "ho_ten_ben_kia",
+        "label": "Họ tên bên còn lại",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "ngay_sinh_ben_kia",
+        "label": "Ngày sinh bên còn lại",
+        "type": "date",
+        "required": true
+      },
+      {
+        "key": "so_cccd_ben_kia",
+        "label": "Số định danh bên còn lại",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "can_xac_minh",
+        "label": "Cần xác minh thêm",
+        "type": "checkbox",
+        "required": false,
+        "default": false
+      },
+      {
+        "key": "ma_tra_cuu",
+        "label": "Mã tra cứu (nộp trực tuyến)",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "so_van_ban",
+        "label": "Số giấy tờ đã cấp",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "ngay_van_ban",
+        "label": "Ngày cấp",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "so_ngay_giai_quyet",
+        "label": "Thời hạn giải quyết (ngày làm việc)",
+        "type": "number",
+        "required": false,
+        "default": 0
+      }
+    ]
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "event": "case.submitted",
+          "form_id": null,
+          "required_documents": [
+            "Tờ khai đăng ký kết hôn",
+            "Giấy tờ tùy thân của hai bên",
+            "Giấy xác nhận tình trạng hôn nhân (nếu đăng ký nơi khác)"
+          ]
+        }
+      },
+      {
+        "id": "kiem_tra",
+        "type": "approval",
+        "label": "Công chức tư pháp – hộ tịch kiểm tra",
+        "position": {
+          "x": 320,
+          "y": 0
+        },
+        "data": {
+          "resolver": "department_manager",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 1,
+          "instructions": "Đối chiếu bản chính giấy tờ, kiểm tra thông tin; thiếu thì trả lại để bổ sung."
+        }
+      },
+      {
+        "id": "ky",
+        "type": "approval",
+        "label": "Lãnh đạo UBND ký",
+        "position": {
+          "x": 680,
+          "y": 0
+        },
+        "data": {
+          "resolver": "role",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 1,
+          "instructions": "",
+          "role": "director",
+          "role_scope": "organization"
+        }
+      },
+      {
+        "id": "tra_ket_qua",
+        "type": "notify",
+        "label": "Báo người nộp",
+        "position": {
+          "x": 1040,
+          "y": 0
+        },
+        "data": {
+          "recipients": [
+            "owner"
+          ],
+          "title": "Đã có kết quả, mời đến nhận: {title}"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "trigger->kiem_tra",
+        "source": "trigger",
+        "target": "kiem_tra",
+        "branch": null
+      },
+      {
+        "id": "kiem_tra:approve->ky",
+        "source": "kiem_tra",
+        "target": "ky",
+        "branch": "approve"
+      },
+      {
+        "id": "ky:approve->tra_ket_qua",
+        "source": "ky",
+        "target": "tra_ket_qua",
+        "branch": "approve"
+      }
+    ]
+  },
+  "allowed_roles": [],
+  "required_file_count": 0
+}

@@ -1,0 +1,212 @@
+{
+  "name": "Đề nghị hoà giải ở cơ sở",
+  "description": "Tiếp nhận đơn, tổ hoà giải tiến hành hoà giải, ghi kết quả; lãnh đạo xác nhận kết quả.",
+  "form": {
+    "name": "Đơn đề nghị hoà giải",
+    "description": "Các bên liên quan và nội dung tranh chấp.",
+    "fields": [
+      {
+        "key": "ho_ten",
+        "label": "Họ và tên người yêu cầu",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "ngay_sinh",
+        "label": "Ngày sinh",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "so_cccd",
+        "label": "Số định danh cá nhân",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "noi_thuong_tru",
+        "label": "Nơi thường trú",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "so_dien_thoai",
+        "label": "Số điện thoại",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "ben_lien_quan",
+        "label": "Bên liên quan",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "noi_dung",
+        "label": "Nội dung tranh chấp",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "ma_tra_cuu",
+        "label": "Mã tra cứu (nộp trực tuyến)",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "so_van_ban",
+        "label": "Số giấy tờ đã cấp",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "ngay_van_ban",
+        "label": "Ngày cấp",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "so_ngay_giai_quyet",
+        "label": "Thời hạn giải quyết (ngày làm việc)",
+        "type": "number",
+        "required": false,
+        "default": 15
+      }
+    ]
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "event": "case.submitted",
+          "form_id": null,
+          "required_documents": [
+            "Đơn đề nghị hoà giải"
+          ]
+        }
+      },
+      {
+        "id": "tiep_nhan",
+        "type": "approval",
+        "label": "Cán bộ tư pháp tiếp nhận, phân công tổ hoà giải",
+        "position": {
+          "x": 320,
+          "y": 0
+        },
+        "data": {
+          "resolver": "department_manager",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 2,
+          "instructions": ""
+        }
+      },
+      {
+        "id": "ket_qua",
+        "type": "input",
+        "label": "Tổ hoà giải ghi kết quả",
+        "position": {
+          "x": 680,
+          "y": 0
+        },
+        "data": {
+          "resolver": "department_manager",
+          "user_id": null,
+          "user_ids": [],
+          "fields": [
+            {
+              "key": "ket_qua_hoa_giai",
+              "label": "Kết quả",
+              "type": "select",
+              "required": true,
+              "options": [
+                "Hoà giải thành",
+                "Hoà giải không thành"
+              ]
+            },
+            {
+              "key": "bien_ban",
+              "label": "Tóm tắt biên bản",
+              "type": "textarea",
+              "required": true,
+              "options": []
+            }
+          ],
+          "allow_files": true,
+          "due_in_days": 15,
+          "instructions": "Đính kèm biên bản hoà giải."
+        }
+      },
+      {
+        "id": "xac_nhan",
+        "type": "approval",
+        "label": "Lãnh đạo xác nhận kết quả",
+        "position": {
+          "x": 1040,
+          "y": 0
+        },
+        "data": {
+          "resolver": "role",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 1,
+          "instructions": "",
+          "role": "director",
+          "role_scope": "organization"
+        }
+      },
+      {
+        "id": "bao",
+        "type": "notify",
+        "label": "Báo người nộp",
+        "position": {
+          "x": 1400,
+          "y": 0
+        },
+        "data": {
+          "recipients": [
+            "owner"
+          ],
+          "title": "Đã có kết quả hoà giải: {title}"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "trigger->tiep_nhan",
+        "source": "trigger",
+        "target": "tiep_nhan",
+        "branch": null
+      },
+      {
+        "id": "tiep_nhan:approve->ket_qua",
+        "source": "tiep_nhan",
+        "target": "ket_qua",
+        "branch": "approve"
+      },
+      {
+        "id": "ket_qua:submitted->xac_nhan",
+        "source": "ket_qua",
+        "target": "xac_nhan",
+        "branch": "submitted"
+      },
+      {
+        "id": "xac_nhan:approve->bao",
+        "source": "xac_nhan",
+        "target": "bao",
+        "branch": "approve"
+      }
+    ]
+  },
+  "allowed_roles": [],
+  "required_file_count": 0
+}

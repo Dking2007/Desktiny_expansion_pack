@@ -1,0 +1,127 @@
+{
+  "name": "Gia hạn hợp đồng, giấy tờ",
+  "description": "Đề xuất gia hạn hợp đồng lao động, chứng chỉ, giấy phép sắp hết hạn: quản lý trực tiếp cho ý kiến, Giám đốc quyết định. Plugin Nhắc hạn hồ sơ đọc trường “Ngày hết hạn”.",
+  "form": {
+    "name": "Đề xuất gia hạn",
+    "description": "Loại giấy tờ, số hiệu, ngày hết hạn và đề xuất.",
+    "fields": [
+      {
+        "key": "loai_giay_to",
+        "label": "Loại",
+        "type": "select",
+        "required": true,
+        "options": [
+          "Hợp đồng lao động",
+          "Chứng chỉ hành nghề",
+          "Giấy phép",
+          "Khác"
+        ]
+      },
+      {
+        "key": "so_hieu",
+        "label": "Số hiệu",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "nguoi_lien_quan",
+        "label": "Người lao động liên quan",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "ngay_het_han",
+        "label": "Ngày hết hạn",
+        "type": "date",
+        "required": true
+      },
+      {
+        "key": "de_xuat",
+        "label": "Đề xuất",
+        "type": "select",
+        "required": true,
+        "options": [
+          "Gia hạn",
+          "Ký hợp đồng mới",
+          "Không gia hạn"
+        ]
+      },
+      {
+        "key": "ly_do",
+        "label": "Lý do",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "event": "case.submitted",
+          "form_id": null,
+          "required_documents": []
+        }
+      },
+      {
+        "id": "quan_ly",
+        "type": "approval",
+        "label": "Quản lý trực tiếp cho ý kiến",
+        "position": {
+          "x": 320,
+          "y": 0
+        },
+        "data": {
+          "resolver": "department_manager",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 3,
+          "instructions": ""
+        }
+      },
+      {
+        "id": "giam_doc",
+        "type": "approval",
+        "label": "Giám đốc quyết định",
+        "position": {
+          "x": 680,
+          "y": 0
+        },
+        "data": {
+          "resolver": "role",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 3,
+          "instructions": "",
+          "role": "director",
+          "role_scope": "organization"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "trigger->quan_ly",
+        "source": "trigger",
+        "target": "quan_ly",
+        "branch": null
+      },
+      {
+        "id": "quan_ly:approve->giam_doc",
+        "source": "quan_ly",
+        "target": "giam_doc",
+        "branch": "approve"
+      }
+    ]
+  },
+  "allowed_roles": [],
+  "required_file_count": 0
+}

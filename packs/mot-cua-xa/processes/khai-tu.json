@@ -1,0 +1,184 @@
+{
+  "name": "Đăng ký khai tử",
+  "description": "Tiếp nhận, kiểm tra, lãnh đạo ký trích lục khai tử. Thời hạn: trong ngày.",
+  "form": {
+    "name": "Tờ khai đăng ký khai tử",
+    "description": "Thông tin người yêu cầu và nội dung đề nghị.",
+    "fields": [
+      {
+        "key": "ho_ten",
+        "label": "Họ và tên người yêu cầu",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "ngay_sinh",
+        "label": "Ngày sinh",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "so_cccd",
+        "label": "Số định danh cá nhân",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "noi_thuong_tru",
+        "label": "Nơi thường trú",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "so_dien_thoai",
+        "label": "Số điện thoại",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "ho_ten_nguoi_mat",
+        "label": "Họ tên người đã mất",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "ngay_mat",
+        "label": "Ngày mất",
+        "type": "date",
+        "required": true
+      },
+      {
+        "key": "noi_mat",
+        "label": "Nơi mất",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "quan_he",
+        "label": "Quan hệ với người đã mất",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "ma_tra_cuu",
+        "label": "Mã tra cứu (nộp trực tuyến)",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "so_van_ban",
+        "label": "Số giấy tờ đã cấp",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "ngay_van_ban",
+        "label": "Ngày cấp",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "so_ngay_giai_quyet",
+        "label": "Thời hạn giải quyết (ngày làm việc)",
+        "type": "number",
+        "required": false,
+        "default": 0
+      }
+    ]
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "event": "case.submitted",
+          "form_id": null,
+          "required_documents": [
+            "Tờ khai đăng ký khai tử",
+            "Giấy báo tử hoặc giấy tờ thay thế",
+            "Giấy tờ tùy thân của người đi khai"
+          ]
+        }
+      },
+      {
+        "id": "kiem_tra",
+        "type": "approval",
+        "label": "Công chức tư pháp – hộ tịch kiểm tra",
+        "position": {
+          "x": 320,
+          "y": 0
+        },
+        "data": {
+          "resolver": "department_manager",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 1,
+          "instructions": "Đối chiếu bản chính giấy tờ, kiểm tra thông tin; thiếu thì trả lại để bổ sung."
+        }
+      },
+      {
+        "id": "ky",
+        "type": "approval",
+        "label": "Lãnh đạo UBND ký",
+        "position": {
+          "x": 680,
+          "y": 0
+        },
+        "data": {
+          "resolver": "role",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 1,
+          "instructions": "",
+          "role": "director",
+          "role_scope": "organization"
+        }
+      },
+      {
+        "id": "tra_ket_qua",
+        "type": "notify",
+        "label": "Báo người nộp",
+        "position": {
+          "x": 1040,
+          "y": 0
+        },
+        "data": {
+          "recipients": [
+            "owner"
+          ],
+          "title": "Đã có kết quả, mời đến nhận: {title}"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "trigger->kiem_tra",
+        "source": "trigger",
+        "target": "kiem_tra",
+        "branch": null
+      },
+      {
+        "id": "kiem_tra:approve->ky",
+        "source": "kiem_tra",
+        "target": "ky",
+        "branch": "approve"
+      },
+      {
+        "id": "ky:approve->tra_ket_qua",
+        "source": "ky",
+        "target": "tra_ket_qua",
+        "branch": "approve"
+      }
+    ]
+  },
+  "allowed_roles": [],
+  "required_file_count": 0
+}

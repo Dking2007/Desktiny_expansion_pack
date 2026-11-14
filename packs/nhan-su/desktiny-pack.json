@@ -1,0 +1,85 @@
+{
+  "schema": "desktiny-pack/1",
+  "id": "vn.mo-rong.nhan-su",
+  "name": "Nhân sự doanh nghiệp",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "authors": [
+    "Desktiny Expansion Pack contributors"
+  ],
+  "description": "Gói cho bộ phận nhân sự của doanh nghiệp, cơ quan nhỏ: giao diện xanh ngọc, từ ngữ nhân sự; các quy trình nghỉ phép, điều chỉnh công, làm thêm giờ, đổi ca, phê duyệt bảng lương, đánh giá KPI, gia hạn hợp đồng và giấy tờ; quy chế chấm công, nghỉ phép, cách tính lương, đánh giá KPI cho trợ lý AI. Dùng cùng các plugin Chấm công GPS, Tiền lương và KPI, Nhắc hạn hồ sơ. Tên công ty là tên giả.",
+  "requires": {
+    "desktiny": ">=0.2.0"
+  },
+  "appearance": {
+    "app_name": "Nhân sự số",
+    "org_name": "Công ty TNHH Mẫu",
+    "logo": "assets/logo.svg",
+    "favicon": "assets/logo.svg",
+    "colors": {
+      "light": {
+        "teal": "#0f6b5c",
+        "teal-strong": "#0b5246",
+        "teal-soft": "#e3f2ef",
+        "teal-ink": "#0f6b5c",
+        "teal-line": "#bfe0d9"
+      },
+      "dark": {
+        "teal": "#6fd3bf",
+        "teal-ink": "#9fe3d5",
+        "teal-soft": "#12302b"
+      }
+    },
+    "font": "be-vietnam-pro",
+    "density": "comfortable",
+    "radius": "large",
+    "login": {
+      "style": "framed",
+      "title": "Cổng nhân sự nội bộ",
+      "subtitle": "Chấm công · Đơn từ · Lương · KPI",
+      "ground": "#0b4a40",
+      "ground_to": "#052520",
+      "button_label": "Đăng nhập bằng tài khoản công ty",
+      "note": "Dùng tài khoản công ty để chấm công, gửi đơn và xem phiếu lương."
+    },
+    "terminology": {
+      "Hồ sơ": "Đơn từ",
+      "Phòng ban": "Bộ phận"
+    },
+    "menu": {
+      "hide": [
+        "feed"
+      ],
+      "order": [
+        "home",
+        "approvals",
+        "cases",
+        "tasks",
+        "chat",
+        "drive",
+        "reports"
+      ]
+    },
+    "home": [
+      "plugins.widgets",
+      "tasks.today",
+      "cases.recent",
+      "quick.start"
+    ]
+  },
+  "processes": [
+    "processes/danh-gia-kpi.json",
+    "processes/dieu-chinh-cong.json",
+    "processes/doi-ca.json",
+    "processes/gia-han-giay-to.json",
+    "processes/lam-them-gio.json",
+    "processes/nghi-phep.json",
+    "processes/phe-duyet-bang-luong.json"
+  ],
+  "knowledge": [
+    "knowledge/quy-che-cham-cong.md",
+    "knowledge/quy-che-nghi-phep.md",
+    "knowledge/cach-tinh-luong.md",
+    "knowledge/danh-gia-kpi.md"
+  ]
+}

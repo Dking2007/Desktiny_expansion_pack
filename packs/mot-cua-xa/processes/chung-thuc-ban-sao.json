@@ -1,0 +1,172 @@
+{
+  "name": "Chứng thực bản sao từ bản chính",
+  "description": "Đối chiếu bản chính, lãnh đạo ký chứng thực. Thời hạn: trong ngày.",
+  "form": {
+    "name": "Đề nghị chứng thực bản sao",
+    "description": "Thông tin người yêu cầu và nội dung đề nghị.",
+    "fields": [
+      {
+        "key": "ho_ten",
+        "label": "Họ và tên người yêu cầu",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "ngay_sinh",
+        "label": "Ngày sinh",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "so_cccd",
+        "label": "Số định danh cá nhân",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "noi_thuong_tru",
+        "label": "Nơi thường trú",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "so_dien_thoai",
+        "label": "Số điện thoại",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "loai_giay_to",
+        "label": "Giấy tờ cần chứng thực",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "so_ban",
+        "label": "Số bản sao",
+        "type": "number",
+        "required": true,
+        "default": 1
+      },
+      {
+        "key": "ma_tra_cuu",
+        "label": "Mã tra cứu (nộp trực tuyến)",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "so_van_ban",
+        "label": "Số giấy tờ đã cấp",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "ngay_van_ban",
+        "label": "Ngày cấp",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "so_ngay_giai_quyet",
+        "label": "Thời hạn giải quyết (ngày làm việc)",
+        "type": "number",
+        "required": false,
+        "default": 0
+      }
+    ]
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "event": "case.submitted",
+          "form_id": null,
+          "required_documents": [
+            "Bản chính giấy tờ",
+            "Bản sao cần chứng thực"
+          ]
+        }
+      },
+      {
+        "id": "kiem_tra",
+        "type": "approval",
+        "label": "Công chức đối chiếu bản chính",
+        "position": {
+          "x": 320,
+          "y": 0
+        },
+        "data": {
+          "resolver": "department_manager",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 1,
+          "instructions": "Đối chiếu bản chính giấy tờ, kiểm tra thông tin; thiếu thì trả lại để bổ sung."
+        }
+      },
+      {
+        "id": "ky",
+        "type": "approval",
+        "label": "Người có thẩm quyền ký chứng thực",
+        "position": {
+          "x": 680,
+          "y": 0
+        },
+        "data": {
+          "resolver": "role",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 1,
+          "instructions": "",
+          "role": "director",
+          "role_scope": "organization"
+        }
+      },
+      {
+        "id": "tra_ket_qua",
+        "type": "notify",
+        "label": "Báo người nộp",
+        "position": {
+          "x": 1040,
+          "y": 0
+        },
+        "data": {
+          "recipients": [
+            "owner"
+          ],
+          "title": "Đã có kết quả, mời đến nhận: {title}"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "trigger->kiem_tra",
+        "source": "trigger",
+        "target": "kiem_tra",
+        "branch": null
+      },
+      {
+        "id": "kiem_tra:approve->ky",
+        "source": "kiem_tra",
+        "target": "ky",
+        "branch": "approve"
+      },
+      {
+        "id": "ky:approve->tra_ket_qua",
+        "source": "ky",
+        "target": "tra_ket_qua",
+        "branch": "approve"
+      }
+    ]
+  },
+  "allowed_roles": [],
+  "required_file_count": 0
+}

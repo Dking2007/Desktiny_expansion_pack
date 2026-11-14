@@ -1,0 +1,169 @@
+{
+  "name": "Đơn nghỉ phép",
+  "description": "Quản lý trực tiếp duyệt; nghỉ trên 3 ngày thì Giám đốc duyệt tiếp.",
+  "form": {
+    "name": "Đơn nghỉ phép",
+    "description": "Loại nghỉ, thời gian nghỉ và người nhận bàn giao công việc.",
+    "fields": [
+      {
+        "key": "loai_nghi",
+        "label": "Loại nghỉ",
+        "type": "select",
+        "required": true,
+        "options": [
+          "Nghỉ phép năm",
+          "Nghỉ ốm",
+          "Nghỉ việc riêng có lương",
+          "Nghỉ không lương",
+          "Nghỉ thai sản"
+        ]
+      },
+      {
+        "key": "tu_ngay",
+        "label": "Từ ngày",
+        "type": "date",
+        "required": true
+      },
+      {
+        "key": "den_ngay",
+        "label": "Đến ngày",
+        "type": "date",
+        "required": true
+      },
+      {
+        "key": "so_ngay",
+        "label": "Số ngày nghỉ",
+        "type": "number",
+        "required": true
+      },
+      {
+        "key": "ly_do",
+        "label": "Lý do",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "nguoi_ban_giao",
+        "label": "Người nhận bàn giao công việc",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "event": "case.submitted",
+          "form_id": null,
+          "required_documents": [
+            "Đơn nghỉ phép"
+          ]
+        }
+      },
+      {
+        "id": "quan_ly",
+        "type": "approval",
+        "label": "Quản lý trực tiếp duyệt",
+        "position": {
+          "x": 320,
+          "y": 0
+        },
+        "data": {
+          "resolver": "department_manager",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 1,
+          "instructions": "Xem lịch công việc và người nhận bàn giao."
+        }
+      },
+      {
+        "id": "nghi_dai",
+        "type": "if",
+        "label": "Nghỉ trên 3 ngày?",
+        "position": {
+          "x": 680,
+          "y": 0
+        },
+        "data": {
+          "mode": "all",
+          "conditions": [
+            {
+              "field": "form.so_ngay",
+              "operator": "gt",
+              "value": 3
+            }
+          ]
+        }
+      },
+      {
+        "id": "giam_doc",
+        "type": "approval",
+        "label": "Giám đốc duyệt",
+        "position": {
+          "x": 1040,
+          "y": -80
+        },
+        "data": {
+          "resolver": "role",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 1,
+          "instructions": "",
+          "role": "director",
+          "role_scope": "organization"
+        }
+      },
+      {
+        "id": "xong",
+        "type": "finish",
+        "label": "Hoàn tất",
+        "position": {
+          "x": 1040,
+          "y": 120
+        },
+        "data": {
+          "result": "approved",
+          "message": "Nghỉ từ 3 ngày trở xuống, quản lý trực tiếp duyệt là đủ."
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "trigger->quan_ly",
+        "source": "trigger",
+        "target": "quan_ly",
+        "branch": null
+      },
+      {
+        "id": "quan_ly:approve->nghi_dai",
+        "source": "quan_ly",
+        "target": "nghi_dai",
+        "branch": "approve"
+      },
+      {
+        "id": "nghi_dai:true->giam_doc",
+        "source": "nghi_dai",
+        "target": "giam_doc",
+        "branch": "true"
+      },
+      {
+        "id": "nghi_dai:false->xong",
+        "source": "nghi_dai",
+        "target": "xong",
+        "branch": "false"
+      }
+    ]
+  },
+  "allowed_roles": [],
+  "required_file_count": 0
+}

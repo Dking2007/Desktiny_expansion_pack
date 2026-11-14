@@ -1,0 +1,106 @@
+{
+  "name": "Phê duyệt bảng lương tháng",
+  "description": "Bộ phận nhân sự trình bảng lương; trưởng bộ phận kiểm tra, Giám đốc duyệt. Cài plugin Tiền lương và KPI để thêm bước “Chốt kỳ lương” trước khi trình.",
+  "form": {
+    "name": "Tờ trình bảng lương",
+    "description": "Kỳ lương, tổng quỹ lương, số người và ghi chú thay đổi so với kỳ trước.",
+    "fields": [
+      {
+        "key": "ky_luong",
+        "label": "Kỳ lương (2026-11)",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "tong_quy_luong",
+        "label": "Tổng quỹ lương (đồng)",
+        "type": "number",
+        "required": true
+      },
+      {
+        "key": "so_nguoi",
+        "label": "Số người hưởng lương",
+        "type": "number",
+        "required": true
+      },
+      {
+        "key": "ghi_chu",
+        "label": "Thay đổi so với kỳ trước",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "event": "case.submitted",
+          "form_id": null,
+          "required_documents": [
+            "Bảng lương chi tiết"
+          ]
+        }
+      },
+      {
+        "id": "kiem_tra",
+        "type": "approval",
+        "label": "Trưởng bộ phận kiểm tra",
+        "position": {
+          "x": 320,
+          "y": 0
+        },
+        "data": {
+          "resolver": "department_manager",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 2,
+          "instructions": ""
+        }
+      },
+      {
+        "id": "giam_doc",
+        "type": "approval",
+        "label": "Giám đốc duyệt",
+        "position": {
+          "x": 680,
+          "y": 0
+        },
+        "data": {
+          "resolver": "role",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 2,
+          "instructions": "",
+          "role": "director",
+          "role_scope": "organization"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "trigger->kiem_tra",
+        "source": "trigger",
+        "target": "kiem_tra",
+        "branch": null
+      },
+      {
+        "id": "kiem_tra:approve->giam_doc",
+        "source": "kiem_tra",
+        "target": "giam_doc",
+        "branch": "approve"
+      }
+    ]
+  },
+  "allowed_roles": [],
+  "required_file_count": 0
+}

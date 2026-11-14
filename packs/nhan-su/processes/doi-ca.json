@@ -1,0 +1,106 @@
+{
+  "name": "Đổi ca làm việc",
+  "description": "Người lao động đề nghị đổi ca với đồng nghiệp; quản lý trực tiếp duyệt.",
+  "form": {
+    "name": "Đề nghị đổi ca",
+    "description": "Ngày, ca hiện tại, ca muốn đổi và người đổi cùng.",
+    "fields": [
+      {
+        "key": "ngay",
+        "label": "Ngày",
+        "type": "date",
+        "required": true
+      },
+      {
+        "key": "ca_hien_tai",
+        "label": "Ca hiện tại",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "ca_muon_doi",
+        "label": "Ca muốn đổi",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "nguoi_doi_cung",
+        "label": "Người đổi cùng",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "ly_do",
+        "label": "Lý do",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "event": "case.submitted",
+          "form_id": null,
+          "required_documents": []
+        }
+      },
+      {
+        "id": "quan_ly",
+        "type": "approval",
+        "label": "Quản lý trực tiếp duyệt",
+        "position": {
+          "x": 320,
+          "y": 0
+        },
+        "data": {
+          "resolver": "department_manager",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 1,
+          "instructions": ""
+        }
+      },
+      {
+        "id": "bao",
+        "type": "notify",
+        "label": "Báo người nộp",
+        "position": {
+          "x": 680,
+          "y": 0
+        },
+        "data": {
+          "recipients": [
+            "owner"
+          ],
+          "title": "Đã duyệt đổi ca: {title}"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "trigger->quan_ly",
+        "source": "trigger",
+        "target": "quan_ly",
+        "branch": null
+      },
+      {
+        "id": "quan_ly:approve->bao",
+        "source": "quan_ly",
+        "target": "bao",
+        "branch": "approve"
+      }
+    ]
+  },
+  "allowed_roles": [],
+  "required_file_count": 0
+}

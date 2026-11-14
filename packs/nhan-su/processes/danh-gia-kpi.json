@@ -1,0 +1,116 @@
+{
+  "name": "Đánh giá KPI kỳ",
+  "description": "Người lao động tự đánh giá; quản lý trực tiếp chấm điểm (tab “Chấm điểm KPI” khi có plugin Tiền lương và KPI) và duyệt; Giám đốc phê duyệt kết quả.",
+  "form": {
+    "name": "Phiếu đánh giá KPI",
+    "description": "Tự đánh giá kết quả công việc trong kỳ.",
+    "fields": [
+      {
+        "key": "ky_danh_gia",
+        "label": "Kỳ đánh giá (Quý IV/2026)",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "tu_danh_gia",
+        "label": "Tự đánh giá kết quả",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "diem_kpi",
+        "label": "Điểm KPI (quản lý chấm)",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "xep_loai",
+        "label": "Xếp loại",
+        "type": "select",
+        "required": false,
+        "options": [
+          "Hoàn thành xuất sắc",
+          "Hoàn thành tốt",
+          "Hoàn thành",
+          "Không hoàn thành"
+        ]
+      },
+      {
+        "key": "nhan_xet",
+        "label": "Nhận xét của quản lý",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "event": "case.submitted",
+          "form_id": null,
+          "required_documents": []
+        }
+      },
+      {
+        "id": "quan_ly",
+        "type": "approval",
+        "label": "Quản lý trực tiếp chấm điểm và duyệt",
+        "position": {
+          "x": 320,
+          "y": 0
+        },
+        "data": {
+          "resolver": "department_manager",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 5,
+          "instructions": "Chấm điểm theo tiêu chí trước khi duyệt."
+        }
+      },
+      {
+        "id": "giam_doc",
+        "type": "approval",
+        "label": "Giám đốc phê duyệt kết quả",
+        "position": {
+          "x": 680,
+          "y": 0
+        },
+        "data": {
+          "resolver": "role",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 5,
+          "instructions": "",
+          "role": "director",
+          "role_scope": "organization"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "trigger->quan_ly",
+        "source": "trigger",
+        "target": "quan_ly",
+        "branch": null
+      },
+      {
+        "id": "quan_ly:approve->giam_doc",
+        "source": "quan_ly",
+        "target": "giam_doc",
+        "branch": "approve"
+      }
+    ]
+  },
+  "allowed_roles": [],
+  "required_file_count": 0
+}

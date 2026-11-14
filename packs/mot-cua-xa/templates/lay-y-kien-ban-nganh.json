@@ -1,0 +1,96 @@
+{
+  "key": "mo-rong-lay-y-kien-ban-nganh",
+  "title": "Lấy ý kiến các ban, ngành trước khi lãnh đạo ký",
+  "description": "Trưởng bộ phận kiểm tra, lấy ý kiến các ban ngành liên quan (chọn người khi dựng quy trình), lãnh đạo UBND ký.",
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "event": "case.submitted",
+          "form_id": null,
+          "required_documents": []
+        }
+      },
+      {
+        "id": "kiem_tra",
+        "type": "approval",
+        "label": "Trưởng bộ phận kiểm tra",
+        "position": {
+          "x": 320,
+          "y": 0
+        },
+        "data": {
+          "resolver": "department_manager",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 2,
+          "instructions": ""
+        }
+      },
+      {
+        "id": "y_kien",
+        "type": "consult",
+        "label": "Lấy ý kiến ban, ngành",
+        "position": {
+          "x": 680,
+          "y": 0
+        },
+        "data": {
+          "resolver": "users",
+          "user_ids": [],
+          "include_department_manager": true,
+          "mode": "all",
+          "due_in_days": 3,
+          "instructions": ""
+        }
+      },
+      {
+        "id": "ky",
+        "type": "approval",
+        "label": "Lãnh đạo UBND ký",
+        "position": {
+          "x": 1040,
+          "y": 0
+        },
+        "data": {
+          "resolver": "role",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 1,
+          "instructions": "",
+          "role": "director",
+          "role_scope": "organization"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "trigger->kiem_tra",
+        "source": "trigger",
+        "target": "kiem_tra",
+        "branch": null
+      },
+      {
+        "id": "kiem_tra:approve->y_kien",
+        "source": "kiem_tra",
+        "target": "y_kien",
+        "branch": "approve"
+      },
+      {
+        "id": "y_kien:approve->ky",
+        "source": "y_kien",
+        "target": "ky",
+        "branch": "approve"
+      }
+    ]
+  }
+}

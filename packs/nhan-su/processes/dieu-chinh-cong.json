@@ -1,0 +1,112 @@
+{
+  "name": "Đề nghị điều chỉnh công",
+  "description": "Quên chấm công, đi công tác, thiết bị lỗi: quản lý trực tiếp xác nhận rồi bộ phận nhân sự cập nhật bảng công.",
+  "form": {
+    "name": "Đề nghị điều chỉnh công",
+    "description": "Ngày cần điều chỉnh, giờ vào/ra thực tế và lý do.",
+    "fields": [
+      {
+        "key": "ngay",
+        "label": "Ngày cần điều chỉnh",
+        "type": "date",
+        "required": true
+      },
+      {
+        "key": "gio_vao",
+        "label": "Giờ vào thực tế (HH:MM)",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "gio_ra",
+        "label": "Giờ ra thực tế (HH:MM)",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "loai",
+        "label": "Lý do",
+        "type": "select",
+        "required": true,
+        "options": [
+          "Quên chấm công",
+          "Đi công tác, làm việc bên ngoài",
+          "Thiết bị hoặc GPS lỗi",
+          "Khác"
+        ]
+      },
+      {
+        "key": "giai_trinh",
+        "label": "Giải trình",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "event": "case.submitted",
+          "form_id": null,
+          "required_documents": []
+        }
+      },
+      {
+        "id": "quan_ly",
+        "type": "approval",
+        "label": "Quản lý trực tiếp xác nhận",
+        "position": {
+          "x": 320,
+          "y": 0
+        },
+        "data": {
+          "resolver": "department_manager",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 1,
+          "instructions": ""
+        }
+      },
+      {
+        "id": "bao",
+        "type": "notify",
+        "label": "Báo người nộp",
+        "position": {
+          "x": 680,
+          "y": 0
+        },
+        "data": {
+          "recipients": [
+            "owner"
+          ],
+          "title": "Đã xác nhận điều chỉnh công: {title}"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "trigger->quan_ly",
+        "source": "trigger",
+        "target": "quan_ly",
+        "branch": null
+      },
+      {
+        "id": "quan_ly:approve->bao",
+        "source": "quan_ly",
+        "target": "bao",
+        "branch": "approve"
+      }
+    ]
+  },
+  "allowed_roles": [],
+  "required_file_count": 0
+}
