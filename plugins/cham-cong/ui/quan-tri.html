@@ -1,0 +1,105 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ca làm và địa điểm</title>
+    <link rel="stylesheet" href="chung.css" />
+  </head>
+  <body>
+    <h1>Chấm công — quản trị</h1>
+    <p class="muted">Khai ca làm, địa điểm được chấm công (toạ độ và bán kính), xếp ca cho người hoặc cả đơn vị, xem tổng hợp tháng.</p>
+    <p id="status" aria-live="polite"></p>
+
+    <h2>Ca làm</h2>
+    <table><thead><tr><th>Tên</th><th>Bắt đầu</th><th>Kết thúc</th><th class="num">Cho phép muộn (phút)</th><th></th></tr></thead><tbody id="shifts"></tbody></table>
+    <form id="shift-form" class="grid">
+      <label>Tên ca <input name="name" required maxlength="60" placeholder="Hành chính" /></label>
+      <label>Bắt đầu <input name="start" type="time" required value="08:00" /></label>
+      <label>Kết thúc <input name="end" type="time" required value="17:00" /></label>
+      <label>Cho phép muộn (phút) <input name="grace_minutes" type="number" min="0" max="120" value="5" /></label>
+      <label>&nbsp;<button type="submit">Thêm ca</button></label>
+    </form>
+
+    <h2>Địa điểm chấm công</h2>
+    <table><thead><tr><th>Tên</th><th>Vĩ độ</th><th>Kinh độ</th><th class="num">Bán kính (m)</th><th></th></tr></thead><tbody id="places"></tbody></table>
+    <form id="place-form" class="grid">
+      <label>Tên <input name="name" maxlength="80" placeholder="Trụ sở chính" /></label>
+      <label>Vĩ độ <input name="lat" required inputmode="decimal" placeholder="21.0285" /></label>
+      <label>Kinh độ <input name="lng" required inputmode="decimal" placeholder="105.8542" /></label>
+      <label>Bán kính (m) <input name="radius_m" type="number" min="20" max="5000" value="150" /></label>
+      <label>&nbsp;<button type="submit">Thêm địa điểm</button></label>
+    </form>
+
+    <h2>Xếp ca cho cả đơn vị</h2>
+    <form id="assign-form" class="grid">
+      <label>Đơn vị <select name="department_id" id="departments"></select></label>
+      <label>Ca <select name="shift_id" id="shift-pick"></select></label>
+      <label>&nbsp;<button type="submit">Xếp ca</button></label>
+    </form>
+
+    <h2>Tổng hợp tháng <input id="month" type="month" /> <button id="export" type="button" class="secondary">Xuất CSV</button></h2>
+    <table>
+      <thead><tr><th>Họ tên</th><th class="num">Ngày có mặt</th><th class="num">Lần đi muộn</th><th class="num">Phút muộn</th><th class="num">Về sớm</th><th class="num">Giờ làm</th></tr></thead>
+      <tbody id="summary"></tbody>
+    </table>
+    <div id="export-box"></div>
+    <script type="module">
+      import { $, desktiny, h, server, show, thisMonth } from './mo-rong.js'
+
+      $('#month').value = thisMonth()
+      const remove = (path) => h('button', { type: 'button', class: 'secondary', onclick: async () => {
+        if (!(await desktiny.confirm('Xoá mục này?'))) return
+        await server(path, { method: 'DELETE' }).catch((error) => show($('#status'), error.message, 'bad'))
+        load()
+      } }, 'Xoá')
+
+      async function load() {
+        try {
+          const data = await server(`/api/quan-tri?thang=${$('#month').value}`)
+          $('#shifts').replaceChildren(...data.shifts.map((s) => h('tr', {}, h('td', {}, s.name), h('td', {}, s.start), h('td', {}, s.end), h('td', { class: 'num' }, s.grace_minutes), h('td', {}, remove(`/api/ca/${s.id}`)))))
+          $('#places').replaceChildren(...data.places.map((p) => h('tr', {}, h('td', {}, p.name), h('td', {}, p.lat), h('td', {}, p.lng), h('td', { class: 'num' }, p.radius_m), h('td', {}, remove(`/api/dia-diem/${p.id}`)))))
+          $('#shift-pick').replaceChildren(h('option', { value: '' }, 'Không xếp ca'), ...data.shifts.map((s) => h('option', { value: s.id }, s.name)))
+          $('#summary').replaceChildren(...data.summary.map((p) => h('tr', {}, h('td', {}, p.display_name), h('td', { class: 'num' }, p.worked_days), h('td', { class: 'num' }, p.late_count), h('td', { class: 'num' }, p.late_minutes), h('td', { class: 'num' }, p.early_count), h('td', { class: 'num' }, p.hours))))
+        } catch (error) {
+          show($('#status'), error.message, 'bad')
+        }
+      }
+      async function departments() {
+        const list = await desktiny.api('/departments').catch(() => ({ items: [] }))
+        $('#departments').replaceChildren(...list.items.map((d) => h('option', { value: d.id }, d.name)))
+      }
+      function submitter(form, path, transform = (v) => v) {
+        $(form).addEventListener('submit', async (event) => {
+          event.preventDefault()
+          const values = transform(Object.fromEntries(new FormData(event.target)))
+          try {
+            await server(path, { method: 'POST', body: values })
+            desktiny.toast('Đã lưu.')
+            event.target.reset()
+            load()
+          } catch (error) {
+            show($('#status'), error.message, 'bad')
+          }
+        })
+      }
+      submitter('#shift-form', '/api/ca')
+      submitter('#place-form', '/api/dia-diem', (v) => ({ ...v, lat: Number(v.lat.replace(',', '.')), lng: Number(v.lng.replace(',', '.')) }))
+      submitter('#assign-form', '/api/phan-ca')
+      $('#month').addEventListener('change', load)
+      // The frame may not download files (sandbox): the CSV is shown to copy into a spreadsheet.
+      $('#export').addEventListener('click', async () => {
+        const session = await desktiny.token()
+        const response = await fetch(`/api/xuat?thang=${$('#month').value}`, { headers: { 'X-Desktiny-Session': session.token } })
+        const box = h('textarea', { rows: 8, readonly: true, style: 'width: 100%' })
+        box.value = (await response.text()).replace(/^\ufeff/, '')
+        $('#export-box').replaceChildren(h('p', { class: 'muted' }, 'Chọn hết (Ctrl+A), sao chép rồi dán vào bảng tính.'), box)
+        box.select()
+      })
+      load()
+      departments()
+    </script>
+  </body>
+</html>

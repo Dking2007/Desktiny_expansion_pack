@@ -1,0 +1,47 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Phiếu lương</title>
+    <link rel="stylesheet" href="chung.css" />
+  </head>
+  <body>
+    <h1>Phiếu lương <input id="month" type="month" /></h1>
+    <p class="muted" id="who"></p>
+    <div id="slip"></div>
+    <script type="module">
+      import { $, h, money, server, thisMonth } from './mo-rong.js'
+      $('#month').value = thisMonth()
+      async function load() {
+        try {
+          const data = await server(`/api/phieu-luong?thang=${$('#month').value}`)
+          $('#who').textContent = data.user.display_name
+          const s = data.payslip
+          if (!s) return $('#slip').replaceChildren(h('p', { class: 'muted' }, 'Chưa có phiếu lương đã chốt cho tháng này.'))
+          const rows = [
+            ['Bậc lương', `${s.grade} (hệ số ${s.coefficient})`],
+            ['Lương theo hệ số', money(s.base_salary * s.coefficient)],
+            ['Phụ cấp', money(s.allowance)],
+            ['Ngày công', s.days === null ? 'Đủ công' : `${s.days}/${s.standard_days}`],
+            ['Tổng thu nhập', money(s.gross)],
+            ['Bảo hiểm (người lao động đóng)', `− ${money(s.insurance)}`],
+            ['Giảm trừ gia cảnh', money(s.deductions)],
+            ['Thu nhập tính thuế', money(s.taxable)],
+            ['Thuế thu nhập cá nhân', `− ${money(s.tax)}`],
+          ]
+          $('#slip').replaceChildren(
+            h('table', {}, h('tbody', {}, rows.map(([k, v]) => h('tr', {}, h('td', {}, k), h('td', { class: 'num' }, v))))),
+            h('p', { class: 'big' }, `Thực lĩnh: ${money(s.net)}`),
+          )
+        } catch (error) {
+          $('#slip').replaceChildren(h('p', { class: 'bad' }, error.message))
+        }
+      }
+      $('#month').addEventListener('change', load)
+      load()
+    </script>
+  </body>
+</html>

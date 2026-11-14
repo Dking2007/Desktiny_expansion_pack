@@ -1,0 +1,50 @@
+{
+  "schema": "desktiny-plugin/1",
+  "id": "vn.mo-rong.cham-cong",
+  "name": "Chấm công GPS",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "authors": ["Desktiny Expansion Pack contributors"],
+  "description": "Chấm công vào/ra ca bằng vị trí GPS tại trụ sở, ca làm và giờ cho phép đi muộn, tổng hợp công theo tháng, xuất CSV. Báo sự kiện khi một người đi muộn quá số lần cho phép trong tháng; trợ lý AI trả lời được “tháng này tôi đi muộn mấy lần”.",
+  "base_url": "http://localhost:9201",
+  "requires": { "desktiny": ">=2" },
+  "permissions": ["people.list", "departments.read"],
+  "frame_permissions": ["geolocation"],
+  "health_endpoint": "/health",
+  "events_endpoint": "/events",
+  "emits": [
+    {
+      "type": "di_muon",
+      "title": "Đi muộn quá số lần cho phép trong tháng",
+      "fields": { "nhan_vien": "person", "so_lan": "number", "thang": "string" }
+    }
+  ],
+  "assistant_tools": [
+    {
+      "name": "so_lan_di_muon",
+      "description": "Số lần và số phút đi muộn của người đang hỏi trong một tháng",
+      "endpoint": "/tools/di-muon",
+      "parameters": { "type": "object", "properties": { "thang": { "type": "string", "title": "Tháng (2026-11)" } } }
+    },
+    {
+      "name": "cong_thang",
+      "description": "Số ngày có mặt, số giờ làm và số lần về sớm của người đang hỏi trong một tháng",
+      "endpoint": "/tools/cong-thang",
+      "parameters": { "type": "object", "properties": { "thang": { "type": "string", "title": "Tháng (2026-11)" } } }
+    }
+  ],
+  "settings_schema": {
+    "type": "object",
+    "properties": {
+      "nguong_di_muon": { "type": "number", "title": "Số lần đi muộn trong tháng thì báo", "default": 3 },
+      "do_chinh_xac_toi_da": { "type": "number", "title": "Sai số GPS tối đa (mét)", "default": 100 },
+      "khoa_chia_se": { "type": "string", "title": "Khoá chia sẻ công cho plugin Lương – KPI", "secret": true }
+    },
+    "required": []
+  },
+  "ui": [
+    { "slot": "page", "title": "Chấm công", "url": "/ui/cham-cong.html", "height": 620 },
+    { "slot": "home.widget", "title": "Chấm công hôm nay", "url": "/ui/widget.html", "height": 150 },
+    { "slot": "admin.page", "title": "Ca làm và địa điểm", "url": "/ui/quan-tri.html", "height": 900 }
+  ]
+}

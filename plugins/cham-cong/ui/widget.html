@@ -1,0 +1,30 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chấm công hôm nay</title>
+    <link rel="stylesheet" href="chung.css" />
+  </head>
+  <body>
+    <div class="row">
+      <div>
+        <div class="muted">Hôm nay</div>
+        <div class="big" id="today">—</div>
+        <div class="muted" id="month"></div>
+      </div>
+    </div>
+    <script type="module">
+      import { $, server } from './mo-rong.js'
+      const time = (value) => (value ? value.slice(11, 16) : '—')
+      server('/api/toi')
+        .then((data) => {
+          $('#today').textContent = `${time(data.punches.in?.at)} → ${time(data.punches.out?.at)}`
+          $('#month').textContent = `Tháng này: ${data.summary.worked_days} ngày có mặt, ${data.summary.late_count} lần đi muộn. Chấm công ở mục Ứng dụng › Chấm công.`
+        })
+        .catch((error) => ($('#month').textContent = error.message))
+    </script>
+  </body>
+</html>

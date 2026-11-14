@@ -1,0 +1,101 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chấm công</title>
+    <link rel="stylesheet" href="chung.css" />
+  </head>
+  <body>
+    <h1>Chấm công</h1>
+    <p class="muted" id="intro">Đang tải…</p>
+    <div class="card">
+      <div class="row">
+        <div>
+          <div class="muted">Hôm nay</div>
+          <div class="big" id="today">—</div>
+        </div>
+        <div style="margin-left: auto" class="row">
+          <button id="in" type="button">Vào ca</button>
+          <button id="out" type="button" class="secondary">Ra ca</button>
+        </div>
+      </div>
+      <p id="status" aria-live="polite"></p>
+    </div>
+    <h2>Tháng <input id="month" type="month" /></h2>
+    <div class="grid" id="summary"></div>
+    <table>
+      <thead><tr><th>Ngày</th><th>Vào</th><th>Ra</th><th class="num">Đi muộn (phút)</th></tr></thead>
+      <tbody id="history"></tbody>
+    </table>
+    <script type="module">
+      import { $, h, server, show, thisMonth } from './mo-rong.js'
+
+      const time = (value) => (value ? value.slice(11, 16) : '—')
+      $('#month').value = thisMonth()
+
+      async function load() {
+        try {
+          const data = await server(`/api/toi?thang=${$('#month').value}`)
+          const shift = data.shift ? `Ca ${data.shift.name}: ${data.shift.start}–${data.shift.end}` : 'Chưa được xếp ca'
+          $('#intro').textContent = `${data.user.display_name} · ${shift}`
+          const punches = data.punches
+          $('#today').textContent = `${time(punches.in?.at)} → ${time(punches.out?.at)}`
+          $('#in').disabled = !!punches.in
+          $('#out').disabled = !punches.in || !!punches.out
+          const s = data.summary
+          $('#summary').replaceChildren(
+            ...[
+              ['Ngày có mặt', s.worked_days],
+              ['Lần đi muộn', s.late_count],
+              ['Phút đi muộn', s.late_minutes ?? 0],
+              ['Số giờ làm', s.hours],
+            ].map(([label, value]) => h('div', { class: 'card' }, h('div', { class: 'muted' }, label), h('div', { class: 'big' }, value ?? 0))),
+          )
+          const days = {}
+          for (const row of data.history) (days[row.day] ??= {})[row.kind] = row
+          $('#history').replaceChildren(
+            ...Object.entries(days).map(([day, row]) =>
+              h('tr', {}, h('td', {}, day), h('td', {}, time(row.in?.at)), h('td', {}, time(row.out?.at)),
+                h('td', { class: 'num' + (row.in?.late_minutes > 0 ? ' bad' : '') }, row.in?.late_minutes || 0)),
+            ),
+          )
+        } catch (error) {
+          show($('#status'), error.message, 'bad')
+        }
+      }
+
+      function position() {
+        return new Promise((resolve, reject) => {
+          if (!navigator.geolocation) return reject(new Error('Trình duyệt không cho dùng vị trí.'))
+          navigator.geolocation.getCurrentPosition(resolve, () => reject(new Error('Chưa lấy được vị trí. Cho phép dùng vị trí rồi thử lại.')), {
+            enableHighAccuracy: true,
+            timeout: 15000,
+          })
+        })
+      }
+
+      async function punch(kind) {
+        show($('#status'), 'Đang lấy vị trí…')
+        try {
+          const where = await position()
+          const result = await server('/api/cham', {
+            method: 'POST',
+            body: { kind, lat: where.coords.latitude, lng: where.coords.longitude, accuracy: where.coords.accuracy },
+          })
+          const late = result.late_minutes > 0 ? ` · muộn ${result.late_minutes} phút` : result.late_minutes < 0 ? ` · sớm ${-result.late_minutes} phút` : ''
+          show($('#status'), `Đã chấm ${kind === 'in' ? 'vào' : 'ra'} lúc ${time(result.at)} tại ${result.place}${late}.`, result.late_minutes ? 'bad' : 'ok')
+          await load()
+        } catch (error) {
+          show($('#status'), error.message, 'bad')
+        }
+      }
+      $('#in').addEventListener('click', () => punch('in'))
+      $('#out').addEventListener('click', () => punch('out'))
+      $('#month').addEventListener('change', load)
+      load()
+    </script>
+  </body>
+</html>

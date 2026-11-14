@@ -1,0 +1,67 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chấm điểm KPI</title>
+    <link rel="stylesheet" href="chung.css" />
+  </head>
+  <body>
+    <h1>Chấm điểm KPI</h1>
+    <p class="muted" id="intro">Đang tải…</p>
+    <form id="form">
+      <table>
+        <thead><tr><th>Tiêu chí</th><th class="num">Trọng số</th><th class="num">Điểm (0–100)</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <p class="big" id="total"></p>
+      <button id="save" type="submit">Ghi điểm vào hồ sơ</button>
+    </form>
+    <p id="status" aria-live="polite"></p>
+    <script type="module">
+      import { $, desktiny, h, server, show } from './mo-rong.js'
+      const context = await desktiny.context
+      const caseId = context.record.case_id
+      let criteria = []
+      const grade = (t) => (t >= 90 ? 'Hoàn thành xuất sắc' : t >= 75 ? 'Hoàn thành tốt' : t >= 50 ? 'Hoàn thành' : 'Không hoàn thành')
+      function total() {
+        const value = criteria.reduce((sum, c) => sum + (Number($(`#c${c.id}`).value) || 0) * c.weight / 100, 0)
+        $('#total').textContent = `Tổng: ${value.toFixed(1)} điểm · ${grade(value)}`
+      }
+      try {
+        const data = await server(`/api/kpi/${caseId}`)
+        criteria = data.criteria
+        $('#intro').textContent = `${data.case.title}${data.case.owner ? ' · người được đánh giá: ' + data.case.owner.display_name : ''}`
+        $('#rows').replaceChildren(
+          ...criteria.map((c) =>
+            h('tr', {}, h('td', {}, c.name), h('td', { class: 'num' }, `${c.weight}%`),
+              h('td', { class: 'num' }, h('input', { id: `c${c.id}`, type: 'number', min: 0, max: 100, required: true, value: data.saved?.scores?.[c.id] ?? '', disabled: !data.can_score, oninput: total }))),
+          ),
+        )
+        if (!data.can_score) {
+          $('#save').disabled = true
+          show($('#status'), 'Bạn là người được đánh giá nên không tự chấm điểm cuối cùng.', 'muted')
+        }
+        if (data.saved) show($('#status'), `Đã chấm bởi ${data.saved.scored_by}: ${data.saved.total} điểm (${data.saved.grade}).`, 'ok')
+        total()
+      } catch (error) {
+        show($('#status'), error.message, 'bad')
+      }
+      $('#form').addEventListener('submit', async (event) => {
+        event.preventDefault()
+        if (!(await desktiny.confirm('Ghi điểm KPI vào hồ sơ này?'))) return
+        try {
+          const scores = Object.fromEntries(criteria.map((c) => [c.id, Number($(`#c${c.id}`).value)]))
+          const result = await server(`/api/kpi/${caseId}`, { method: 'POST', body: { scores } })
+          show($('#status'), `Đã ghi ${result.total} điểm (${result.grade}).`, 'ok')
+          desktiny.toast('Đã ghi điểm KPI.')
+          desktiny.refresh()
+        } catch (error) {
+          show($('#status'), error.message, 'bad')
+        }
+      })
+    </script>
+  </body>
+</html>

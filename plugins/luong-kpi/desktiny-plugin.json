@@ -1,0 +1,58 @@
+{
+  "schema": "desktiny-plugin/1",
+  "id": "vn.mo-rong.luong-kpi",
+  "name": "Tiền lương và KPI",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "authors": ["Desktiny Expansion Pack contributors"],
+  "description": "Bậc lương, hồ sơ lương, tính lương tháng (bảo hiểm, thuế thu nhập cá nhân lũy tiến, ngày công lấy từ plugin Chấm công), chốt kỳ lương bằng bước quy trình chạy lâu, phiếu lương cá nhân, chấm điểm KPI theo tiêu chí có trọng số ngay trong hồ sơ đánh giá.",
+  "base_url": "http://localhost:9202",
+  "requires": { "desktiny": ">=2" },
+  "permissions": ["cases.read", "cases.fields.write", "people.list", "departments.read"],
+  "writes": { "fields": ["diem_kpi", "xep_loai"] },
+  "health_endpoint": "/health",
+  "events_endpoint": "/events",
+  "nodes": [
+    {
+      "kind": "chot_ky_luong",
+      "title": "Chốt kỳ lương",
+      "description": "Tính lương kỳ đã chọn rồi chờ người phụ trách xem và chốt ở trang quản trị của plugin.",
+      "endpoint": "/nodes/chot-ky-luong",
+      "mode": "async",
+      "timeout_days": 10,
+      "config_schema": {
+        "type": "object",
+        "properties": { "ky": { "type": "string", "title": "Kỳ lương (2026-11)", "default": "{form.ky_luong}" } },
+        "required": ["ky"]
+      },
+      "outputs": { "tong_thuc_linh": "Tổng thực lĩnh", "tong_quy_luong": "Tổng quỹ lương", "so_nguoi": "Số người" }
+    }
+  ],
+  "assistant_tools": [
+    {
+      "name": "phieu_luong",
+      "description": "Phiếu lương đã chốt của người đang hỏi: tổng thu nhập, bảo hiểm, thuế, thực lĩnh trong một tháng",
+      "endpoint": "/tools/phieu-luong",
+      "parameters": { "type": "object", "properties": { "thang": { "type": "string", "title": "Tháng (2026-11)" } } }
+    }
+  ],
+  "settings_schema": {
+    "type": "object",
+    "properties": {
+      "luong_co_so": { "type": "number", "title": "Mức lương cơ sở (đồng)", "default": 2340000 },
+      "ty_le_bao_hiem": { "type": "number", "title": "Tỉ lệ bảo hiểm người lao động đóng (%)", "default": 10.5 },
+      "tran_bao_hiem_lan": { "type": "number", "title": "Trần lương đóng bảo hiểm (số lần lương cơ sở)", "default": 20 },
+      "giam_tru_ban_than": { "type": "number", "title": "Giảm trừ bản thân (đồng/tháng)", "default": 15500000 },
+      "giam_tru_phu_thuoc": { "type": "number", "title": "Giảm trừ mỗi người phụ thuộc (đồng/tháng)", "default": 6200000 },
+      "bac_thue": { "type": "string", "title": "Biểu thuế lũy tiến tháng", "description": "Cận trên:thuế suất %, bậc cuối 0:%. Ví dụ 5000000:5,10000000:10,…,0:35" },
+      "url_cham_cong": { "type": "string", "title": "Địa chỉ máy chủ plugin Chấm công", "description": "Để trống thì tính đủ công." },
+      "khoa_cham_cong": { "type": "string", "title": "Khoá chia sẻ công (như ở plugin Chấm công)", "secret": true }
+    },
+    "required": []
+  },
+  "ui": [
+    { "slot": "page", "title": "Phiếu lương", "url": "/ui/phieu-luong.html", "height": 560 },
+    { "slot": "case.tab", "title": "Chấm điểm KPI", "url": "/ui/kpi.html", "height": 520 },
+    { "slot": "admin.page", "title": "Bảng lương và KPI", "url": "/ui/quan-tri.html", "height": 1000 }
+  ]
+}

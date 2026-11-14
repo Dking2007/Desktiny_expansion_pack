@@ -1,0 +1,113 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bảng lương và KPI</title>
+    <link rel="stylesheet" href="chung.css" />
+  </head>
+  <body>
+    <h1>Tiền lương và KPI — quản trị</h1>
+    <p id="status" aria-live="polite"></p>
+
+    <h2>Bậc lương</h2>
+    <table><thead><tr><th>Mã</th><th>Tên</th><th class="num">Hệ số</th><th class="num">Phụ cấp</th></tr></thead><tbody id="grades"></tbody></table>
+    <form id="grade-form" class="grid">
+      <label>Mã <input name="code" required maxlength="20" placeholder="CV-1" /></label>
+      <label>Tên <input name="name" required maxlength="80" placeholder="Chuyên viên bậc 1" /></label>
+      <label>Hệ số <input name="coefficient" required inputmode="decimal" placeholder="2.34" /></label>
+      <label>Phụ cấp (đồng) <input name="allowance" type="number" min="0" value="0" /></label>
+      <label>&nbsp;<button type="submit">Lưu bậc</button></label>
+    </form>
+
+    <h2>Hồ sơ lương</h2>
+    <form id="profile-form" class="grid">
+      <label>Người <select name="person" id="people" multiple size="5"></select></label>
+      <label>Bậc <select name="grade_id" id="grade-pick" required></select></label>
+      <label>Phụ cấp riêng <input name="extra_allowance" type="number" min="0" value="0" /></label>
+      <label>Người phụ thuộc <input name="dependents" type="number" min="0" value="0" /></label>
+      <label>Công chuẩn/tháng <input name="standard_days" type="number" min="1" value="22" /></label>
+      <label>&nbsp;<button type="submit">Lưu cho người đã chọn</button></label>
+    </form>
+    <table><thead><tr><th>Họ tên</th><th>Bậc</th><th class="num">Phụ cấp riêng</th><th class="num">Phụ thuộc</th></tr></thead><tbody id="profiles"></tbody></table>
+
+    <h2>Kỳ lương <input id="month" type="month" /></h2>
+    <div class="row">
+      <button id="compute" type="button">Tính lương</button>
+      <button id="lock" type="button">Chốt kỳ lương</button>
+      <input id="reason" maxlength="300" placeholder="Lý do trả lại" />
+      <button id="return" type="button" class="secondary">Trả lại</button>
+      <span id="period" class="muted"></span>
+    </div>
+    <table>
+      <thead><tr><th>Họ tên</th><th class="num">Ngày công</th><th class="num">Tổng thu nhập</th><th class="num">Bảo hiểm</th><th class="num">Thuế TNCN</th><th class="num">Thực lĩnh</th></tr></thead>
+      <tbody id="payslips"></tbody>
+    </table>
+
+    <h2>Tiêu chí KPI</h2>
+    <p class="muted">Mỗi dòng: tên tiêu chí; trọng số %. Tổng trọng số bằng 100.</p>
+    <textarea id="criteria" rows="5" style="width: 100%"></textarea>
+    <p><button id="save-criteria" type="button" class="secondary">Lưu tiêu chí</button></p>
+    <script type="module">
+      import { $, desktiny, h, money, server, show, thisMonth } from './mo-rong.js'
+      $('#month').value = thisMonth()
+      let grades = []
+      const fail = (error) => show($('#status'), error.message, 'bad')
+
+      async function load() {
+        try {
+          const data = await server(`/api/quan-tri?thang=${$('#month').value}`)
+          grades = data.grades
+          $('#grades').replaceChildren(...grades.map((g) => h('tr', {}, h('td', {}, g.code), h('td', {}, g.name), h('td', { class: 'num' }, g.coefficient), h('td', { class: 'num' }, money(g.allowance)))))
+          $('#grade-pick').replaceChildren(...grades.map((g) => h('option', { value: g.id }, `${g.code} — ${g.name}`)))
+          const gradeName = (id) => grades.find((g) => g.id === id)?.name ?? '—'
+          $('#profiles').replaceChildren(...data.profiles.map((p) => h('tr', {}, h('td', {}, p.display_name), h('td', {}, gradeName(p.grade_id)), h('td', { class: 'num' }, money(p.extra_allowance)), h('td', { class: 'num' }, p.dependents))))
+          const p = data.period
+          const states = { draft: 'Chưa tính / bị trả lại', computed: 'Đã tính, chờ chốt', locked: 'Đã chốt' }
+          $('#period').textContent = p ? `${states[p.state]} · ${p.people} người · tổng thực lĩnh ${money(p.total_net)}${p.note ? ' · ' + p.note : ''}${p.call_id ? ' · có quy trình đang chờ' : ''}` : 'Chưa tính'
+          $('#payslips').replaceChildren(...data.payslips.map((s) => h('tr', {}, h('td', {}, s.display_name), h('td', { class: 'num' }, s.data.days ?? 'đủ'), h('td', { class: 'num' }, money(s.data.gross)), h('td', { class: 'num' }, money(s.data.insurance)), h('td', { class: 'num' }, money(s.data.tax)), h('td', { class: 'num' }, money(s.net)))))
+          $('#criteria').value = data.criteria.map((c) => `${c.name}; ${c.weight}`).join('\n')
+        } catch (error) {
+          fail(error)
+        }
+      }
+      async function people() {
+        const list = await server('/api/nguoi').catch(() => ({ items: [] }))
+        $('#people').replaceChildren(...list.items.map((u) => h('option', { value: JSON.stringify({ id: u.id, display_name: u.display_name }) }, u.display_name)))
+      }
+      $('#grade-form').addEventListener('submit', async (event) => {
+        event.preventDefault()
+        const body = Object.fromEntries(new FormData(event.target))
+        await server('/api/bac-luong', { method: 'POST', body: { ...body, coefficient: Number(String(body.coefficient).replace(',', '.')) } }).then(load, fail)
+      })
+      $('#profile-form').addEventListener('submit', async (event) => {
+        event.preventDefault()
+        const chosen = [...$('#people').selectedOptions].map((o) => JSON.parse(o.value))
+        if (!chosen.length) return show($('#status'), 'Chọn ít nhất một người.', 'bad')
+        const body = Object.fromEntries(new FormData(event.target))
+        delete body.person
+        await server('/api/ho-so-luong', { method: 'POST', body: { ...body, people: chosen } }).then(load, fail)
+      })
+      $('#compute').addEventListener('click', () => server('/api/tinh-luong', { method: 'POST', body: { thang: $('#month').value } }).then(load, fail))
+      $('#lock').addEventListener('click', async () => {
+        if (!(await desktiny.confirm(`Chốt kỳ lương ${$('#month').value}? Phiếu lương sẽ hiện cho từng người.`))) return
+        await server('/api/chot', { method: 'POST', body: { thang: $('#month').value } }).then(load, fail)
+      })
+      $('#return').addEventListener('click', async () => {
+        // The frame has no prompt() (sandbox without modals): the reason comes from the field beside the button.
+        const reason = $('#reason').value.trim()
+        if (!reason) return show($('#status'), 'Nhập lý do trả lại.', 'bad')
+        await server('/api/chot', { method: 'POST', body: { thang: $('#month').value, tra_lai: true, ly_do: reason } }).then(load, fail)
+      })
+      $('#save-criteria').addEventListener('click', async () => {
+        const items = $('#criteria').value.split('\n').map((line) => line.split(';')).filter((p) => p[0]?.trim()).map(([name, weight]) => ({ name: name.trim(), weight: Number(weight) }))
+        await server('/api/tieu-chi', { method: 'POST', body: { items } }).then(() => { desktiny.toast('Đã lưu tiêu chí.'); load() }, fail)
+      })
+      $('#month').addEventListener('change', load)
+      load()
+      people()
+    </script>
+  </body>
+</html>
