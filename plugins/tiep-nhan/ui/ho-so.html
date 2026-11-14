@@ -1,0 +1,25 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nộp trực tuyến</title>
+    <link rel="stylesheet" href="chung.css" />
+  </head>
+  <body>
+    <div id="out" class="muted">Đang tải…</div>
+    <script type="module">
+      import { $, desktiny, h, server } from './mo-rong.js'
+      const context = await desktiny.context
+      server(`/api/ho-so/${context.record.case_id}`)
+        .then(({ request: r }) => {
+          $('#out').replaceChildren(...(r
+            ? [h('div', {}, h('strong', {}, r.code), ' · ', r.procedure), h('div', { class: 'muted' }, `Nộp ${r.created_at.slice(0, 10)} qua ${r.source}`), h('span', { class: 'tag' }, r.status_label)]
+            : [h('span', { class: 'muted' }, 'Hồ sơ này không đến từ cổng trực tuyến.')]))
+        })
+        .catch((error) => ($('#out').textContent = error.message))
+    </script>
+  </body>
+</html>

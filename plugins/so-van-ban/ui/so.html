@@ -1,0 +1,51 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sổ văn bản</title>
+    <link rel="stylesheet" href="chung.css" />
+  </head>
+  <body>
+    <h1>Sổ văn bản</h1>
+    <div class="grid">
+      <label>Sổ <select id="book"><option value="">Tất cả</option></select></label>
+      <label>Năm <input id="year" type="number" min="2000" max="2100" /></label>
+      <label>Tìm <input id="q" placeholder="Số hoặc trích yếu" /></label>
+      <label>&nbsp;<button id="export" type="button" class="secondary">Xuất CSV</button></label>
+    </div>
+    <div id="export-box"></div>
+    <table>
+      <thead><tr><th>Số, ký hiệu</th><th>Ngày</th><th>Trích yếu</th><th>Người cấp</th><th>Hồ sơ</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <script type="module">
+      import { $, desktiny, h, server } from './mo-rong.js'
+      $('#year').value = new Date().getFullYear()
+      const query = () => `so=${encodeURIComponent($('#book').value)}&nam=${$('#year').value}&q=${encodeURIComponent($('#q').value)}`
+      let first = true
+      async function load() {
+        const data = await server(`/api/so?${query()}`)
+        if (first) {
+          $('#book').append(...data.books.map((b) => h('option', { value: b.code }, b.name)))
+          first = false
+        }
+        $('#rows').replaceChildren(...data.entries.map((e) => h('tr', { class: e.state === 'cancelled' ? 'muted' : '' },
+          h('td', {}, e.full_number, e.state === 'cancelled' ? ` (huỷ: ${e.cancel_reason})` : ''), h('td', {}, e.issued_at.slice(0, 10)), h('td', {}, e.summary), h('td', {}, e.issued_by),
+          h('td', {}, e.case_id ? h('a', { href: '#', onclick: (ev) => { ev.preventDefault(); desktiny.navigate(`/cases/${e.case_id}`) } }, 'Mở') : '—'))))
+      }
+      for (const id of ['#book', '#year', '#q']) $(id).addEventListener('change', load)
+      $('#export').addEventListener('click', async () => {
+        const session = await desktiny.token()
+        const text = await (await fetch(`/api/xuat?${query()}`, { headers: { 'X-Desktiny-Session': session.token } })).text()
+        const box = h('textarea', { rows: 8, readonly: true, style: 'width: 100%' })
+        box.value = text.replace(/^﻿/, '')
+        $('#export-box').replaceChildren(h('p', { class: 'muted' }, 'Chọn hết, sao chép rồi dán vào bảng tính.'), box)
+        box.select()
+      })
+      load()
+    </script>
+  </body>
+</html>

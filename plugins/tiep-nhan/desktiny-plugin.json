@@ -1,0 +1,43 @@
+{
+  "schema": "desktiny-plugin/1",
+  "id": "vn.mo-rong.tiep-nhan",
+  "name": "Tiếp nhận hồ sơ trực tuyến",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "authors": ["Desktiny Expansion Pack contributors"],
+  "description": "Trang công khai cho người dân, doanh nghiệp nộp yêu cầu theo thủ tục và tra cứu tình trạng bằng mã tra cứu và mã bí mật, không cần tài khoản; nhận cả hồ sơ từ hệ thống ngoài (ki-ốt, cổng khác) bằng khoá. Mỗi yêu cầu thành sự kiện để quy trình tạo hồ sơ; tình trạng hồ sơ được cập nhật lại cho người nộp.",
+  "base_url": "http://localhost:9206",
+  "requires": { "desktiny": ">=2" },
+  "permissions": ["cases.read"],
+  "events": ["case.submitted", "case.step_entered", "case.needs_revision", "case.approved", "case.rejected", "case.closed"],
+  "events_endpoint": "/events",
+  "health_endpoint": "/health",
+  "emits": [
+    {
+      "type": "ho_so_truc_tuyen",
+      "title": "Có yêu cầu nộp trực tuyến",
+      "fields": {
+        "ma_tra_cuu": "string",
+        "thu_tuc": "string",
+        "ho_ten": "string",
+        "so_cccd": "string",
+        "so_dien_thoai": "string",
+        "dia_chi": "string",
+        "noi_dung": "string"
+      }
+    }
+  ],
+  "settings_schema": {
+    "type": "object",
+    "properties": {
+      "ten_co_quan": { "type": "string", "title": "Tên hiện trên trang nộp hồ sơ", "default": "Bộ phận Một cửa" },
+      "danh_sach_thu_tuc": { "type": "string", "title": "Các thủ tục nhận trực tuyến (cách nhau bằng dấu chấm phẩy)" },
+      "khoa_he_thong_ngoai": { "type": "string", "title": "Khoá cho hệ thống ngoài gửi hồ sơ (X-Api-Key)", "secret": true }
+    },
+    "required": []
+  },
+  "ui": [
+    { "slot": "case.side", "title": "Nộp trực tuyến", "url": "/ui/ho-so.html", "height": 150 },
+    { "slot": "admin.page", "title": "Hồ sơ nộp trực tuyến", "url": "/ui/quan-tri.html", "height": 700 }
+  ]
+}

@@ -1,0 +1,49 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Văn bản chờ ký</title>
+    <link rel="stylesheet" href="chung.css" />
+  </head>
+  <body>
+    <h1>Văn bản chờ ký</h1>
+    <div id="pin"></div>
+    <p id="status" aria-live="polite"></p>
+    <div id="list"></div>
+    <script type="module">
+      import { $, desktiny, h, server, show } from './mo-rong.js'
+      import { pinBox } from './pin.js'
+      const status = $('#status')
+      async function load() {
+        if (!(await pinBox($('#pin')))) return
+        const data = await server('/api/cho-ky')
+        if (!data.items.length) return $('#list').replaceChildren(h('p', { class: 'muted' }, 'Không có văn bản nào chờ bạn ký.'))
+        $('#list').replaceChildren(...data.items.map((item) => {
+          const boxes = item.files.map((f) => h('label', { class: 'row', style: 'font-weight: 400' }, h('input', { type: 'checkbox', value: f.id, checked: true }), f.name))
+          const pin = h('input', { type: 'password', inputmode: 'numeric', placeholder: 'PIN' })
+          const reason = h('input', { placeholder: 'Lý do (khi từ chối)', maxlength: 300 })
+          const decide = async (refuse) => {
+            try {
+              const ids = boxes.map((b) => b.querySelector('input')).filter((i) => i.checked).map((i) => i.value)
+              if (!refuse && !(await desktiny.confirm(`Ký ${ids.length} tệp của hồ sơ “${item.title}”?`))) return
+              const result = await server(`/api/cho-ky/${item.call_id}`, { method: 'POST', body: { pin: pin.value, file_ids: ids, tu_choi: refuse, ly_do: reason.value } })
+              desktiny.toast(refuse ? 'Đã từ chối ký.' : `Đã ký ${result.signed} tệp.`)
+              load()
+            } catch (error) {
+              show(status, error.message, 'bad')
+            }
+          }
+          return h('div', { class: 'card', style: 'margin-bottom: 10px' },
+            h('div', { class: 'row' }, h('strong', {}, item.title), h('span', { class: 'muted' }, `từ ${item.created_at.slice(0, 16).replace('T', ' ')}`),
+              h('a', { href: '#', onclick: (e) => { e.preventDefault(); desktiny.navigate(`/cases/${item.case_id}`) } }, 'Mở hồ sơ')),
+            item.reason ? h('p', { class: 'muted' }, item.reason) : null, ...boxes,
+            h('div', { class: 'row' }, pin, h('button', { type: 'button', onclick: () => decide(false) }, 'Ký'), reason, h('button', { type: 'button', class: 'secondary', onclick: () => decide(true) }, 'Từ chối')))
+        }))
+      }
+      load().catch((error) => show(status, error.message, 'bad'))
+    </script>
+  </body>
+</html>

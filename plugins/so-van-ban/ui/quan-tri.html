@@ -1,0 +1,49 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cấu hình sổ văn bản</title>
+    <link rel="stylesheet" href="chung.css" />
+  </head>
+  <body>
+    <h1>Cấu hình sổ văn bản</h1>
+    <p class="muted">Ký hiệu cơ quan đặt ở Quản trị › Plugin › Cấu hình. Số đã cấp không bao giờ cấp lại; số sai thì huỷ (giữ trong sổ, ghi lý do).</p>
+    <p id="status" aria-live="polite"></p>
+    <table><thead><tr><th>Mã</th><th>Tên</th><th>Ký hiệu</th><th class="num">Bắt đầu từ</th><th>Theo năm</th></tr></thead><tbody id="books"></tbody></table>
+    <form id="book-form" class="grid">
+      <label>Mã <input name="code" required maxlength="10" placeholder="HD" /></label>
+      <label>Tên <input name="name" required maxlength="80" placeholder="Hợp đồng" /></label>
+      <label>Ký hiệu <input name="symbol" maxlength="20" placeholder="HĐ" /></label>
+      <label>Bắt đầu từ số <input name="start_number" type="number" min="1" value="1" /></label>
+      <label>&nbsp;<button type="submit">Lưu sổ</button></label>
+    </form>
+    <h2>Huỷ một số đã cấp</h2>
+    <div class="grid">
+      <label>Số đã cấp <select id="entry"></select></label>
+      <label>Lý do <input id="reason" maxlength="300" /></label>
+      <label>&nbsp;<button id="cancel" type="button" class="secondary">Huỷ số</button></label>
+    </div>
+    <script type="module">
+      import { $, desktiny, h, server, show } from './mo-rong.js'
+      const fail = (error) => show($('#status'), error.message, 'bad')
+      async function load() {
+        const data = await server(`/api/so?nam=${new Date().getFullYear()}`).catch(fail)
+        if (!data) return
+        $('#books').replaceChildren(...data.books.map((b) => h('tr', {}, h('td', {}, b.code), h('td', {}, b.name), h('td', {}, b.symbol || '—'), h('td', { class: 'num' }, b.start_number), h('td', {}, b.yearly ? 'Có' : 'Không'))))
+        $('#entry').replaceChildren(...data.entries.filter((e) => e.state !== 'cancelled').map((e) => h('option', { value: e.id }, `${e.full_number} — ${e.summary}`)))
+      }
+      $('#book-form').addEventListener('submit', async (event) => {
+        event.preventDefault()
+        await server('/api/quan-tri/so', { method: 'POST', body: Object.fromEntries(new FormData(event.target)) }).then(() => { event.target.reset(); load() }, fail)
+      })
+      $('#cancel').addEventListener('click', async () => {
+        if (!$('#entry').value || !(await desktiny.confirm('Huỷ số này? Số vẫn nằm trong sổ và không được cấp lại.'))) return
+        await server(`/api/quan-tri/huy/${$('#entry').value}`, { method: 'POST', body: { ly_do: $('#reason').value } }).then(load, fail)
+      })
+      load()
+    </script>
+  </body>
+</html>

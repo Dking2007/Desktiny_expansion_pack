@@ -1,0 +1,44 @@
+{
+  "schema": "desktiny-plugin/1",
+  "id": "vn.mo-rong.ky-so",
+  "name": "Ký số văn bản",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "authors": ["Desktiny Expansion Pack contributors"],
+  "description": "Ký tài liệu của hồ sơ bằng mã PIN cá nhân và gắn phiếu xác nhận ký số (PDF) vào hồ sơ, từ bước quy trình chạy lâu (chờ người ký) hoặc nút trên hồ sơ. Ai cũng kiểm được mã xác thực. Chữ ký là mô phỏng bằng khoá của cơ quan; thay bằng chứng thư số khi triển khai thật.",
+  "base_url": "http://localhost:9204",
+  "requires": { "desktiny": ">=2" },
+  "permissions": ["cases.read", "files.read", "cases.attach", "notifications.send"],
+  "health_endpoint": "/health",
+  "events_endpoint": "/events",
+  "nodes": [
+    {
+      "kind": "ky_so_van_ban",
+      "title": "Ký số văn bản",
+      "description": "Đưa tài liệu của hồ sơ vào danh sách chờ ký; đi tiếp khi người ký xác nhận bằng PIN.",
+      "endpoint": "/nodes/ky-so",
+      "mode": "async",
+      "timeout_days": 5,
+      "config_schema": {
+        "type": "object",
+        "properties": {
+          "nguoi_ky": { "type": "string", "title": "Mã người ký (để trống: ai xem được hồ sơ cũng ký được)" },
+          "ghi_chu": { "type": "string", "title": "Ghi chú cho người ký" }
+        },
+        "required": []
+      },
+      "outputs": { "so_tep_da_ky": "Số tệp đã ký", "ma_xac_thuc": "Mã xác thực", "nguoi_ky": "Người ký" }
+    }
+  ],
+  "settings_schema": {
+    "type": "object",
+    "properties": {
+      "khoa_ky": { "type": "string", "title": "Khoá ký của cơ quan (chuỗi ngẫu nhiên dài)", "secret": true }
+    },
+    "required": ["khoa_ky"]
+  },
+  "ui": [
+    { "slot": "page", "title": "Văn bản chờ ký", "url": "/ui/cho-ky.html", "height": 640 },
+    { "slot": "case.action", "title": "Ký số", "url": "/ui/ky.html", "height": 420 }
+  ]
+}

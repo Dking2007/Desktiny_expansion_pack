@@ -1,0 +1,32 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hồ sơ nộp trực tuyến</title>
+    <link rel="stylesheet" href="chung.css" />
+  </head>
+  <body>
+    <h1>Hồ sơ nộp trực tuyến</h1>
+    <p class="muted">Trang nộp công khai: <code id="link"></code>. Để tạo hồ sơ tự động, tạo luồng bắt đầu bằng sự kiện “Có yêu cầu nộp trực tuyến” với bước “Tạo hồ sơ”, trường <code>ma_tra_cuu</code> = <code>{trigger.ma_tra_cuu}</code>.</p>
+    <label>Trạng thái <select id="status"><option value="">Tất cả</option></select></label>
+    <table>
+      <thead><tr><th>Mã tra cứu</th><th>Thủ tục</th><th>Người nộp</th><th>Điện thoại</th><th>Nguồn</th><th>Tình trạng</th><th>Hồ sơ</th><th>Ngày nộp</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <script type="module">
+      import { $, h, server } from './mo-rong.js'
+      $('#link').textContent = new URL('/cong/nop.html', document.baseURI).href
+      let first = true
+      async function load() {
+        const data = await server(`/api/quan-tri?trang_thai=${$('#status').value}`)
+        if (first) { $('#status').append(...Object.entries(data.statuses).map(([k, v]) => h('option', { value: k }, v))); first = false }
+        $('#rows').replaceChildren(...data.items.map((r) => h('tr', {}, h('td', {}, r.code), h('td', {}, r.procedure), h('td', {}, r.full_name), h('td', {}, r.phone), h('td', {}, r.source), h('td', {}, r.status_label), h('td', {}, r.case_code || '—'), h('td', {}, r.created_at.slice(0, 10)))))
+      }
+      $('#status').addEventListener('change', load)
+      load()
+    </script>
+  </body>
+</html>

@@ -1,0 +1,59 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nộp hồ sơ trực tuyến</title>
+    <link rel="stylesheet" href="cong.css" />
+  </head>
+  <body>
+    <header><h1 id="agency">Nộp hồ sơ trực tuyến</h1><nav><a href="nop.html">Nộp hồ sơ</a><a href="tra-cuu.html">Tra cứu</a></nav></header>
+    <form id="form">
+      <label>Thủ tục <select name="thu_tuc" id="procedures" required></select></label>
+      <label>Họ và tên <input name="ho_ten" required maxlength="120" autocomplete="name" /></label>
+      <label>Số định danh cá nhân (CCCD, 12 số) <input name="so_cccd" required pattern="\d{12}" inputmode="numeric" /></label>
+      <label>Số điện thoại <input name="so_dien_thoai" required inputmode="tel" autocomplete="tel" /></label>
+      <label>Địa chỉ <input name="dia_chi" maxlength="300" autocomplete="street-address" /></label>
+      <label>Nội dung yêu cầu <textarea name="noi_dung" rows="4" maxlength="2000"></textarea></label>
+      <label><span id="question">Câu hỏi kiểm tra</span> <input name="tra_loi" required inputmode="numeric" /></label>
+      <p class="muted">Giấy tờ bản chính mang theo khi đến nhận kết quả. Thông tin chỉ dùng để giải quyết thủ tục.</p>
+      <button type="submit">Nộp hồ sơ</button>
+      <p id="status" aria-live="polite"></p>
+    </form>
+    <div id="done" class="card" hidden></div>
+    <script>
+      let challenge = null
+      const $ = (id) => document.getElementById(id)
+      async function info() {
+        const data = await (await fetch('api/thong-tin')).json()
+        $('agency').textContent = data.co_quan + ' — nộp hồ sơ trực tuyến'
+        $('procedures').replaceChildren(...data.thu_tuc.map((p) => new Option(p, p)))
+        challenge = data.cau_hoi
+        $('question').textContent = 'Câu hỏi kiểm tra: ' + challenge.noi_dung
+      }
+      $('form').addEventListener('submit', async (event) => {
+        event.preventDefault()
+        const body = Object.fromEntries(new FormData(event.target))
+        body.cau_hoi_id = challenge?.id
+        const response = await fetch('api/nop', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        const data = await response.json()
+        if (!response.ok) {
+          $('status').className = 'bad'
+          $('status').textContent = data.message
+          return info()
+        }
+        $('form').hidden = true
+        const done = $('done')
+        done.hidden = false
+        const line = (text, cls) => { const p = document.createElement('p'); p.textContent = text; if (cls) p.className = cls; done.append(p) }
+        line('Đã nộp hồ sơ “' + data.thu_tuc + '”. Ghi lại hai mã dưới đây để tra cứu:', 'ok')
+        line('Mã tra cứu: ' + data.ma_tra_cuu, 'code')
+        line('Mã bí mật: ' + data.ma_bi_mat, 'code')
+        line('Không đưa mã bí mật cho người khác. Tra cứu tại trang “Tra cứu”.', 'muted')
+      })
+      info()
+    </script>
+  </body>
+</html>

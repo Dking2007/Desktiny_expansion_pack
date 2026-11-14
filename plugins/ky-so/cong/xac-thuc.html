@@ -1,0 +1,37 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Xác thực chữ ký</title>
+    <style>
+      body { max-width: 640px; margin: 40px auto; padding: 0 16px; font: 15px/1.6 system-ui, sans-serif; color: #0f172a; }
+      input, button { font: inherit; padding: 8px 10px; }
+      .ok { color: #15803d; } .bad { color: #b91c1c; } code { word-break: break-all; }
+    </style>
+  </head>
+  <body>
+    <h1>Xác thực chữ ký văn bản</h1>
+    <p>Nhập mã xác thực in trên phiếu xác nhận ký số. Đối chiếu SHA-256 với tệp bạn đang có để chắc đó là đúng tệp đã ký.</p>
+    <form id="form"><input id="code" required maxlength="20" placeholder="Mã xác thực" /> <button>Kiểm tra</button></form>
+    <div id="out" aria-live="polite"></div>
+    <script>
+      const out = document.getElementById('out')
+      document.getElementById('form').addEventListener('submit', async (event) => {
+        event.preventDefault()
+        const response = await fetch('../xac-thuc/' + encodeURIComponent(document.getElementById('code').value.trim()))
+        const data = await response.json()
+        out.replaceChildren()
+        const line = (label, value) => { const p = document.createElement('p'); p.append(label + ': '); const c = document.createElement('code'); c.textContent = value; p.append(c); out.append(p) }
+        if (!response.ok) { const p = document.createElement('p'); p.className = 'bad'; p.textContent = data.message; return out.append(p) }
+        const head = document.createElement('p')
+        head.className = data.valid ? 'ok' : 'bad'
+        head.textContent = data.valid ? 'Chữ ký hợp lệ.' : 'Chữ ký KHÔNG hợp lệ.'
+        out.append(head)
+        line('Tệp', data.file_name); line('Người ký', data.signer); line('Thời điểm', data.signed_at); line('SHA-256', data.sha256)
+      })
+    </script>
+  </body>
+</html>

@@ -1,0 +1,45 @@
+{
+  "schema": "desktiny-plugin/1",
+  "id": "vn.mo-rong.so-van-ban",
+  "name": "Sổ văn bản",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "authors": ["Desktiny Expansion Pack contributors"],
+  "description": "Sổ văn bản đi theo từng loại (quyết định, công văn, thông báo, giấy xác nhận…), cấp số liên tục theo năm, không nhảy số, không cấp trùng; số bị huỷ vẫn giữ trong sổ. Cấp số từ bước quy trình hoặc nút trên hồ sơ, ghi số và ngày vào hồ sơ.",
+  "base_url": "http://localhost:9203",
+  "requires": { "desktiny": ">=2" },
+  "permissions": ["cases.read", "cases.fields.write"],
+  "writes": { "fields": ["so_van_ban", "ngay_van_ban"] },
+  "health_endpoint": "/health",
+  "events_endpoint": "/events",
+  "nodes": [
+    {
+      "kind": "cap_so_van_ban",
+      "title": "Cấp số văn bản",
+      "description": "Lấy số tiếp theo của sổ đã chọn; bước sau dùng {buoc.so_van_ban}.",
+      "endpoint": "/nodes/cap-so",
+      "config_schema": {
+        "type": "object",
+        "properties": {
+          "so": { "type": "string", "title": "Mã sổ", "description": "QD, CV, TB, GXN hoặc sổ khai thêm ở trang quản trị", "default": "QD" },
+          "trich_yeu": { "type": "string", "title": "Trích yếu", "default": "{title}" }
+        },
+        "required": ["so"]
+      },
+      "outputs": { "so_van_ban": "Số, ký hiệu văn bản", "so": "Số thứ tự", "ngay": "Ngày cấp số" }
+    }
+  ],
+  "settings_schema": {
+    "type": "object",
+    "properties": {
+      "ky_hieu_co_quan": { "type": "string", "title": "Ký hiệu cơ quan ban hành", "default": "UBND" }
+    },
+    "required": []
+  },
+  "ui": [
+    { "slot": "page", "title": "Sổ văn bản", "url": "/ui/so.html", "height": 700 },
+    { "slot": "case.tab", "title": "Số văn bản", "url": "/ui/ho-so.html", "height": 300 },
+    { "slot": "case.action", "title": "Cấp số văn bản", "url": "/ui/cap-so.html", "height": 320 },
+    { "slot": "admin.page", "title": "Cấu hình sổ văn bản", "url": "/ui/quan-tri.html", "height": 700 }
+  ]
+}

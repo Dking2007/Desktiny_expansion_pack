@@ -1,0 +1,32 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Số văn bản của hồ sơ</title>
+    <link rel="stylesheet" href="chung.css" />
+  </head>
+  <body>
+    <table>
+      <thead><tr><th>Số, ký hiệu</th><th>Sổ</th><th>Ngày</th><th>Trích yếu</th><th>Người cấp</th></tr></thead>
+      <tbody id="rows"><tr><td colspan="5" class="muted">Đang tải…</td></tr></tbody>
+    </table>
+    <script type="module">
+      import { $, desktiny, h, server } from './mo-rong.js'
+      const context = await desktiny.context
+      try {
+        const data = await server(`/api/ho-so/${context.record.case_id}`)
+        const names = Object.fromEntries(data.books.map((b) => [b.code, b.name]))
+        $('#rows').replaceChildren(
+          ...(data.entries.length
+            ? data.entries.map((e) => h('tr', { class: e.state === 'cancelled' ? 'muted' : '' }, h('td', {}, e.full_number, e.state === 'cancelled' ? ' (đã huỷ)' : ''), h('td', {}, names[e.book] ?? e.book), h('td', {}, e.issued_at.slice(0, 10)), h('td', {}, e.summary), h('td', {}, e.issued_by)))
+            : [h('tr', {}, h('td', { colspan: 5, class: 'muted' }, 'Hồ sơ chưa được cấp số văn bản nào.'))]),
+        )
+      } catch (error) {
+        $('#rows').replaceChildren(h('tr', {}, h('td', { colspan: 5, class: 'bad' }, error.message)))
+      }
+    </script>
+  </body>
+</html>

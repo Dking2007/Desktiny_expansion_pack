@@ -1,0 +1,44 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cấp số văn bản</title>
+    <link rel="stylesheet" href="chung.css" />
+  </head>
+  <body>
+    <form id="form">
+      <label>Sổ <select id="book" required></select></label>
+      <label>Trích yếu <input id="summary" maxlength="500" /></label>
+      <p class="muted">Mỗi hồ sơ được một số trong mỗi sổ; bấm lại trả về đúng số đã cấp. Nếu biểu mẫu có trường “so_van_ban”, “ngay_van_ban” thì số và ngày được ghi vào hồ sơ.</p>
+      <div class="row"><button type="submit">Cấp số</button> <button type="button" class="secondary" id="close">Đóng</button></div>
+    </form>
+    <p id="status" aria-live="polite"></p>
+    <script type="module">
+      import { $, desktiny, h, server, show } from './mo-rong.js'
+      const context = await desktiny.context
+      const caseId = context.record.case_id
+      $('#close').addEventListener('click', () => desktiny.close(null))
+      try {
+        const data = await server(`/api/ho-so/${caseId}`)
+        $('#book').replaceChildren(...data.books.map((b) => h('option', { value: b.code }, `${b.name} (${b.code})`)))
+        $('#summary').value = data.case.title
+      } catch (error) {
+        show($('#status'), error.message, 'bad')
+      }
+      $('#form').addEventListener('submit', async (event) => {
+        event.preventDefault()
+        try {
+          const result = await server(`/api/ho-so/${caseId}/cap-so`, { method: 'POST', body: { so: $('#book').value, trich_yeu: $('#summary').value } })
+          desktiny.toast(`Số văn bản: ${result.entry.full_number}`)
+          desktiny.refresh()
+          desktiny.close({ so_van_ban: result.entry.full_number })
+        } catch (error) {
+          show($('#status'), error.message, 'bad')
+        }
+      })
+    </script>
+  </body>
+</html>

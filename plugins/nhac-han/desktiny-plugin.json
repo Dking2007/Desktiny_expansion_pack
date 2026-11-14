@@ -1,0 +1,43 @@
+{
+  "schema": "desktiny-plugin/1",
+  "id": "vn.mo-rong.nhac-han",
+  "name": "Nhắc hạn hồ sơ",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "authors": ["Desktiny Expansion Pack contributors"],
+  "description": "Theo dõi trường ngày hết hạn (hợp đồng lao động, giấy phép, chứng chỉ…) trong hồ sơ của các quy trình được chọn khi duyệt; nhắc người tạo hồ sơ trước 30, 7, 1 ngày và đúng ngày, phát sự kiện “sắp hết hạn” để quy trình tự tạo việc gia hạn.",
+  "base_url": "http://localhost:9205",
+  "requires": { "desktiny": ">=2" },
+  "permissions": ["cases.read", "cases.list", "notifications.send"],
+  "list_scope": { "forms": "ask" },
+  "health_endpoint": "/health",
+  "events_endpoint": "/events",
+  "emits": [
+    {
+      "type": "sap_het_han",
+      "title": "Hồ sơ sắp hết hạn",
+      "fields": { "ho_so": "case", "ngay_het_han": "date", "con_lai": "number" }
+    }
+  ],
+  "assistant_tools": [
+    {
+      "name": "ho_so_sap_het_han",
+      "description": "Các hồ sơ người đang hỏi xem được sắp hết hạn trong số ngày tới",
+      "endpoint": "/tools/sap-het-han",
+      "parameters": { "type": "object", "properties": { "so_ngay": { "type": "number", "title": "Trong bao nhiêu ngày tới" } } }
+    }
+  ],
+  "settings_schema": {
+    "type": "object",
+    "properties": {
+      "truong_ngay_het_han": { "type": "string", "title": "Mã trường ngày hết hạn trong biểu mẫu", "default": "ngay_het_han" },
+      "moc_nhac": { "type": "string", "title": "Nhắc trước bao nhiêu ngày (cách nhau bằng dấu phẩy)", "default": "30,7,1,0" },
+      "chu_ky_phut": { "type": "number", "title": "Quét mỗi bao nhiêu phút", "default": 60 }
+    },
+    "required": []
+  },
+  "ui": [
+    { "slot": "home.widget", "title": "Hồ sơ sắp hết hạn", "url": "/ui/widget.html", "height": 220 },
+    { "slot": "admin.page", "title": "Nhắc hạn hồ sơ", "url": "/ui/quan-tri.html", "height": 640 }
+  ]
+}

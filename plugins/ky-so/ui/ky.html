@@ -1,0 +1,50 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ký số</title>
+    <link rel="stylesheet" href="chung.css" />
+  </head>
+  <body>
+    <div id="pin"></div>
+    <form id="form" hidden>
+      <p class="muted">Chọn tài liệu cần ký. Phiếu xác nhận ký số (PDF) được gắn vào hồ sơ.</p>
+      <div id="files"></div>
+      <div class="row"><input id="code" type="password" inputmode="numeric" placeholder="PIN" required /><button type="submit">Ký</button><button type="button" id="close" class="secondary">Đóng</button></div>
+    </form>
+    <div id="done"></div>
+    <p id="status" aria-live="polite"></p>
+    <script type="module">
+      import { $, desktiny, h, server, show } from './mo-rong.js'
+      import { pinBox } from './pin.js'
+      const context = await desktiny.context
+      const caseId = context.record.case_id
+      $('#close').addEventListener('click', () => desktiny.close(null))
+      try {
+        if (await pinBox($('#pin'))) {
+          const data = await server(`/api/ho-so/${caseId}`)
+          $('#files').replaceChildren(...data.files.map((f) => h('label', { class: 'row', style: 'font-weight: 400' }, h('input', { type: 'checkbox', value: f.id, checked: true }), f.name)))
+          if (data.signatures.length) $('#done').replaceChildren(h('h2', {}, 'Đã ký'), ...data.signatures.map((s) => h('p', { class: 'muted' }, `${s.file_name} — ${s.signer_name}, ${s.signed_at.slice(0, 16).replace('T', ' ')} — mã ${s.code}`)))
+          $('#form').hidden = false
+        }
+      } catch (error) {
+        show($('#status'), error.message, 'bad')
+      }
+      $('#form').addEventListener('submit', async (event) => {
+        event.preventDefault()
+        const ids = [...$('#files').querySelectorAll('input:checked')].map((i) => i.value)
+        try {
+          const result = await server(`/api/ho-so/${caseId}/ky`, { method: 'POST', body: { pin: $('#code').value, file_ids: ids } })
+          desktiny.toast(`Đã ký ${result.signed} tệp; mã xác thực ${result.codes.join(', ')}.`)
+          desktiny.refresh()
+          desktiny.close(result)
+        } catch (error) {
+          show($('#status'), error.message, 'bad')
+        }
+      })
+    </script>
+  </body>
+</html>

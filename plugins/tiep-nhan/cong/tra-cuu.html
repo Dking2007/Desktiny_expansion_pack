@@ -1,0 +1,39 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tra cứu hồ sơ</title>
+    <link rel="stylesheet" href="cong.css" />
+  </head>
+  <body>
+    <header><h1>Tra cứu tình trạng hồ sơ</h1><nav><a href="nop.html">Nộp hồ sơ</a><a href="tra-cuu.html">Tra cứu</a></nav></header>
+    <form id="form">
+      <label>Mã tra cứu <input name="ma" required placeholder="TN-2611-ABC123" /></label>
+      <label>Mã bí mật <input name="ma_bi_mat" required inputmode="numeric" /></label>
+      <button type="submit">Tra cứu</button>
+    </form>
+    <div id="out" aria-live="polite"></div>
+    <script>
+      const out = document.getElementById('out')
+      document.getElementById('form').addEventListener('submit', async (event) => {
+        event.preventDefault()
+        const query = new URLSearchParams(new FormData(event.target))
+        const response = await fetch('api/tra-cuu?' + query)
+        const data = await response.json()
+        out.replaceChildren()
+        const card = document.createElement('div')
+        card.className = 'card'
+        const line = (text, cls) => { const p = document.createElement('p'); p.textContent = text; if (cls) p.className = cls; card.append(p) }
+        if (!response.ok) { line(data.message, 'bad'); return out.append(card) }
+        line(data.thu_tuc + ' — nộp ngày ' + data.ngay_nop)
+        line(data.trang_thai, 'code')
+        if (data.ma_ho_so) line('Mã hồ sơ: ' + data.ma_ho_so, 'muted')
+        for (const step of data.lich_su) line(step.luc.slice(0, 16).replace('T', ' ') + ' — ' + step.trang_thai, 'muted')
+        out.append(card)
+      })
+    </script>
+  </body>
+</html>
