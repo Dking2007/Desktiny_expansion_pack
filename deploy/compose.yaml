@@ -1,0 +1,84 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
+# The connected plugins' servers. Each gets the token and signing key Desktiny issued when it was approved
+# (Quản trị › Plugin › Duyệt quyền, shown once). Copy .env.example to .env and fill it in.
+#   docker compose -f deploy/compose.yaml --env-file deploy/.env up -d --build
+x-plugin: &plugin
+  build:
+    context: ..
+    dockerfile: deploy/Dockerfile
+  image: desktiny-expansion-plugins:1.0.0
+  restart: unless-stopped
+  read_only: true
+  tmpfs: [/tmp]
+  security_opt: ["no-new-privileges:true"]
+
+services:
+  cham-cong:
+    <<: *plugin
+    environment:
+      PLUGIN: cham-cong
+      PORT: "9201"
+      DESKTINY_URL: ${DESKTINY_URL:?}
+      DESKTINY_TOKEN: ${CHAM_CONG_TOKEN:-}
+      DESKTINY_SECRET: ${CHAM_CONG_SECRET:-}
+    ports: ["9201:9201"]
+    volumes: [cham-cong:/data]
+  luong-kpi:
+    <<: *plugin
+    environment:
+      PLUGIN: luong-kpi
+      PORT: "9202"
+      DESKTINY_URL: ${DESKTINY_URL:?}
+      DESKTINY_TOKEN: ${LUONG_KPI_TOKEN:-}
+      DESKTINY_SECRET: ${LUONG_KPI_SECRET:-}
+    ports: ["9202:9202"]
+    volumes: [luong-kpi:/data]
+  so-van-ban:
+    <<: *plugin
+    environment:
+      PLUGIN: so-van-ban
+      PORT: "9203"
+      DESKTINY_URL: ${DESKTINY_URL:?}
+      DESKTINY_TOKEN: ${SO_VAN_BAN_TOKEN:-}
+      DESKTINY_SECRET: ${SO_VAN_BAN_SECRET:-}
+    ports: ["9203:9203"]
+    volumes: [so-van-ban:/data]
+  ky-so:
+    <<: *plugin
+    environment:
+      PLUGIN: ky-so
+      PORT: "9204"
+      DESKTINY_URL: ${DESKTINY_URL:?}
+      DESKTINY_TOKEN: ${KY_SO_TOKEN:-}
+      DESKTINY_SECRET: ${KY_SO_SECRET:-}
+    ports: ["9204:9204"]
+    volumes: [ky-so:/data]
+  nhac-han:
+    <<: *plugin
+    environment:
+      PLUGIN: nhac-han
+      PORT: "9205"
+      DESKTINY_URL: ${DESKTINY_URL:?}
+      DESKTINY_TOKEN: ${NHAC_HAN_TOKEN:-}
+      DESKTINY_SECRET: ${NHAC_HAN_SECRET:-}
+    ports: ["9205:9205"]
+    volumes: [nhac-han:/data]
+  tiep-nhan:
+    <<: *plugin
+    environment:
+      PLUGIN: tiep-nhan
+      PORT: "9206"
+      DESKTINY_URL: ${DESKTINY_URL:?}
+      DESKTINY_TOKEN: ${TIEP_NHAN_TOKEN:-}
+      DESKTINY_SECRET: ${TIEP_NHAN_SECRET:-}
+    ports: ["9206:9206"]
+    volumes: [tiep-nhan:/data]
+
+volumes:
+  cham-cong:
+  luong-kpi:
+  so-van-ban:
+  ky-so:
+  nhac-han:
+  tiep-nhan:
