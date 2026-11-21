@@ -67,9 +67,38 @@ Chọn một cách:
 
 | Cách | Lệnh |
 |---|---|
-| Windows | **Bấm đúp `build.bat`** (xong sẽ mở thư mục `dist`) |
+| Windows | **Bấm đúp `build.bat`** → chọn từ danh sách (Enter = tất cả); xong sẽ mở thư mục `dist` |
 | VS Code | **Ctrl+Shift+B** → “Đóng gói (dist/*.zip)” |
 | Dòng lệnh | `python scripts/dong_goi.py` · `./build.sh` · `make build` |
+
+### Chọn gói, plugin cần đóng gói
+
+Bấm đúp `build.bat` sẽ hiện danh sách đánh số theo từng bản mở rộng. Gõ số hoặc tên, cách nhau bởi dấu cách; **Enter**
+không gõ gì là đóng gói tất cả:
+
+```
+  Bản mở rộng mot-cua-xa  (gõ “mot-cua-xa” để lấy cả bản)
+    1. Một cửa cấp xã  [gói giao diện, mot-cua-xa]
+    2. Đọc giấy tờ, điền sẵn hồ sơ  [plugin đóng gói, doc-giay-to]
+    …
+Nhập số hoặc tên, cách nhau bởi dấu cách (Enter = tất cả): 1 2 ky-so
+```
+
+Từ dòng lệnh, ghi tên sau lệnh (không ghi gì = tất cả):
+
+```sh
+build.bat nhan-su                  # cả bản mở rộng Nhân sự: gói + 3 plugin
+build.bat ky-so so-van-ban         # chỉ hai plugin
+build.bat goi-nhan-su              # chỉ gói giao diện (tên bản mở rộng trùng tên gói thì thêm goi-)
+python scripts/dong_goi.py --chon  # hiện danh sách như khi bấm đúp
+make build CHON="nhan-su ky-so"
+```
+
+Tên là tên thư mục của bản mở rộng, gói hoặc plugin (`plugin-<tên>` cũng được). Gói máy chủ chỉ chứa các plugin kết
+nối được chọn, và `HUONG-DAN-CAI.txt` ghi đúng lệnh `docker compose … up -d <các plugin đó>`. Chỉ chọn gói giao diện
+và plugin đóng gói thì không có gói máy chủ.
+
+### Đóng gói cho máy chủ thật
 
 Khi triển khai thật, chỉ cho plugin kết nối biết máy chủ của chúng ở đâu:
 
@@ -86,7 +115,7 @@ diện trỏ tới (logo, quy trình, mẫu, kiến thức) có thật và đún
 
 ### Kết quả trong `dist/`
 
-`dist/` được làm trống rồi ghi lại mỗi lần đóng gói. Mỗi bản mở rộng một thư mục, cài thư mục nào thì lấy đủ tệp ở đó:
+`dist/` được làm trống rồi ghi lại mỗi lần đóng gói (chỉ còn những gì vừa chọn). Mỗi bản mở rộng một thư mục, cài thư mục nào thì lấy đủ tệp ở đó:
 
 ```
 dist/
@@ -105,8 +134,7 @@ dist/
     └── may-chu-plugin-1.0.0.zip            mã máy chủ 6 plugin kết nối + Dockerfile + compose.yaml
 ```
 
-Gói máy chủ chung cho cả hai bản mở rộng; chỉ dùng một bản thì chỉ cần chạy các plugin của bản đó
-(`docker compose … up -d cham-cong luong-kpi nhac-han`).
+Đóng gói tất cả thì gói máy chủ chứa cả 6 plugin kết nối; chọn riêng một bản mở rộng thì chỉ chứa plugin của bản đó.
 
 Tên tệp có phiên bản lấy từ manifest (`version`). Cùng mã nguồn luôn cho ra cùng tệp .zip.
 

@@ -72,6 +72,37 @@ def test_host_points_connected_plugins_at_the_real_server(tmp_path):
     assert "base_url" not in read(tmp_path / "mot-cua-xa/plugin-tinh-han-1.0.0.zip", "desktiny-plugin.json")
 
 
+def test_only_the_chosen_packs_and_plugins_are_built(tmp_path):
+    built = {path for path, _, _ in dong_goi.build(out=tmp_path, only=["tinh-han", "plugin-cham-cong, ky-so"])}
+    assert built == {"mot-cua-xa/plugin-tinh-han-1.0.0.zip", "nhan-su/plugin-cham-cong-1.0.0.zip",
+                     "mot-cua-xa/plugin-ky-so-1.0.0.zip", "may-chu-plugin/may-chu-plugin-1.0.0.zip"}  # fmt: skip
+    # The server bundle holds only the chosen connected plugins, and the guide starts just those services.
+    server = names(tmp_path / "may-chu-plugin/may-chu-plugin-1.0.0.zip")
+    assert "expansion/nhan-su/plugins/cham-cong/server.py" in server and "expansion/mot-cua-xa/plugins/ky-so/server.py" in server
+    assert not any("so-van-ban" in path or "luong-kpi" in path for path in server)
+    assert "up -d --build ky-so cham-cong" in (tmp_path / "HUONG-DAN-CAI.txt").read_text(encoding="utf-8")
+
+
+def test_an_expansion_name_takes_all_of_it_and_goi_takes_only_the_pack(tmp_path):
+    whole = dong_goi.select(["nhan-su"])
+    assert whole.packs == ["nhan-su"] and whole.plugins == ["cham-cong", "luong-kpi", "nhac-han"]
+    assert dong_goi.select(["goi-nhan-su"]).plugins == []
+    # Packaged plugins only: no server bundle, no docker lines in the guide.
+    built = {path for path, _, _ in dong_goi.build(out=tmp_path, only=["goi-mot-cua-xa", "doc-giay-to"])}
+    assert built == {"mot-cua-xa/goi-mot-cua-xa-1.0.0.zip", "mot-cua-xa/plugin-doc-giay-to-1.0.0.zip"}
+    assert "docker" not in (tmp_path / "HUONG-DAN-CAI.txt").read_text(encoding="utf-8")
+
+
+def test_menu_numbers_follow_the_catalog_and_unknown_names_are_refused(tmp_path):
+    items = dong_goi.catalog()
+    assert [i.name for i in items[:2]] == ["mot-cua-xa", "doc-giay-to"]  # expansion by expansion, pack first
+    number = next(n for n, item in enumerate(items, 1) if item.name == "so-van-ban")
+    assert dong_goi.select([f"{number} so-van-ban"]).plugins == ["so-van-ban"]  # once, even if chosen twice
+    with pytest.raises(SystemExit, match="Không có: khong-co"):
+        dong_goi.build(out=tmp_path / "dist", only=["khong-co"])
+    assert not (tmp_path / "dist").exists()
+
+
 def fake_root(tmp_path, monkeypatch) -> Path:
     root = tmp_path / "goc"
     for part in ("sdk", "lib", "deploy"):

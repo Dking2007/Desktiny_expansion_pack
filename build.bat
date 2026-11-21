@@ -1,7 +1,8 @@
 @echo off
 rem SPDX-License-Identifier: Apache-2.0
 rem SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
-rem Đóng gói mọi gói giao diện và plugin thành .zip trong dist\ (bấm đúp, hoặc: build.bat --host plugins.co-quan.vn)
+rem Đóng gói gói giao diện và plugin thành .zip trong dist\. Bấm đúp: chọn từ danh sách.
+rem Hoặc: build.bat [nhan-su ky-so ...] [--host plugins.co-quan.vn]
 setlocal
 chcp 65001 >nul
 set PYTHONIOENCODING=utf-8
@@ -16,7 +17,8 @@ if not defined PY (
   goto :end
 )
 
-%PY% scripts\dong_goi.py %*
+rem Không ghi tên nào thì hiện danh sách để chọn; Enter = đóng gói tất cả.
+if "%~1"=="" (%PY% scripts\dong_goi.py --chon) else (%PY% scripts\dong_goi.py %*)
 set CODE=%ERRORLEVEL%
 if "%CODE%"=="0" if "%~1"=="" start "" explorer "%~dp0dist"
 

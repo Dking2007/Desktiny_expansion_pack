@@ -21,7 +21,10 @@ Output:
 * Every manifest is checked first with the rules Desktiny applies on upload; nothing is written if one fails.
   Pack and plugin folder names are unique across expansions.
 
-    python scripts/dong_goi.py [--host plugins.co-quan.vn]      (or build.bat / ./build.sh / make build)
+    python scripts/dong_goi.py [TÊN ...] [--chon] [--host plugins.co-quan.vn]   (or build.bat / ./build.sh / make build)
+
+TÊN picks what to build (all by default): an expansion (all of it), a pack or a plugin (`goi-<gói>`, `plugin-<plugin>`
+or the bare name). `--chon` asks from a numbered menu instead (build.bat does this when given no arguments).
 """
 
 from __future__ import annotations
@@ -34,6 +37,7 @@ import sys
 import tomllib
 import zipfile
 from collections import Counter
+from dataclasses import dataclass, field
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -149,9 +153,9 @@ def connected_plugin_files(name: str, host: str | None = None) -> dict[str, byte
     return files
 
 
-def server_files() -> dict[str, bytes]:
+def server_files(connected: list[str] | None = None) -> dict[str, bytes]:
     """What the plugin servers need to run: the server kit, the SDK, the connected plugins (same layout), Docker files."""
-    _, connected = plugins()
+    connected = plugins()[1] if connected is None else connected
     files: dict[str, bytes] = {}
     for part in ("lib", "sdk", "deploy"):
         files |= {f"{part}/{path}": data for path, data in folder(ROOT / part).items()}
@@ -199,7 +203,8 @@ def pack_problems(name: str) -> list[str]:
     return found
 
 
-def all_problems() -> dict[str, list[str]]:
+def layout_problems() -> dict[str, list[str]]:
+    """No expansion at all, or a pack/plugin name used by two expansions (names must pick one folder)."""
     found: dict[str, list[str]] = {}
     if not expansions():
         found["expansion/"] = ["Không có bản mở rộng nào (expansion/<tên>/packs, expansion/<tên>/plugins)."]
@@ -207,22 +212,102 @@ def all_problems() -> dict[str, list[str]]:
         twice = [name for name, count in Counter(p.parent.name for p in _found(kind, marker)).items() if count > 1]
         if twice:
             found[f"expansion/*/{kind}"] = [f"Tên trùng giữa các bản mở rộng: {', '.join(sorted(twice))}."]
+    return found
+
+
+def all_problems(chosen: Selection | None = None) -> dict[str, list[str]]:
+    """What stops the build, for the chosen packs and plugins (all of them by default)."""
+    found = layout_problems()
     if found:
         return found
-    for name in packs():
+    chosen = chosen or select()
+    for name in chosen.packs:
         found[pack_dir(name).relative_to(ROOT).as_posix()] = pack_problems(name)
-    packaged, connected = plugins()
-    for name in packaged + connected:
+    packaged = plugins()[0]
+    for name in chosen.plugins:
         base = plugin_dir(name)
         found[base.relative_to(ROOT).as_posix()] = plugin_problems(read_json(base / "desktiny-plugin.json"),
                                                                    base if name in packaged else None)  # fmt: skip
     return {where: issues for where, issues in found.items() if issues}
 
 
+# ---- Choosing ----------------------------------------------------------------------------------------
+
+
+@dataclass
+class Item:
+    kind: str  # "goi" or "plugin"
+    name: str
+    expansion: str
+    title: str
+
+
+@dataclass
+class Selection:
+    packs: list[str] = field(default_factory=list)
+    plugins: list[str] = field(default_factory=list)
+
+
+def catalog() -> list[Item]:
+    """Everything that can be built, expansion by expansion: its packs, then its plugins."""
+    items = []
+    for expansion in expansions():
+        items += [Item("goi", name, expansion, read_json(pack_dir(name) / "desktiny-pack.json").get("name", name))
+                  for name in packs(expansion)]  # fmt: skip
+        packaged, connected = plugins(expansion)
+        items += [Item("plugin", name, expansion, manifest(name).get("name", name)) for name in packaged + connected]
+    return items
+
+
+def select(choices: list[str] | None = None) -> Selection:
+    """The packs and plugins named by `choices` (all when empty). A choice is a number from the menu, an expansion
+    (all of it), `goi-<gói>` / `plugin-<plugin>`, or a bare pack or plugin name; commas and spaces separate them."""
+    items = catalog()
+    words = [w for choice in choices or [] for w in choice.replace(",", " ").split()]
+    if not words:
+        chosen = items
+    else:
+        chosen, unknown = [], []
+        for word in words:
+            word = word.strip().lower().removesuffix(".zip")
+            if word.isdigit() and 1 <= int(word) <= len(items):
+                found = [items[int(word) - 1]]
+            elif word in expansions():
+                found = [item for item in items if item.expansion == word]
+            else:
+                found = [item for item in items if word in (item.name, f"{item.kind}-{item.name}")]
+            chosen += found
+            unknown += [] if found else [word]
+        if unknown:
+            names = ", ".join([*expansions(), *(item.name for item in items)])
+            raise SystemExit(f"✗ Không có: {', '.join(unknown)}. Chọn trong: {names}.")
+    picked = [item for item in items if item in chosen]  # catalog order, once each
+    return Selection([i.name for i in picked if i.kind == "goi"], [i.name for i in picked if i.kind == "plugin"])
+
+
+def ask() -> list[str]:
+    """The menu shown by build.bat: numbered packs and plugins per expansion; Enter alone builds everything."""
+    _, connected = plugins()
+    print("Chọn những gì cần đóng gói:\n")
+    expansion = None
+    for number, item in enumerate(catalog(), 1):
+        if item.expansion != expansion:
+            expansion = item.expansion
+            print(f"  Bản mở rộng {expansion}  (gõ “{expansion}” để lấy cả bản)")
+        kind = "gói giao diện" if item.kind == "goi" else ("plugin kết nối" if item.name in connected else "plugin đóng gói")
+        print(f"   {number:>2}. {item.title}  [{kind}, {item.name}]")
+    try:
+        answer = input("\nNhập số hoặc tên, cách nhau bởi dấu cách (Enter = tất cả): ")
+    except EOFError:
+        answer = ""
+    print()
+    return [answer]
+
+
 # ---- Build -------------------------------------------------------------------------------------------
 
 
-def guide(built: list[tuple[str, str, str]], host: str | None) -> str:
+def guide(built: list[tuple[str, str, str]], host: str | None, services: list[str]) -> str:
     """HUONG-DAN-CAI.txt: each file and where it goes, in the order to install them."""
     lines = ["BỘ MỞ RỘNG DESKTINY — CÁC TỆP CẦN CÀI", "=" * 40, "",
              "Mỗi thư mục là một bản mở rộng. Cài gói giao diện trước, rồi plugin:",
@@ -234,25 +319,29 @@ def guide(built: list[tuple[str, str, str]], host: str | None) -> str:
             continue
         if directory == SERVER_DIR:
             lines += ["MÁY CHỦ PLUGIN KẾT NỐI — giải nén trên máy chủ, điền deploy/.env, chạy:",
-                      "   docker compose -f deploy/compose.yaml --env-file deploy/.env up -d --build"]  # fmt: skip
+                      "   docker compose -f deploy/compose.yaml --env-file deploy/.env up -d --build " + " ".join(services)]  # fmt: skip
         else:
             lines.append(f"BẢN MỞ RỘNG: {directory}")
         lines += [f"   - {path}   [{kind}] {note}".rstrip() for path, kind, note in rows]
         lines.append("")
-    lines += [
-        "Plugin kết nối: sau khi Duyệt quyền, Desktiny hiện TOKEN và KHOÁ KÝ một lần — chép vào deploy/.env",
-        "(<TÊN>_TOKEN, <TÊN>_SECRET) rồi chạy lại docker compose. Thêm máy chủ plugin vào PLUGIN_ALLOWED_HOSTS",
-        "và PLUGIN_FRAME_SOURCES của Desktiny.",
-        f"base_url của plugin kết nối: {'trỏ tới ' + host if host else 'http://localhost:92xx (đóng gói lại với --host <máy chủ> khi triển khai thật)'}.",
-        "",
-        "Chi tiết: README.md của bộ mở rộng.",
-    ]  # fmt: skip
+    if services:
+        lines += [
+            "Plugin kết nối: sau khi Duyệt quyền, Desktiny hiện TOKEN và KHOÁ KÝ một lần — chép vào deploy/.env",
+            "(<TÊN>_TOKEN, <TÊN>_SECRET) rồi chạy lại docker compose. Thêm máy chủ plugin vào PLUGIN_ALLOWED_HOSTS",
+            "và PLUGIN_FRAME_SOURCES của Desktiny.",
+            f"base_url của plugin kết nối: {'trỏ tới ' + host if host else 'http://localhost:92xx (đóng gói lại với --host <máy chủ> khi triển khai thật)'}.",
+            "",
+        ]  # fmt: skip
+    lines.append("Chi tiết: README.md của bộ mở rộng.")
     return "\n".join(lines) + "\n"
 
 
-def build(host: str | None = None, out: Path = DIST) -> list[tuple[str, str, str]]:
-    """Check, then write every zip under `out`; returns (path in out, kind, note) for each file."""
-    issues = all_problems()
+def build(host: str | None = None, out: Path = DIST, only: list[str] | None = None) -> list[tuple[str, str, str]]:
+    """Check, then write the zips of the chosen packs and plugins (`only`, see `select`; all by default) under `out`;
+    returns (path in out, kind, note) for each file."""
+    issues = layout_problems()
+    chosen = None if issues else select(only)
+    issues = issues or all_problems(chosen)
     if issues:
         message = "\n".join(f"  {where}: {issue}" for where, found in issues.items() for issue in found)
         raise SystemExit(f"✗ Chưa đóng gói được, cần sửa:\n{message}")
@@ -265,21 +354,21 @@ def build(host: str | None = None, out: Path = DIST) -> list[tuple[str, str, str
         (out / path).write_bytes(data)
         built.append((path, kind, note))
 
-    for expansion in expansions():
-        for name in packs(expansion):
-            data = read_json(pack_dir(name) / "desktiny-pack.json")
-            write(f"{expansion}/goi-{name}-{data['version']}.zip", zipped(pack_files(name)), "gói giao diện", data["name"])
-        packaged, connected = plugins(expansion)
-        for name in packaged + connected:
-            data = manifest(name, host)
-            files = packaged_plugin_files(name) if name in packaged else connected_plugin_files(name, host)
-            kind = "plugin đóng gói, không cần máy chủ" if name in packaged else f"plugin kết nối, máy chủ {data['base_url']}"
-            write(f"{expansion}/plugin-{name}-{data['version']}.zip", zipped(files), kind, data["name"])
-    _, connected = plugins()
-    if connected:
-        write(f"{SERVER_DIR}/may-chu-plugin-{project_version()}.zip", zipped(server_files()), "máy chủ",
-              f"{len(connected)} plugin kết nối: " + ", ".join(connected))  # fmt: skip
-    (out / "HUONG-DAN-CAI.txt").write_text(guide(built, host), encoding="utf-8")
+    for name in chosen.packs:
+        data = read_json(pack_dir(name) / "desktiny-pack.json")
+        write(f"{expansion_of(pack_dir(name))}/goi-{name}-{data['version']}.zip", zipped(pack_files(name)),
+              "gói giao diện", data["name"])  # fmt: skip
+    packaged = plugins()[0]
+    servers = [name for name in chosen.plugins if name not in packaged]
+    for name in chosen.plugins:
+        data = manifest(name, host)
+        files = packaged_plugin_files(name) if name in packaged else connected_plugin_files(name, host)
+        kind = "plugin đóng gói, không cần máy chủ" if name in packaged else f"plugin kết nối, máy chủ {data['base_url']}"
+        write(f"{expansion_of(plugin_dir(name))}/plugin-{name}-{data['version']}.zip", zipped(files), kind, data["name"])
+    if servers:
+        write(f"{SERVER_DIR}/may-chu-plugin-{project_version()}.zip", zipped(server_files(servers)), "máy chủ",
+              f"{len(servers)} plugin kết nối: " + ", ".join(servers))  # fmt: skip
+    (out / "HUONG-DAN-CAI.txt").write_text(guide(built, host, servers), encoding="utf-8")
     return built
 
 
@@ -287,11 +376,18 @@ def main():
     for stream in (sys.stdout, sys.stderr):
         stream.reconfigure(encoding="utf-8")  # Windows consoles default to a code page without Vietnamese
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("chon", nargs="*", metavar="TÊN",
+                        help="Chỉ đóng gói những thứ này: bản mở rộng (cả bản), gói, plugin (vd. nhan-su ky-so). "
+                             "Bỏ trống = tất cả.")  # fmt: skip
+    parser.add_argument("--chon", dest="menu", action="store_true", help="Hiện danh sách để chọn (build.bat dùng).")
     parser.add_argument("--host", "--base-url-host", dest="host",
                         help="Máy chủ thật của các plugin kết nối, ví dụ plugins.co-quan.vn")  # fmt: skip
     parser.add_argument("--out", type=Path, default=DIST, help="Thư mục kết quả (mặc định dist/).")
     args = parser.parse_args()
-    built = build(args.host, args.out)
+    only = args.chon
+    if args.menu and not only and not layout_problems():
+        only = ask()
+    built = build(args.host, args.out, only)
     for path, kind, note in built:
         print(f"✓ {path}  ({kind})  {note}")
     print(f"\nĐã đóng gói {len(built)} tệp vào {args.out}. Xem {args.out / 'HUONG-DAN-CAI.txt'} để biết cài vào đâu.")
