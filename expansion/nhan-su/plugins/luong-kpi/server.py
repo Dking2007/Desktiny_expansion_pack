@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parents[1] / "lib"))
+sys.path.insert(0, str(HERE.parents[3] / "lib"))
 
 from mo_rong import App, HttpError, Response, Settings, Store  # noqa: E402
 from mo_rong.vn import month_of  # noqa: E402

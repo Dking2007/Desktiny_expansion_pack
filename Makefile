@@ -4,13 +4,13 @@ PYTHON ?= python3
 # This folder sits inside the Desktiny source tree.
 DESKTINY_DIR ?= ..
 
-.PHONY: help test test-js test-desktiny lint dist up
+.PHONY: help build test test-js test-desktiny lint dist up
 help:
+	@echo "build / dist    kiểm rồi đóng gói mọi gói giao diện và plugin thành .zip trong dist/ (HOST=… cho máy chủ thật)"
 	@echo "test            test máy chủ plugin (Python)"
 	@echo "test-js         test mã trang của plugin đóng gói (Node 22)"
 	@echo "test-desktiny   cài thật mọi gói và plugin vào Desktiny ở DESKTINY_DIR rồi chạy luồng"
 	@echo "lint            ruff"
-	@echo "dist            đóng gói vào dist/ (gói .zip, plugin đóng gói .zip, manifest plugin kết nối)"
 	@echo "up              chạy máy chủ các plugin kết nối (deploy/compose.yaml, cần deploy/.env)"
 
 test:
@@ -25,8 +25,8 @@ test-desktiny:
 lint:
 	$(PYTHON) -m ruff check .
 
-dist:
-	$(PYTHON) scripts/dong_goi.py $(if $(HOST),--base-url-host $(HOST))
+build dist:
+	$(PYTHON) scripts/dong_goi.py $(if $(HOST),--host $(HOST))
 
 up:
 	docker compose -f deploy/compose.yaml --env-file deploy/.env up -d --build

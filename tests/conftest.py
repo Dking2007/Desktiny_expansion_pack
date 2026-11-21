@@ -23,8 +23,9 @@ SECRET = "khoa-ky-thu"
 
 
 def load(plugin: str):
-    """The plugin's server module (plugins/<name>/server.py)."""
-    spec = importlib.util.spec_from_file_location(f"plugin_{plugin.replace('-', '_')}", ROOT / "plugins" / plugin / "server.py")
+    """The plugin's server module (expansion/<bản mở rộng>/plugins/<name>/server.py)."""
+    (path,) = ROOT.glob(f"expansion/*/plugins/{plugin}/server.py")
+    spec = importlib.util.spec_from_file_location(f"plugin_{plugin.replace('-', '_')}", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module

@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
+*.bat text eol=crlf
+*.sh text eol=lf

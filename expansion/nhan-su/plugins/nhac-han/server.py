@@ -16,7 +16,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parents[1] / "lib"))
+sys.path.insert(0, str(HERE.parents[3] / "lib"))
 
 from desktiny_plugin import Client, PluginError  # noqa: E402
 from mo_rong import App, Response, Settings, Store  # noqa: E402

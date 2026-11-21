@@ -134,8 +134,9 @@ def test_every_plugin_installs_and_its_pages_and_steps_are_offered(world, tmp_pa
         assert installed.status_code == 201, (name, installed.text)
         approve(director, installed.json()["id"], installed.json()["revision"], json.loads(dong_goi.packaged_plugin_files(name)["desktiny-plugin.json"]))
     for name in connected:
+        # The .zip the build hands out (manifest only); the flow tests below upload the bare manifest.
         manifest = dong_goi.manifest(name)
-        installed = upload(director, "/plugins", f"{name}.json", json.dumps(manifest).encode(), "application/json")
+        installed = upload(director, "/plugins", f"{name}.zip", dong_goi.zipped(dong_goi.connected_plugin_files(name)))
         assert installed.status_code == 201, (name, installed.text)
         approve(director, manifest["id"], installed.json()["revision"], manifest)
     rows = {row["id"]: row for row in director.get(API + "/plugins").json()["items"]}

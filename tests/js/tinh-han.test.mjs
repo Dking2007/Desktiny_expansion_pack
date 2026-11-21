@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { addWorkingDays, iso, timeLimitFor, workingDaysBetween } from '../../plugins/tinh-han/ui/ngay-lam-viec.js'
+import { addWorkingDays, iso, timeLimitFor, workingDaysBetween } from '../../expansion/mot-cua-xa/plugins/tinh-han/ui/ngay-lam-viec.js'
 
 test('weekends and holidays are skipped, moved workdays count', () => {
   // Friday 24/04/2026 + 1 working day: Monday 27/04 is the Hùng Kings day off, so Tuesday 28/04.

@@ -6,3 +6,5 @@ dist/
 data/
 *.sqlite3
 deploy/.env
+.vscode/
+CLAUDE.md

@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { deflateSync } from 'node:zlib'
-import { recognize, textOf } from '../../plugins/doc-giay-to/ui/nhan-dang.js'
+import { recognize, textOf } from '../../expansion/mot-cua-xa/plugins/doc-giay-to/ui/nhan-dang.js'
 
 const CARD = `CĂN CƯỚC CÔNG DÂN
 Số / No.: 001190012345

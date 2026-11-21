@@ -22,6 +22,7 @@ import json
 import mimetypes
 import os
 import re
+import sys
 import threading
 import time
 from collections.abc import Callable
@@ -273,5 +274,6 @@ class App:
 
     def run(self, port: int):
         port = int(os.environ.get("PORT", port))
+        sys.stdout.reconfigure(encoding="utf-8")  # a Windows console's code page has no Vietnamese
         print(f"[{self.name}] đang chạy ở cổng {port}", flush=True)
         self.server(port).serve_forever()
