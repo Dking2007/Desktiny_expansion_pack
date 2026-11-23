@@ -19,6 +19,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[3] / "lib"))
 
+from desktiny_plugin import PluginError  # noqa: E402
 from mo_rong import App, HttpError, Response, Settings, Store  # noqa: E402
 
 VN = timezone(timedelta(hours=7))
@@ -125,7 +126,22 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
             sql, args = sql + " AND book = ?", [*args, request.query["so"].upper()]
         if request.query.get("q"):
             sql, args = sql + " AND (summary LIKE ? OR full_number LIKE ?)", [*args, f"%{request.query['q']}%", f"%{request.query['q']}%"]
-        return db.all(sql + " ORDER BY book, number DESC LIMIT 1000", *args)
+        rows = db.all(sql + " ORDER BY book, number DESC LIMIT 1000", *args)
+        if (request.viewer.get("context") or {}).get("slot") == "admin.page":
+            return rows  # the whole register, for the organisation's managers
+        # Everyone else sees the numbers of dossiers they may open, and those they issued themselves.
+        client, name, seen = app.as_viewer(request), request.viewer["user"]["display_name"], {}
+
+        def may_open(case_id: str) -> bool:
+            if case_id not in seen:
+                try:
+                    client.case(case_id)
+                    seen[case_id] = True
+                except PluginError:
+                    seen[case_id] = False
+            return seen[case_id]
+
+        return [row for row in rows if row["issued_by"] == name or (row["case_id"] and may_open(row["case_id"]))]
 
     @app.route("GET", "/api/so", viewer=True)
     def registers(request):

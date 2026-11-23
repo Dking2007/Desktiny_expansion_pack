@@ -52,3 +52,20 @@ def test_the_dossier_button_numbers_once_writes_the_fields_and_cancelled_numbers
     listed = call(app, "GET", "/api/so", session="phien-an").data["entries"]
     assert {e["state"] for e in listed} == {"issued", "cancelled"}
     assert call(app, "GET", "/api/ho-so/khong-co", session="phien-an").status == 404
+
+
+def test_people_see_only_numbers_of_dossiers_they_may_open_and_managers_see_all(make_app, desktiny):
+    app = make_app("so-van-ban")
+    for case_id in ("hs-a", "hs-b"):
+        desktiny.cases[case_id] = {"id": case_id, "title": f"Hồ sơ {case_id}", "payload": {}, "form": {"fields": []}}
+    call(app, "POST", "/api/ho-so/hs-a/cap-so", {"so": "QD"}, "phien-an")
+    call(app, "POST", "/api/ho-so/hs-b/cap-so", {"so": "QD"}, "phien-binh")
+    del desktiny.cases["hs-a"]  # An's dossier is no longer one Bình (the fake: anyone) may open
+    seen = [e["case_id"] for e in call(app, "GET", "/api/so", session="phien-binh").data["entries"]]
+    assert seen == ["hs-b"]
+    mine = [e["case_id"] for e in call(app, "GET", "/api/so", session="phien-an").data["entries"]]
+    assert set(mine) == {"hs-a", "hs-b"}  # An issued hs-a, and may open hs-b
+    everything = call(app, "GET", "/api/so", session="phien-qt").data["entries"]
+    assert len(everything) == 2
+    export = call(app, "GET", "/api/xuat", session="phien-binh").body.decode()
+    assert "hs-a" not in export and "Hồ sơ hs-a" not in export
