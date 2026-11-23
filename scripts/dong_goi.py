@@ -6,6 +6,7 @@ Sources, one folder per expansion:
 
     expansion/<bản mở rộng>/packs/<gói>/desktiny-pack.json
     expansion/<bản mở rộng>/plugins/<plugin>/desktiny-plugin.json   (+ server.py for a connected plugin)
+    expansion/<bản mở rộng>/dung-chung.json   {"plugins": [...]}: plugins of other expansions this one also uses
 
 Output:
 
@@ -20,6 +21,8 @@ Output:
   `--host` rewrites `base_url` (http://localhost:92xx) for a real deployment.
 * Every manifest is checked first with the rules Desktiny applies on upload; nothing is written if one fails.
   Pack and plugin folder names are unique across expansions.
+* An expansion may borrow plugins from another (`dung-chung.json`) instead of copying them: building it also
+  builds those plugins, and their zips land in its own folder too, so each dist/<bản mở rộng>/ is complete.
 
     python scripts/dong_goi.py [TÊN ...] [--chon] [--host plugins.co-quan.vn]   (or build.bat / ./build.sh / make build)
 
@@ -102,6 +105,12 @@ def plugin_dir(name: str) -> Path:
 def expansion_of(path: Path) -> str:
     """expansion/<bản mở rộng>/<packs|plugins>/<tên> → <bản mở rộng>."""
     return path.relative_to(ROOT / "expansion").parts[0]
+
+
+def borrowed(expansion: str) -> list[str]:
+    """Plugins of other expansions that `expansion` also uses (its dung-chung.json), in the order written there."""
+    path = ROOT / "expansion" / expansion / "dung-chung.json"
+    return list(read_json(path).get("plugins", [])) if path.is_file() else []
 
 
 def packs(expansion: str | None = None) -> list[str]:
@@ -212,6 +221,16 @@ def layout_problems() -> dict[str, list[str]]:
         twice = [name for name, count in Counter(p.parent.name for p in _found(kind, marker)).items() if count > 1]
         if twice:
             found[f"expansion/*/{kind}"] = [f"Tên trùng giữa các bản mở rộng: {', '.join(sorted(twice))}."]
+    every = {p.parent.name: expansion_of(p.parent) for p in _found("plugins", "desktiny-plugin.json")}
+    for expansion in expansions():
+        try:
+            names = borrowed(expansion)
+        except (ValueError, AttributeError) as exc:
+            found[f"expansion/{expansion}/dung-chung.json"] = [f"Không đọc được: {exc}"]
+            continue
+        wrong = [f"Không có plugin “{name}” ở bản mở rộng khác." for name in names if every.get(name) in (None, expansion)]
+        if wrong:
+            found[f"expansion/{expansion}/dung-chung.json"] = wrong
     return found
 
 
@@ -246,6 +265,8 @@ class Item:
 class Selection:
     packs: list[str] = field(default_factory=list)
     plugins: list[str] = field(default_factory=list)
+    # Expansions whose own folder gets zips: those something was chosen from, or that were named.
+    folders: list[str] = field(default_factory=list)
 
 
 def catalog() -> list[Item]:
@@ -264,8 +285,9 @@ def select(choices: list[str] | None = None) -> Selection:
     (all of it), `goi-<gói>` / `plugin-<plugin>`, or a bare pack or plugin name; commas and spaces separate them."""
     items = catalog()
     words = [w for choice in choices or [] for w in choice.replace(",", " ").split()]
+    named: set[str] = set()
     if not words:
-        chosen = items
+        chosen, named = items, set(expansions())
     else:
         chosen, unknown = [], []
         for word in words:
@@ -273,7 +295,9 @@ def select(choices: list[str] | None = None) -> Selection:
             if word.isdigit() and 1 <= int(word) <= len(items):
                 found = [items[int(word) - 1]]
             elif word in expansions():
-                found = [item for item in items if item.expansion == word]
+                found = [item for item in items if item.expansion == word
+                         or (item.kind == "plugin" and item.name in borrowed(word))]  # fmt: skip
+                named.add(word)
             else:
                 found = [item for item in items if word in (item.name, f"{item.kind}-{item.name}")]
             chosen += found
@@ -282,7 +306,10 @@ def select(choices: list[str] | None = None) -> Selection:
             names = ", ".join([*expansions(), *(item.name for item in items)])
             raise SystemExit(f"✗ Không có: {', '.join(unknown)}. Chọn trong: {names}.")
     picked = [item for item in items if item in chosen]  # catalog order, once each
-    return Selection([i.name for i in picked if i.kind == "goi"], [i.name for i in picked if i.kind == "plugin"])
+    # A plugin pulled in only because a named expansion borrows it does not open its home expansion's folder.
+    direct = {item.expansion for item in picked if not any(item.name in borrowed(n) for n in named) or item.expansion in named}
+    folders = [e for e in expansions() if e in named or e in direct]
+    return Selection([i.name for i in picked if i.kind == "goi"], [i.name for i in picked if i.kind == "plugin"], folders)
 
 
 def ask() -> list[str]:
@@ -293,7 +320,9 @@ def ask() -> list[str]:
     for number, item in enumerate(catalog(), 1):
         if item.expansion != expansion:
             expansion = item.expansion
-            print(f"  Bản mở rộng {expansion}  (gõ “{expansion}” để lấy cả bản)")
+            shared = borrowed(expansion)
+            also = f"; dùng chung: {', '.join(shared)}" if shared else ""
+            print(f"  Bản mở rộng {expansion}  (gõ “{expansion}” để lấy cả bản{also})")
         kind = "gói giao diện" if item.kind == "goi" else ("plugin kết nối" if item.name in connected else "plugin đóng gói")
         print(f"   {number:>2}. {item.title}  [{kind}, {item.name}]")
     try:
@@ -365,7 +394,11 @@ def build(host: str | None = None, out: Path = DIST, only: list[str] | None = No
         data = manifest(name, host)
         files = packaged_plugin_files(name) if name in packaged else connected_plugin_files(name, host)
         kind = "plugin đóng gói, không cần máy chủ" if name in packaged else f"plugin kết nối, máy chủ {data['base_url']}"
-        write(f"{expansion_of(plugin_dir(name))}/plugin-{name}-{data['version']}.zip", zipped(files), kind, data["name"])
+        home = expansion_of(plugin_dir(name))
+        targets = [e for e in chosen.folders if e == home or name in borrowed(e)]
+        for target in targets or [home]:
+            note = data["name"] if target == home else f"{data['name']} (dùng chung với {home}; đã cài thì bỏ qua)"
+            write(f"{target}/plugin-{name}-{data['version']}.zip", zipped(files), kind, note)
     if servers:
         write(f"{SERVER_DIR}/may-chu-plugin-{project_version()}.zip", zipped(server_files(servers)), "máy chủ",
               f"{len(servers)} plugin kết nối: " + ", ".join(servers))  # fmt: skip

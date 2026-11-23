@@ -32,12 +32,15 @@ def test_each_expansion_gets_its_pack_and_plugins_as_zips_with_an_install_guide(
     built = dong_goi.build(out=out)
     paths = {path for path, _, _ in built}
     assert not (out / "cu.txt").exists()  # the folder is emptied first
-    assert dong_goi.expansions() == ["mot-cua-xa", "nhan-su"]
+    assert dong_goi.expansions() == ["mot-cua-xa", "nhan-su", "van-thu"]
     assert {
         "nhan-su/goi-nhan-su-1.1.0.zip", "nhan-su/plugin-cham-cong-1.0.0.zip", "nhan-su/plugin-luong-kpi-1.0.0.zip",
         "nhan-su/plugin-nhac-han-1.0.0.zip", "mot-cua-xa/goi-mot-cua-xa-1.1.0.zip", "mot-cua-xa/plugin-so-van-ban-1.0.0.zip",
         "mot-cua-xa/plugin-ky-so-1.0.0.zip", "mot-cua-xa/plugin-tiep-nhan-1.0.0.zip", "mot-cua-xa/plugin-tinh-han-1.0.0.zip",
-        "mot-cua-xa/plugin-doc-giay-to-1.0.0.zip", "may-chu-plugin/may-chu-plugin-1.1.0.zip",
+        "mot-cua-xa/plugin-doc-giay-to-1.0.0.zip", "van-thu/goi-van-thu-1.0.0.zip", "van-thu/plugin-so-van-ban-den-1.0.0.zip",
+        # Văn thư borrows these from Một cửa: the same zips are also in its own folder.
+        "van-thu/plugin-so-van-ban-1.0.0.zip", "van-thu/plugin-ky-so-1.0.0.zip", "van-thu/plugin-tinh-han-1.0.0.zip",
+        "may-chu-plugin/may-chu-plugin-1.1.0.zip",
     } == paths  # fmt: skip
     guide = (out / "HUONG-DAN-CAI.txt").read_text(encoding="utf-8")
     assert all(path in guide for path in paths)
@@ -93,6 +96,20 @@ def test_an_expansion_name_takes_all_of_it_and_goi_takes_only_the_pack(tmp_path)
     assert "docker" not in (tmp_path / "HUONG-DAN-CAI.txt").read_text(encoding="utf-8")
 
 
+def test_a_borrowing_expansion_builds_complete_without_opening_the_lenders_folder(tmp_path):
+    chosen = dong_goi.select(["van-thu"])
+    assert chosen.packs == ["van-thu"] and chosen.folders == ["van-thu"]
+    assert set(chosen.plugins) == {"so-van-ban", "ky-so", "tinh-han", "so-van-ban-den"}
+    built = {path for path, _, _ in dong_goi.build(out=tmp_path, only=["van-thu"])}
+    assert all(path.startswith(("van-thu/", "may-chu-plugin/")) for path in built)
+    assert (tmp_path / "van-thu/plugin-ky-so-1.0.0.zip").read_bytes() == dong_goi.zipped(dong_goi.connected_plugin_files("ky-so"))
+    server = names(tmp_path / "may-chu-plugin/may-chu-plugin-1.1.0.zip")
+    assert {"expansion/van-thu/plugins/so-van-ban-den/server.py", "expansion/mot-cua-xa/plugins/ky-so/server.py"} <= server
+    # Building a lender's plugin on its own puts it in the lender's folder only.
+    assert {p for p, _, _ in dong_goi.build(out=tmp_path, only=["ky-so"])} == {
+        "mot-cua-xa/plugin-ky-so-1.0.0.zip", "may-chu-plugin/may-chu-plugin-1.1.0.zip"}  # fmt: skip
+
+
 def test_menu_numbers_follow_the_catalog_and_unknown_names_are_refused(tmp_path):
     items = dong_goi.catalog()
     assert [i.name for i in items[:2]] == ["mot-cua-xa", "doc-giay-to"]  # expansion by expansion, pack first
@@ -124,6 +141,14 @@ def test_a_broken_pack_stops_the_build(tmp_path, monkeypatch):
     with pytest.raises(SystemExit, match="mat.json"):
         dong_goi.build(out=tmp_path / "dist")
     assert not (tmp_path / "dist").exists()
+
+
+def test_borrowing_a_plugin_that_is_not_elsewhere_stops_the_build(tmp_path, monkeypatch):
+    root = fake_root(tmp_path, monkeypatch)
+    write_pack(root / "expansion/mot/packs/mot")
+    (root / "expansion/mot/dung-chung.json").write_text('{"plugins": ["khong-co"]}', encoding="utf-8")
+    with pytest.raises(SystemExit, match="khong-co"):
+        dong_goi.build(out=tmp_path / "dist")
 
 
 def test_the_same_name_in_two_expansions_stops_the_build(tmp_path, monkeypatch):
