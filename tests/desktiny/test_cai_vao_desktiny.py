@@ -108,9 +108,9 @@ def approve(director, plugin_id: str, revision: int, manifest: dict, **extra):
     return approved.json()
 
 
-def test_both_packs_install_publish_every_process_and_pass_the_contrast_check(world):  # noqa: F811
+def test_every_pack_installs_publish_every_process_and_pass_the_contrast_check(world):  # noqa: F811
     director = as_(world, "director")
-    for name, activate in (("nhan-su", "false"), ("mot-cua-xa", "true")):
+    for name, activate in (("nhan-su", "false"), ("van-thu", "false"), ("mot-cua-xa", "true")):
         files = dong_goi.pack_files(name)
         preview = upload(director, "/packs/preview", f"{name}.zip", dong_goi.zipped(files))
         assert preview.status_code == 200, preview.text
@@ -147,14 +147,14 @@ def test_every_plugin_installs_and_its_pages_and_steps_are_offered(world, tmp_pa
     rows = {row["id"]: row for row in director.get(API + "/plugins").json()["items"]}
     assert len(rows) == len(packaged) + len(connected) and {r["state"] for r in rows.values()} == {"enabled"}
     nodes = {n["kind"] for n in director.get(API + "/plugins/nodes").json()["items"]}
-    assert {"cap_so_van_ban", "ky_so_van_ban", "chot_ky_luong"} <= nodes
+    assert {"cap_so_van_ban", "ky_so_van_ban", "chot_ky_luong", "vao_so_van_ban_den"} <= nodes
     staff = as_(world, "staff")
     pages = staff.get(API + "/plugin-slots?slot=page").json()["items"]
-    assert {"Chấm công", "Phiếu lương", "Sổ văn bản", "Văn bản chờ ký", "Tính hạn giải quyết"} <= {p["title"] for p in pages}
+    assert {"Chấm công", "Phiếu lương", "Sổ văn bản", "Sổ văn bản đến", "Văn bản chờ ký", "Tính hạn giải quyết"} <= {p["title"] for p in pages}
     packaged_page = next(p for p in pages if p["plugin_id"] == "vn.mo-rong.tinh-han")
     assert staff.get(packaged_page["url"]).status_code == 200
     actions = {p["title"] for p in staff.get(API + "/plugin-slots?slot=case.action").json()["items"]}
-    assert {"Đọc giấy tờ", "Ký số", "Cấp số văn bản"} <= actions
+    assert {"Đọc giấy tờ", "Ký số", "Cấp số văn bản", "Vào sổ văn bản đến"} <= actions
     gps = next(p for p in pages if p["plugin_id"] == "vn.mo-rong.cham-cong")
     assert gps["allow"] == "geolocation"
     triggers = {t["key"] for t in as_(world, "director").get(API + "/automations/catalog").json()["triggers"]}
@@ -289,4 +289,52 @@ def test_an_online_request_starts_a_flow_that_creates_the_dossier(world, tmp_pat
     # The dossier carries the tracking code the plugin matches Desktiny's later events with (unit tests cover that).
     detail = as_(world, "director").get(f"{API}/cases/{made[0]['id']}").json()
     assert detail["payload"]["ma_tra_cuu"] == filed.data["ma_tra_cuu"]
+    desktiny_plugins.use_transport(None)
+
+
+def test_an_incoming_document_is_registered_by_its_flow_and_shown_on_the_document(world, tmp_path):  # noqa: F811
+    world[8].plugin_allowed_hosts = "localhost"
+    incoming, _ = install_connected(world, "so-van-ban-den", tmp_path)
+    serve({9207: incoming})
+    director = as_(world, "director")
+    form = director.post(API + "/forms", json={"name": "Phiếu vào sổ văn bản đến", "fields": [
+        {"key": "noi_gui", "label": "Nơi gửi", "type": "text", "required": True},
+        {"key": "trich_yeu", "label": "Trích yếu", "type": "textarea", "required": True},
+        {"key": "han_xu_ly", "label": "Hạn xử lý", "type": "date"},
+        {"key": "so_den", "label": "Số đến", "type": "text"},
+        {"key": "ngay_den", "label": "Ngày đến", "type": "date"}],
+        "approval_steps": [{"label": "Lãnh đạo", "resolver": "user", "user_id": world[7]["manager"]}]})  # fmt: skip
+    assert form.status_code == 201, form.text
+    graph = {
+        "nodes": [node("start", "trigger", event="case.submitted"),
+                  node("vao_so", "plugin_action", plugin_id="vn.mo-rong.so-van-ban-den", node="vao_so_van_ban_den", config={},
+                       outputs={"so_den": "Số đến", "ngay_den": "Ngày đến"}),
+                  # Desktiny lets a plugin write form fields only in a person's session: the flow writes them itself.
+                  node("ghi", "update_record", changes=[{"field": "form.so_den", "value": "{vao_so.so_den}"},
+                                                         {"field": "form.ngay_den", "value": "{vao_so.ngay_den}"}]),
+                  node("bao", "notify", recipients=["owner"], title="Đã vào sổ, số đến {vao_so.so_den}")],
+        "edges": [{"id": "a", "source": "start", "target": "vao_so"}, {"id": "b", "source": "vao_so", "target": "ghi", "branch": "success"},
+                  {"id": "c", "source": "ghi", "target": "bao"}],
+    }  # fmt: skip
+    enable_flow(world, "Vào sổ văn bản đến", graph)
+    staff = as_(world, "staff")
+    case = staff.post(API + "/cases", json={"title": "Công văn của Sở Nội vụ", "form_id": form.json()["id"],
+                                            "payload": {"noi_gui": "Sở Nội vụ", "trich_yeu": "Về việc báo cáo văn thư",
+                                                        "han_xu_ly": "2099-01-15"}},
+                      headers={"Idempotency-Key": "den-1"}).json()  # fmt: skip
+    submitted = staff.post(f"{API}/cases/{case['id']}/submit", json={"expected_revision": case["revision"]},
+                           headers={"Idempotency-Key": "den-1-s"})  # fmt: skip
+    assert submitted.status_code == 202, submitted.text
+    drain(world, rounds=40)
+    entry = incoming.store.one("SELECT * FROM entries")
+    assert entry["number"] == 1 and entry["sender"] == "Sở Nội vụ" and entry["due"] == "2099-01-15"
+    assert "Đã vào sổ, số đến 1" in titles(world)
+    payload = as_(world, "director").get(f"{API}/cases/{case['id']}").json()["payload"]
+    assert payload["so_den"] == "1" and payload["ngay_den"] == entry["received_at"][:10]
+    # The side panel, as the person looking at the document.
+    session = as_(world, "staff").post(API + "/plugin-sessions", json={"plugin_id": "vn.mo-rong.so-van-ban-den", "slot": "case.side",
+                                                                    "case_id": case["id"]}).json()  # fmt: skip
+    shown = incoming.handle("GET", f"/api/van-ban/{case['id']}", {"X-Desktiny-Session": session["token"]})
+    assert shown.status == 200, shown.body
+    assert shown.data["entry"]["status"] == "open"
     desktiny_plugins.use_transport(None)

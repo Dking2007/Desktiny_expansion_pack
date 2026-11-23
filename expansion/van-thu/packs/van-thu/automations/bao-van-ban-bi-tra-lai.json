@@ -1,0 +1,44 @@
+{
+  "name": "Báo văn bản bị trả lại",
+  "description": "Văn bản bị trả lại để sửa (dự thảo cần chỉnh, vào sổ sai) thì báo ngay người lập.",
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": {
+          "x": 0,
+          "y": 60
+        },
+        "data": {
+          "event": "case.needs_revision"
+        }
+      },
+      {
+        "id": "bao",
+        "type": "notify",
+        "label": "",
+        "position": {
+          "x": 320,
+          "y": 60
+        },
+        "data": {
+          "recipients": [
+            "owner"
+          ],
+          "title": "Văn bản bị trả lại, cần sửa: {title}"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "trigger->bao",
+        "source": "trigger",
+        "target": "bao",
+        "branch": null
+      }
+    ]
+  },
+  "scope": "all"
+}

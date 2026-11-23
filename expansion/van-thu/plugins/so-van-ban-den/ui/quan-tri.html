@@ -1,0 +1,40 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quản lý sổ văn bản đến</title>
+    <link rel="stylesheet" href="chung.css" />
+  </head>
+  <body>
+    <h1>Quản lý sổ văn bản đến</h1>
+    <p class="muted">Trang này thấy toàn bộ sổ. Mức báo “sắp đến hạn” đặt ở Quản trị › Plugin › Cấu hình. Số đến đã cấp không bao giờ cấp lại; số cấp nhầm thì huỷ (vẫn giữ trong sổ, ghi lý do).</p>
+    <p id="status" aria-live="polite"></p>
+    <div class="row" id="counts"></div>
+    <h2>Huỷ một số đến</h2>
+    <div class="grid">
+      <label>Số đến <select id="entry"></select></label>
+      <label>Lý do <input id="reason" maxlength="300" /></label>
+      <label>&nbsp;<button id="cancel" type="button" class="secondary">Huỷ số</button></label>
+    </div>
+    <script type="module">
+      import { $, desktiny, h, server, show } from './mo-rong.js'
+      import { STATUS } from './so-den.js'
+      const fail = (error) => show($('#status'), error.message, 'bad')
+      async function load() {
+        const data = await server(`/api/so?nam=${new Date().getFullYear()}`).catch(fail)
+        if (!data) return
+        $('#counts').replaceChildren(...['open', 'due_soon', 'overdue', 'done'].map((key) =>
+          h('div', { class: 'card' }, h('div', { class: 'big' }, data.counts[key]), h('div', { class: 'muted' }, STATUS[key]))))
+        $('#entry').replaceChildren(...data.entries.filter((e) => e.status !== 'cancelled').map((e) => h('option', { value: e.id }, `${e.number} — ${e.summary.slice(0, 80)}`)))
+      }
+      $('#cancel').addEventListener('click', async () => {
+        if (!$('#entry').value || !(await desktiny.confirm('Huỷ số đến này? Số vẫn nằm trong sổ và không được cấp lại.'))) return
+        await server(`/api/quan-tri/huy/${$('#entry').value}`, { method: 'POST', body: { ly_do: $('#reason').value } }).then(load, fail)
+      })
+      load()
+    </script>
+  </body>
+</html>

@@ -1,0 +1,68 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sổ văn bản đến</title>
+    <link rel="stylesheet" href="chung.css" />
+  </head>
+  <body>
+    <h1>Sổ văn bản đến</h1>
+    <div class="row" id="counts"></div>
+    <div class="grid">
+      <label>Năm <input id="year" type="number" min="2000" max="2100" /></label>
+      <label>Tình trạng
+        <select id="state">
+          <option value="">Tất cả</option>
+          <option value="open">Đang xử lý</option>
+          <option value="due_soon">Sắp đến hạn</option>
+          <option value="overdue">Quá hạn</option>
+          <option value="done">Đã xử lý</option>
+          <option value="cancelled">Đã huỷ số</option>
+        </select>
+      </label>
+      <label>Tìm <input id="q" placeholder="Trích yếu, nơi gửi, số ký hiệu" /></label>
+      <label>&nbsp;<button id="export" type="button" class="secondary">Xuất CSV</button></label>
+    </div>
+    <div id="export-box"></div>
+    <table>
+      <thead><tr><th class="num">Số đến</th><th>Ngày đến</th><th>Nơi gửi, số ký hiệu</th><th>Trích yếu</th><th>Hạn xử lý</th><th>Tình trạng</th><th></th></tr></thead>
+      <tbody id="rows"><tr><td colspan="7" class="muted">Đang tải…</td></tr></tbody>
+    </table>
+    <script type="module">
+      import { $, desktiny, h, server } from './mo-rong.js'
+      import { STATUS, badge, day } from './so-den.js'
+      $('#year').value = new Date().getFullYear()
+      const query = () => `nam=${$('#year').value}&tinh_trang=${$('#state').value}&q=${encodeURIComponent($('#q').value)}`
+      const open = (id) => (event) => { event.preventDefault(); desktiny.navigate(`/cases/${id}`) }
+      async function load() {
+        try {
+          const data = await server(`/api/so?${query()}`)
+          $('#counts').replaceChildren(...['open', 'due_soon', 'overdue', 'done'].map((key) =>
+            h('div', { class: 'card' }, h('div', { class: 'big ' + (key === 'overdue' && data.counts[key] ? 'bad' : '') }, data.counts[key]), h('div', { class: 'muted' }, STATUS[key]))))
+          $('#rows').replaceChildren(...(data.entries.length ? data.entries.map((e) => h('tr', { class: e.status === 'cancelled' ? 'muted' : '' },
+            h('td', { class: 'num' }, h('strong', {}, e.number)), h('td', {}, day(e.received_at)),
+            h('td', {}, e.sender, h('br'), h('small', { class: 'muted' }, e.original_number || '—')),
+            h('td', {}, e.urgent ? h('span', { class: 'tag bad' }, e.urgency) : null, ' ', e.summary, e.status === 'cancelled' ? h('small', { class: 'muted' }, ` (huỷ: ${e.cancel_reason})`) : null),
+            h('td', {}, e.due ? day(e.due) : '—'), h('td', {}, badge(e)),
+            h('td', {}, e.case_id ? h('a', { href: '#', onclick: open(e.case_id) }, 'Mở') : '—')))
+            : [h('tr', {}, h('td', { colspan: 7, class: 'muted' }, 'Chưa có văn bản đến nào phù hợp.'))]))
+        } catch (error) {
+          $('#rows').replaceChildren(h('tr', {}, h('td', { colspan: 7, class: 'bad' }, error.message)))
+        }
+      }
+      for (const id of ['#year', '#state', '#q']) $(id).addEventListener('change', load)
+      $('#export').addEventListener('click', async () => {
+        const session = await desktiny.token()
+        const text = await (await fetch(`/api/xuat?${query()}`, { headers: { 'X-Desktiny-Session': session.token } })).text()
+        const box = h('textarea', { rows: 8, readonly: true, style: 'width: 100%' })
+        box.value = text.replace(/^﻿/, '')
+        $('#export-box').replaceChildren(h('p', { class: 'muted' }, 'Chọn hết, sao chép rồi dán vào bảng tính.'), box)
+        box.select()
+      })
+      load()
+    </script>
+  </body>
+</html>

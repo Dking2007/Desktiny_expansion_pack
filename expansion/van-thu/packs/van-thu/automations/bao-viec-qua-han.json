@@ -1,0 +1,45 @@
+{
+  "name": "Báo công việc quá hạn",
+  "description": "Công việc giao từ văn bản quá hạn thì báo người nhận việc và người giao.",
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": {
+          "x": 0,
+          "y": 60
+        },
+        "data": {
+          "event": "task.overdue"
+        }
+      },
+      {
+        "id": "bao",
+        "type": "notify",
+        "label": "",
+        "position": {
+          "x": 320,
+          "y": 60
+        },
+        "data": {
+          "recipients": [
+            "assignee",
+            "creator"
+          ],
+          "title": "Công việc quá hạn: {title}"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "trigger->bao",
+        "source": "trigger",
+        "target": "bao",
+        "branch": null
+      }
+    ]
+  },
+  "scope": "all"
+}

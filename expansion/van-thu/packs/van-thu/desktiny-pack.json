@@ -1,0 +1,57 @@
+{
+  "schema": "desktiny-pack/1",
+  "id": "vn.mo-rong.van-thu",
+  "name": "Văn thư – điều hành",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "authors": ["Desktiny Expansion Pack contributors"],
+  "description": "Gói cho công tác văn thư và điều hành của cơ quan: giao diện chàm, từ ngữ văn thư; quy trình xử lý văn bản đến (vào sổ, lãnh đạo chỉ đạo, giao xử lý, báo cáo kết quả), ban hành văn bản đi (kiểm tra nội dung và thể thức, ký ban hành), nộp lưu hồ sơ; luồng cảnh báo quá hạn; hướng dẫn văn thư cho trợ lý AI. Dùng cùng plugin Sổ văn bản đến, Sổ văn bản (cấp số đi), Ký số, Tính hạn. Tên cơ quan là tên giả.",
+  "requires": { "desktiny": ">=0.2.0" },
+  "appearance": {
+    "app_name": "Văn phòng điện tử",
+    "org_name": "Cơ quan Mẫu",
+    "logo": "assets/logo.svg",
+    "favicon": "assets/logo.svg",
+    "colors": {
+      "light": { "teal": "#3730a3", "teal-strong": "#2e2885", "teal-soft": "#eef0fb", "teal-ink": "#3730a3", "teal-line": "#c9cdf2" },
+      "dark": { "teal": "#a5b4fc", "teal-ink": "#c7d0fe", "teal-soft": "#1e1b4b" }
+    },
+    "font": "be-vietnam-pro",
+    "density": "comfortable",
+    "radius": "small",
+    "login": {
+      "style": "framed",
+      "title": "Văn phòng điện tử",
+      "subtitle": "Văn bản đến · Văn bản đi · Hồ sơ lưu trữ",
+      "ground": "#1e1b4b",
+      "ground_to": "#0b0a24",
+      "button_label": "Đăng nhập",
+      "note": "Không xử lý văn bản mật trên hệ thống này."
+    },
+    "terminology": {
+      "Hồ sơ": "Văn bản",
+      "Cần phê duyệt": "Chờ cho ý kiến"
+    },
+    "menu": {
+      "hide": ["feed"],
+      "order": ["home", "approvals", "cases", "tasks", "drive", "chat", "reports"]
+    },
+    "home": ["plugins.widgets", "tasks.today", "cases.recent", "quick.start"]
+  },
+  "processes": [
+    "processes/xu-ly-van-ban-den.json",
+    "processes/ban-hanh-van-ban-di.json",
+    "processes/nop-luu-ho-so.json"
+  ],
+  "automations": [
+    "automations/canh-bao-van-ban-qua-han.json",
+    "automations/bao-van-ban-bi-tra-lai.json",
+    "automations/bao-viec-qua-han.json"
+  ],
+  "knowledge": [
+    "knowledge/xu-ly-van-ban-den.md",
+    "knowledge/ban-hanh-van-ban-di.md",
+    "knowledge/the-thuc-van-ban.md",
+    "knowledge/lap-ho-so-nop-luu.md"
+  ]
+}

@@ -1,0 +1,204 @@
+{
+  "name": "Xử lý văn bản đến",
+  "description": "Văn thư vào sổ văn bản đến và trình; lãnh đạo cho ý kiến chỉ đạo, giao người xử lý và hạn; người được giao xử lý, báo cáo kết quả.",
+  "form": {
+    "name": "Phiếu vào sổ văn bản đến",
+    "description": "Thông tin văn bản đến. Văn thư đính kèm bản quét (hoặc bản điện tử nhận được) rồi trình.",
+    "fields": [
+      {
+        "key": "noi_gui",
+        "label": "Cơ quan, tổ chức gửi",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "so_ky_hieu_goc",
+        "label": "Số, ký hiệu văn bản",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "ngay_van_ban",
+        "label": "Ngày văn bản",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "loai_van_ban",
+        "label": "Loại văn bản",
+        "type": "select",
+        "required": true,
+        "options": [
+          "Công văn",
+          "Quyết định",
+          "Thông báo",
+          "Kế hoạch",
+          "Báo cáo",
+          "Tờ trình",
+          "Giấy mời",
+          "Khác"
+        ]
+      },
+      {
+        "key": "trich_yeu",
+        "label": "Trích yếu nội dung",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "do_khan",
+        "label": "Mức độ khẩn",
+        "type": "select",
+        "required": true,
+        "options": [
+          "Thường",
+          "Khẩn",
+          "Thượng khẩn",
+          "Hoả tốc"
+        ]
+      },
+      {
+        "key": "so_den",
+        "label": "Số đến",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "ngay_den",
+        "label": "Ngày đến",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "y_kien_chi_dao",
+        "label": "Ý kiến chỉ đạo",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "nguoi_xu_ly",
+        "label": "Người xử lý chính (họ tên đầy đủ)",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "han_xu_ly",
+        "label": "Hạn xử lý",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "ket_qua_xu_ly",
+        "label": "Kết quả xử lý",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": {
+          "x": 0,
+          "y": 60
+        },
+        "data": {
+          "event": "case.submitted",
+          "form_id": null,
+          "required_documents": [
+            "Bản quét văn bản đến"
+          ]
+        }
+      },
+      {
+        "id": "chi_dao",
+        "type": "approval",
+        "label": "Lãnh đạo cho ý kiến chỉ đạo, giao xử lý",
+        "position": {
+          "x": 320,
+          "y": 60
+        },
+        "data": {
+          "resolver": "role",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": false,
+          "due_in_days": 1,
+          "instructions": "Ghi ý kiến chỉ đạo, họ tên người xử lý chính và hạn xử lý (nếu có) rồi chọn Duyệt. Trả lại nếu văn thư vào sổ sai.",
+          "role": "director",
+          "role_scope": "organization",
+          "editable_fields": [
+            "y_kien_chi_dao",
+            "nguoi_xu_ly",
+            "han_xu_ly"
+          ]
+        }
+      },
+      {
+        "id": "xu_ly",
+        "type": "approval",
+        "label": "Xử lý và báo cáo kết quả",
+        "position": {
+          "x": 640,
+          "y": 60
+        },
+        "data": {
+          "resolver": "form_field",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": false,
+          "due_in_days": 7,
+          "instructions": "Xử lý theo ý kiến chỉ đạo; ghi kết quả (đã trả lời bằng văn bản số…, đã triển khai…) rồi chọn Duyệt để kết thúc.",
+          "form_field": "nguoi_xu_ly",
+          "editable_fields": [
+            "ket_qua_xu_ly"
+          ],
+          "overdue": {
+            "action": "remind",
+            "user_id": null
+          }
+        }
+      },
+      {
+        "id": "bao_xong",
+        "type": "notify",
+        "label": "Báo văn thư",
+        "position": {
+          "x": 960,
+          "y": 60
+        },
+        "data": {
+          "recipients": [
+            "owner"
+          ],
+          "title": "Đã xử lý xong văn bản đến: {title}"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "trigger->chi_dao",
+        "source": "trigger",
+        "target": "chi_dao",
+        "branch": null
+      },
+      {
+        "id": "chi_dao:approve->xu_ly",
+        "source": "chi_dao",
+        "target": "xu_ly",
+        "branch": "approve"
+      },
+      {
+        "id": "xu_ly:approve->bao_xong",
+        "source": "xu_ly",
+        "target": "bao_xong",
+        "branch": "approve"
+      }
+    ]
+  },
+  "allowed_roles": [],
+  "required_file_count": 1
+}

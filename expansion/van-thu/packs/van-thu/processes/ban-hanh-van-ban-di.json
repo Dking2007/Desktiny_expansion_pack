@@ -1,0 +1,165 @@
+{
+  "name": "Ban hành văn bản đi",
+  "description": "Chuyên viên trình dự thảo; lãnh đạo đơn vị kiểm tra nội dung và thể thức; lãnh đạo cơ quan ký; văn thư cấp số và phát hành.",
+  "form": {
+    "name": "Phiếu trình ban hành văn bản",
+    "description": "Thông tin văn bản dự thảo. Đính kèm dự thảo và tài liệu liên quan.",
+    "fields": [
+      {
+        "key": "loai_van_ban",
+        "label": "Loại văn bản",
+        "type": "select",
+        "required": true,
+        "options": [
+          "Công văn",
+          "Quyết định",
+          "Thông báo",
+          "Kế hoạch",
+          "Báo cáo",
+          "Tờ trình",
+          "Giấy mời",
+          "Khác"
+        ]
+      },
+      {
+        "key": "trich_yeu",
+        "label": "Trích yếu nội dung",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "noi_nhan",
+        "label": "Nơi nhận",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "do_khan",
+        "label": "Mức độ khẩn",
+        "type": "select",
+        "required": true,
+        "options": [
+          "Thường",
+          "Khẩn",
+          "Thượng khẩn",
+          "Hoả tốc"
+        ]
+      },
+      {
+        "key": "van_ban_tra_loi",
+        "label": "Trả lời văn bản đến (số đến, nếu có)",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "so_van_ban",
+        "label": "Số, ký hiệu văn bản",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "ngay_van_ban",
+        "label": "Ngày ban hành",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": {
+          "x": 0,
+          "y": 60
+        },
+        "data": {
+          "event": "case.submitted",
+          "form_id": null,
+          "required_documents": [
+            "Dự thảo văn bản"
+          ]
+        }
+      },
+      {
+        "id": "lanh_dao_don_vi",
+        "type": "approval",
+        "label": "Lãnh đạo đơn vị kiểm tra nội dung, thể thức",
+        "position": {
+          "x": 320,
+          "y": 60
+        },
+        "data": {
+          "resolver": "department_manager",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": false,
+          "due_in_days": 1,
+          "instructions": "Kiểm tra nội dung, căn cứ, thể thức (Quốc hiệu, tên cơ quan, trích yếu, nơi nhận…); trả lại để sửa nếu cần.",
+          "editable_fields": [
+            "trich_yeu",
+            "noi_nhan"
+          ]
+        }
+      },
+      {
+        "id": "ky",
+        "type": "approval",
+        "label": "Lãnh đạo cơ quan ký ban hành",
+        "position": {
+          "x": 640,
+          "y": 60
+        },
+        "data": {
+          "resolver": "role",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 1,
+          "instructions": "Duyệt là đồng ý ký ban hành; văn thư cấp số và phát hành sau bước này.",
+          "role": "director",
+          "role_scope": "organization"
+        }
+      },
+      {
+        "id": "phat_hanh",
+        "type": "notify",
+        "label": "Báo văn thư cấp số, phát hành",
+        "position": {
+          "x": 960,
+          "y": 60
+        },
+        "data": {
+          "recipients": [
+            "owner"
+          ],
+          "title": "Văn bản đã được ký, chuyển văn thư cấp số và phát hành: {title}"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "trigger->lanh_dao_don_vi",
+        "source": "trigger",
+        "target": "lanh_dao_don_vi",
+        "branch": null
+      },
+      {
+        "id": "lanh_dao_don_vi:approve->ky",
+        "source": "lanh_dao_don_vi",
+        "target": "ky",
+        "branch": "approve"
+      },
+      {
+        "id": "ky:approve->phat_hanh",
+        "source": "ky",
+        "target": "phat_hanh",
+        "branch": "approve"
+      }
+    ]
+  },
+  "allowed_roles": [],
+  "required_file_count": 1
+}

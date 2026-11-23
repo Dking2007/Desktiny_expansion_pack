@@ -1,0 +1,51 @@
+{
+  "schema": "desktiny-plugin/1",
+  "id": "vn.mo-rong.so-van-ban-den",
+  "name": "Sổ văn bản đến",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "authors": ["Desktiny Expansion Pack contributors"],
+  "description": "Sổ văn bản đến: vào sổ văn bản đến với số đến liên tục theo năm (không nhảy số, không trùng), ghi số đến và ngày đến vào văn bản; theo dõi văn bản đang xử lý, sắp đến hạn, quá hạn; khối trang chủ “Văn bản đến cần xử lý”; trợ lý AI liệt kê văn bản đến chưa xử lý.",
+  "base_url": "http://localhost:9207",
+  "requires": { "desktiny": ">=2" },
+  "permissions": ["cases.read", "cases.fields.write"],
+  "writes": { "fields": ["so_den", "ngay_den"] },
+  "events": ["case.closed"],
+  "events_endpoint": "/events",
+  "health_endpoint": "/health",
+  "nodes": [
+    {
+      "kind": "vao_so_van_ban_den",
+      "title": "Vào sổ văn bản đến",
+      "description": "Lấy số đến tiếp theo cho văn bản. Để ghi vào văn bản, thêm bước Cập nhật hồ sơ sau nó: form.so_den = {buoc.so_den}, form.ngay_den = {buoc.ngay_den}.",
+      "endpoint": "/nodes/vao-so",
+      "config_schema": { "type": "object", "properties": {}, "required": [] },
+      "outputs": { "so_den": "Số đến", "ngay_den": "Ngày đến", "han_xu_ly": "Hạn xử lý" }
+    }
+  ],
+  "assistant_tools": [
+    {
+      "name": "van_ban_den_chua_xu_ly",
+      "description": "Các văn bản đến đang xử lý mà người đang hỏi xem được (số đến, nơi gửi, trích yếu, hạn, quá hạn chưa)",
+      "endpoint": "/tools/van-ban-den",
+      "parameters": {
+        "type": "object",
+        "properties": { "tinh_trang": { "type": "string", "title": "Để trống: tất cả văn bản đang xử lý; “qua_han”: chỉ văn bản quá hạn" } }
+      }
+    }
+  ],
+  "settings_schema": {
+    "type": "object",
+    "properties": {
+      "bao_truoc_ngay": { "type": "number", "title": "Báo “sắp đến hạn” trước bao nhiêu ngày", "default": 2 }
+    },
+    "required": []
+  },
+  "ui": [
+    { "slot": "page", "title": "Sổ văn bản đến", "url": "/ui/so.html", "height": 720 },
+    { "slot": "case.side", "title": "Sổ văn bản đến", "url": "/ui/van-ban.html", "height": 190 },
+    { "slot": "case.action", "title": "Vào sổ văn bản đến", "url": "/ui/vao-so.html", "height": 360 },
+    { "slot": "home.widget", "title": "Văn bản đến cần xử lý", "url": "/ui/widget.html", "height": 240 },
+    { "slot": "admin.page", "title": "Quản lý sổ văn bản đến", "url": "/ui/quan-tri.html", "height": 700 }
+  ]
+}

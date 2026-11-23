@@ -115,3 +115,15 @@ th.num {
   color: var(--dk-teal-ink, #1e3a5f);
   font-size: 12px;
 }
+.warn {
+  color: var(--dk-amber-ink, #854d0e);
+}
+.tag.ok {
+  background: var(--dk-green-soft, #e8f6ee);
+}
+.tag.bad {
+  background: var(--dk-red-soft, #fdecec);
+}
+.tag.warn {
+  background: var(--dk-amber-soft, #fff3df);
+}

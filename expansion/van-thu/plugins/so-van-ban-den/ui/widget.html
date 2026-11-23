@@ -1,0 +1,30 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Văn bản đến cần xử lý</title>
+    <link rel="stylesheet" href="chung.css" />
+  </head>
+  <body>
+    <p id="summary" class="muted">Đang tải…</p>
+    <table><tbody id="rows"></tbody></table>
+    <script type="module">
+      import { $, desktiny, h, server } from './mo-rong.js'
+      import { left } from './so-den.js'
+      const open = (id) => (event) => { event.preventDefault(); desktiny.navigate(`/cases/${id}`) }
+      server('/api/can-xu-ly')
+        .then(({ items, counts }) => {
+          const pending = counts.open + counts.due_soon + counts.overdue
+          $('#summary').replaceChildren(pending ? `${pending} văn bản đang xử lý` : 'Không có văn bản đến nào đang chờ xử lý.',
+            counts.overdue ? h('strong', { class: 'bad' }, ` · ${counts.overdue} quá hạn`) : '', counts.due_soon ? ` · ${counts.due_soon} sắp đến hạn` : '')
+          $('#rows').replaceChildren(...items.slice(0, 6).map((r) => h('tr', {},
+            h('td', { class: 'num' }, r.number), h('td', {}, r.urgent ? h('span', { class: 'tag bad' }, r.urgency) : null, ' ', h('a', { href: '#', onclick: open(r.case_id) }, r.summary)),
+            h('td', { class: 'num ' + (r.status === 'overdue' ? 'bad' : '') }, left(r)))))
+        })
+        .catch((error) => $('#summary').replaceChildren(h('span', { class: 'bad' }, error.message)))
+    </script>
+  </body>
+</html>

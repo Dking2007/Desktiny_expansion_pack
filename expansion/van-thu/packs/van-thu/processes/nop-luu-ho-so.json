@@ -1,0 +1,134 @@
+{
+  "name": "Nộp lưu hồ sơ vào lưu trữ cơ quan",
+  "description": "Đơn vị lập hồ sơ công việc đã kết thúc và đề nghị nộp lưu; lãnh đạo đơn vị duyệt; người lập chuyển hồ sơ cho lưu trữ cơ quan.",
+  "form": {
+    "name": "Mục lục hồ sơ nộp lưu",
+    "description": "Mỗi phiếu là một hồ sơ (một việc). Đính kèm mục lục văn bản trong hồ sơ.",
+    "fields": [
+      {
+        "key": "ten_ho_so",
+        "label": "Tiêu đề hồ sơ",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "ky_hieu_ho_so",
+        "label": "Số, ký hiệu hồ sơ (theo danh mục hồ sơ)",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "nam_hinh_thanh",
+        "label": "Năm hình thành",
+        "type": "number",
+        "required": true
+      },
+      {
+        "key": "thoi_gian_bat_dau",
+        "label": "Thời gian bắt đầu",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "thoi_gian_ket_thuc",
+        "label": "Thời gian kết thúc",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "so_to",
+        "label": "Số tờ",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "thoi_han_bao_quan",
+        "label": "Thời hạn bảo quản",
+        "type": "select",
+        "required": true,
+        "options": [
+          "Vĩnh viễn",
+          "70 năm",
+          "50 năm",
+          "20 năm",
+          "10 năm",
+          "5 năm"
+        ]
+      },
+      {
+        "key": "ghi_chu",
+        "label": "Ghi chú",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": {
+          "x": 0,
+          "y": 60
+        },
+        "data": {
+          "event": "case.submitted",
+          "form_id": null,
+          "required_documents": [
+            "Mục lục văn bản trong hồ sơ"
+          ]
+        }
+      },
+      {
+        "id": "lanh_dao_don_vi",
+        "type": "approval",
+        "label": "Lãnh đạo đơn vị duyệt nộp lưu",
+        "position": {
+          "x": 320,
+          "y": 60
+        },
+        "data": {
+          "resolver": "department_manager",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": false,
+          "due_in_days": 3,
+          "instructions": "Kiểm tra hồ sơ đủ văn bản, đúng thời hạn bảo quản."
+        }
+      },
+      {
+        "id": "bao",
+        "type": "notify",
+        "label": "Báo người lập",
+        "position": {
+          "x": 640,
+          "y": 60
+        },
+        "data": {
+          "recipients": [
+            "owner"
+          ],
+          "title": "Đã duyệt nộp lưu, chuyển hồ sơ cho lưu trữ cơ quan: {title}"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "trigger->lanh_dao_don_vi",
+        "source": "trigger",
+        "target": "lanh_dao_don_vi",
+        "branch": null
+      },
+      {
+        "id": "lanh_dao_don_vi:approve->bao",
+        "source": "lanh_dao_don_vi",
+        "target": "bao",
+        "branch": "approve"
+      }
+    ]
+  },
+  "allowed_roles": [],
+  "required_file_count": 1
+}

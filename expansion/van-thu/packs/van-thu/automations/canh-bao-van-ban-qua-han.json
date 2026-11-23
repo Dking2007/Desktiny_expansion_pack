@@ -1,0 +1,45 @@
+{
+  "name": "Cảnh báo văn bản quá hạn xử lý",
+  "description": "Văn bản đến hoặc văn bản trình quá hạn thì báo người lập và lãnh đạo đơn vị.",
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": {
+          "x": 0,
+          "y": 60
+        },
+        "data": {
+          "event": "case.overdue"
+        }
+      },
+      {
+        "id": "bao",
+        "type": "notify",
+        "label": "",
+        "position": {
+          "x": 320,
+          "y": 60
+        },
+        "data": {
+          "recipients": [
+            "owner",
+            "department_manager"
+          ],
+          "title": "Quá hạn xử lý: {title}"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "trigger->bao",
+        "source": "trigger",
+        "target": "bao",
+        "branch": null
+      }
+    ]
+  },
+  "scope": "all"
+}

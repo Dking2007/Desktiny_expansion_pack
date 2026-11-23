@@ -7,7 +7,7 @@ x-plugin: &plugin
   build:
     context: ..
     dockerfile: deploy/Dockerfile
-  image: desktiny-expansion-plugins:1.0.0
+  image: desktiny-expansion-plugins:1.1.0
   restart: unless-stopped
   read_only: true
   tmpfs: [/tmp]
@@ -76,6 +76,16 @@ services:
       TRUST_PROXY: ${TIEP_NHAN_TRUST_PROXY:-}
     ports: ["9206:9206"]
     volumes: [tiep-nhan:/data]
+  so-van-ban-den:
+    <<: *plugin
+    environment:
+      PLUGIN: so-van-ban-den
+      PORT: "9207"
+      DESKTINY_URL: ${DESKTINY_URL:?}
+      DESKTINY_TOKEN: ${SO_VAN_BAN_DEN_TOKEN:-}
+      DESKTINY_SECRET: ${SO_VAN_BAN_DEN_SECRET:-}
+    ports: ["9207:9207"]
+    volumes: [so-van-ban-den:/data]
 
 volumes:
   cham-cong:
@@ -84,3 +94,4 @@ volumes:
   ky-so:
   nhac-han:
   tiep-nhan:
+  so-van-ban-den:
