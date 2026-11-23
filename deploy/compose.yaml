@@ -72,6 +72,8 @@ services:
       DESKTINY_URL: ${DESKTINY_URL:?}
       DESKTINY_TOKEN: ${TIEP_NHAN_TOKEN:-}
       DESKTINY_SECRET: ${TIEP_NHAN_SECRET:-}
+      # 1 only behind a reverse proxy that sets X-Forwarded-For (the public pages' rate limit uses it).
+      TRUST_PROXY: ${TIEP_NHAN_TRUST_PROXY:-}
     ports: ["9206:9206"]
     volumes: [tiep-nhan:/data]
 

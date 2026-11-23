@@ -19,6 +19,7 @@ Standard library plus the `desktiny-plugin` SDK. Each plugin builds an `App`, ad
 from __future__ import annotations
 
 import json
+import logging
 import mimetypes
 import os
 import re
@@ -33,10 +34,14 @@ from urllib.parse import parse_qs, urlsplit
 
 from desktiny_plugin import Client, PluginError, SignatureError, verify
 
+from .vn import InputError
+
 SDK = Path(__file__).resolve().parents[2] / "sdk" / "desktiny-plugin-sdk.js"
 MAX_BODY = 2_000_000
 # The frame SDK, the shared page helper and styles, served to every plugin's pages from sdk/.
 SHARED = {"desktiny-plugin-sdk.js", "mo-rong.js", "chung.css"}
+MAX_VIEWERS = 2000
+logger = logging.getLogger("mo_rong")
 STATIC_TYPES = {".html", ".js", ".css", ".svg", ".png", ".json", ".ico", ".webp"}
 
 
@@ -109,6 +114,8 @@ class Settings:
         self.token = values.get("token", env.get("DESKTINY_TOKEN", ""))
         self.secret = values.get("secret", env.get("DESKTINY_SECRET", ""))
         self.data_dir = Path(values.get("data_dir", env.get("DATA_DIR", "data")))
+        # Only behind a reverse proxy that sets it: otherwise anyone could pick their own address.
+        self.trust_proxy = str(values.get("trust_proxy", env.get("TRUST_PROXY", ""))).lower() in {"1", "true", "yes"}
 
 
 class App:
@@ -173,6 +180,9 @@ class App:
             raise HttpError(401, "Phiên Desktiny không hợp lệ hoặc đã hết hạn.", "session_invalid") from exc
         if not me.get("user"):
             raise HttpError(401, "Phiên này không gắn với người dùng.", "session_invalid")
+        if len(self._viewers) >= MAX_VIEWERS:  # sessions last minutes; drop the stale ones
+            now = time.monotonic()
+            self._viewers = {k: v for k, v in self._viewers.items() if now - v[0] < 60}
         self._viewers[token] = (time.monotonic(), me)
         return me
 
@@ -209,6 +219,15 @@ class App:
             return json_response({"error": exc.code, "message": exc.message}, exc.status)
         except PluginError as exc:
             return json_response({"error": exc.code, "message": exc.detail}, 502 if exc.status >= 500 else exc.status)
+        except InputError as exc:
+            return json_response({"error": "invalid", "message": str(exc)}, 422)
+        except (ValueError, KeyError, TypeError) as exc:
+            # A field missing or of the wrong kind in what the page sent.
+            logger.info("[%s] %s %s: dữ liệu không hợp lệ (%r)", self.name, method, parts.path, exc)
+            return json_response({"error": "invalid", "message": "Dữ liệu gửi lên không hợp lệ."}, 422)
+        except Exception:
+            logger.exception("[%s] %s %s lỗi", self.name, method, parts.path)
+            return json_response({"error": "server_error", "message": "Máy chủ plugin gặp lỗi; đã ghi nhật ký."}, 500)
 
     def static(self, path: str) -> Response | None:
         shared = SDK.parent / path.rsplit("/", 1)[-1]
@@ -240,8 +259,11 @@ class App:
                     self.send_error(413)
                     return
                 body = self.rfile.read(size) if size else b""
-                forwarded = self.headers.get("X-Forwarded-For", "").split(",")[0].strip()
-                result = app.handle(self.command, self.path, dict(self.headers), body, forwarded or self.client_address[0])
+                address = self.client_address[0]
+                if app.settings.trust_proxy:
+                    # The proxy appends the address it saw: the last entry is the one it vouches for.
+                    address = self.headers.get("X-Forwarded-For", "").split(",")[-1].strip() or address
+                result = app.handle(self.command, self.path, dict(self.headers), body, address)
                 self.send_response(result.status)
                 self.send_header("Content-Type", result.content_type)
                 # Frames are sandboxed (origin "null"); they call with a session token, never cookies.
@@ -273,6 +295,7 @@ class App:
         threading.Thread(target=loop, daemon=True).start()
 
     def run(self, port: int):
+        logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
         port = int(os.environ.get("PORT", port))
         sys.stdout.reconfigure(encoding="utf-8")  # a Windows console's code page has no Vietnamese
         print(f"[{self.name}] đang chạy ở cổng {port}", flush=True)

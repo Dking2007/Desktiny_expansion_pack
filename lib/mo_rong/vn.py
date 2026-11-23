@@ -8,6 +8,10 @@ import re
 from datetime import date, datetime
 
 
+class InputError(ValueError):
+    """A value a person typed that cannot be read; its message is shown to them."""
+
+
 def month_of(value: str | None = None) -> str:
     """"2026-11" from "2026-11", "11/2026" or today."""
     if not value:
@@ -18,7 +22,7 @@ def month_of(value: str | None = None) -> str:
     found = re.fullmatch(r"(\d{1,2})[/-](\d{4})", value)
     if found:
         return f"{found.group(2)}-{int(found.group(1)):02d}"
-    raise ValueError("Tháng dạng 2026-11 hoặc 11/2026.")
+    raise InputError("Tháng dạng 2026-11 hoặc 11/2026.")
 
 
 def parse_date(value) -> date | None:
