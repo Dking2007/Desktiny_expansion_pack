@@ -121,6 +121,11 @@ def test_both_packs_install_publish_every_process_and_pass_the_contrast_check(wo
         available = {item["name"] for item in as_(world, "staff").get(API + "/processes/available").json()["items"]}
         assert names <= available, (names - available, installed.json())
         director = as_(world, "director")
+        # The pack's flows are installed switched off, for the organisation to turn on.
+        flows = {json.loads(files[path])["name"] for path in manifest.get("automations", [])}
+        rules = {r["name"]: r for r in director.get(API + "/automations?limit=200").json()["items"]}
+        assert flows and flows <= set(rules), flows - set(rules)
+        assert not any(rules[name]["enabled"] for name in flows)
     look = director.get(API + "/appearance").json()
     assert look["pack_id"] == "vn.mo-rong.mot-cua-xa" and look["appearance"]["login"]["button_label"] == "Đăng nhập cán bộ"
 

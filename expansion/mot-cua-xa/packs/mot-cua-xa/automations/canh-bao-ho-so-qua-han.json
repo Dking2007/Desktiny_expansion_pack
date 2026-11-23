@@ -1,0 +1,45 @@
+{
+  "name": "Cảnh báo hồ sơ quá hạn",
+  "description": "Hồ sơ quá hạn giải quyết thì báo người lập và trưởng bộ phận.",
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": {
+          "x": 0,
+          "y": 60
+        },
+        "data": {
+          "event": "case.overdue"
+        }
+      },
+      {
+        "id": "bao",
+        "type": "notify",
+        "label": "",
+        "position": {
+          "x": 320,
+          "y": 60
+        },
+        "data": {
+          "recipients": [
+            "owner",
+            "department_manager"
+          ],
+          "title": "Quá hạn giải quyết: {title}"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "trigger->bao",
+        "source": "trigger",
+        "target": "bao",
+        "branch": null
+      }
+    ]
+  },
+  "scope": "all"
+}

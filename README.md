@@ -121,12 +121,12 @@ diện trỏ tới (logo, quy trình, mẫu, kiến thức) có thật và đún
 dist/
 ├── HUONG-DAN-CAI.txt                       tệp nào tải lên đâu, theo thứ tự
 ├── nhan-su/
-│   ├── goi-nhan-su-1.0.0.zip               gói giao diện
+│   ├── goi-nhan-su-1.1.0.zip               gói giao diện
 │   ├── plugin-cham-cong-1.0.0.zip          plugin kết nối: chỉ manifest (trang do máy chủ plugin phục vụ)
 │   ├── plugin-luong-kpi-1.0.0.zip
 │   └── plugin-nhac-han-1.0.0.zip
 ├── mot-cua-xa/
-│   ├── goi-mot-cua-xa-1.0.0.zip
+│   ├── goi-mot-cua-xa-1.1.0.zip
 │   ├── plugin-tinh-han-1.0.0.zip           plugin đóng gói: manifest + trang + SDK khung
 │   ├── plugin-doc-giay-to-1.0.0.zip
 │   └── plugin-so-van-ban-1.0.0.zip, plugin-ky-so-1.0.0.zip, plugin-tiep-nhan-1.0.0.zip
@@ -200,10 +200,10 @@ Desktiny gọi tới được.
 
 ### Gói giao diện
 
-| Gói | Giao diện | Quy trình | Kiến thức cho trợ lý AI |
-|---|---|---|---|
-| **Nhân sự doanh nghiệp** `vn.mo-rong.nhan-su` | Xanh ngọc, trang đăng nhập riêng, “Hồ sơ” → “Đơn từ” | Đơn nghỉ phép (trên 3 ngày lên Giám đốc), Điều chỉnh công, Làm thêm giờ (trên 4 giờ lên Giám đốc), Đổi ca, Phê duyệt bảng lương, Đánh giá KPI, Gia hạn hợp đồng/giấy tờ | Quy chế chấm công, nghỉ phép, cách tính lương, đánh giá KPI |
-| **Một cửa cấp xã** `vn.mo-rong.mot-cua-xa` | Đỏ – vàng, “Hồ sơ” → “Hồ sơ thủ tục” | Đăng ký khai sinh, kết hôn, khai tử; Chứng thực bản sao; Xác nhận tình trạng hôn nhân; Hoà giải ở cơ sở; mẫu “Lấy ý kiến ban, ngành” | Hướng dẫn tiếp nhận, thời hạn giải quyết, hồ sơ nộp trực tuyến |
+| Gói | Giao diện | Quy trình | Luồng tự động (cài ở trạng thái tắt) | Kiến thức cho trợ lý AI |
+|---|---|---|---|---|
+| **Nhân sự doanh nghiệp** `vn.mo-rong.nhan-su` | Xanh ngọc, trang đăng nhập riêng, “Hồ sơ” → “Đơn từ” | Đơn nghỉ phép (trên 3 ngày lên Giám đốc), Điều chỉnh công, Làm thêm giờ (trên 4 giờ lên Giám đốc), Đổi ca, Phê duyệt bảng lương, Đánh giá KPI, Gia hạn hợp đồng/giấy tờ | Nhắc đơn bị trả lại chưa bổ sung sau 1 ngày; Cảnh báo đơn quá hạn; Báo công việc quá hạn | Quy chế chấm công, nghỉ phép, cách tính lương, đánh giá KPI |
+| **Một cửa cấp xã** `vn.mo-rong.mot-cua-xa` | Đỏ – vàng, “Hồ sơ” → “Hồ sơ thủ tục” | Đăng ký khai sinh, kết hôn, khai tử; Chứng thực bản sao; Xác nhận tình trạng hôn nhân; Hoà giải ở cơ sở; mẫu “Lấy ý kiến ban, ngành” | Nhắc hồ sơ bị trả lại chưa bổ sung sau 1 ngày; Cảnh báo hồ sơ quá hạn; Báo lãnh đạo khi hồ sơ bị từ chối | Hướng dẫn tiếp nhận, thời hạn giải quyết, hồ sơ nộp trực tuyến |
 
 Biểu mẫu có sẵn các trường plugin dùng (đổi mã trường thì phải đổi cả plugin):
 
@@ -229,6 +229,9 @@ Biểu mẫu có sẵn các trường plugin dùng (đổi mã trường thì ph
 | **Tính hạn theo ngày làm việc** `tinh-han` | đóng gói | Tính hạn bỏ cuối tuần, ngày lễ, tính ngày làm bù | Trang *Tính hạn giải quyết*; khung *Hạn giải quyết* trên hồ sơ |
 | **Đọc giấy tờ, điền sẵn** `doc-giay-to` | đóng gói | Đọc lớp chữ của tài liệu đã nộp (văn bản, PDF có chữ) hoặc nội dung dán vào, nhận ra họ tên, ngày sinh, số định danh, quê quán, nơi thường trú, MST, điện thoại | Nút *Đọc giấy tờ* trên hồ sơ: cán bộ xem, sửa, xác nhận rồi ghi vào hồ sơ |
 
+Các luồng tự động dùng sự kiện có sẵn của Desktiny nên chạy được cả khi chưa cài plugin; bật ở **Quy trình nghiệp
+vụ** sau khi xem lại người nhận.
+
 Plugin nên dùng cùng gói: **Nhân sự** ↔ Chấm công, Tiền lương và KPI, Nhắc hạn. **Một cửa** ↔ Sổ văn bản, Ký số,
 Tiếp nhận, Tính hạn, Đọc giấy tờ.
 
@@ -252,7 +255,10 @@ Dựng trên trình thiết kế quy trình của Desktiny sau khi cài:
 - Mọi lời Desktiny gọi tới (sự kiện, bước, công cụ trợ lý) được kiểm **chữ ký HMAC**; báo kết quả bước chạy lâu
   cũng được ký.
 - Mã PIN ký số lưu dạng PBKDF2, khoá sau 5 lần sai. Trang nộp công khai có câu hỏi kiểm tra và giới hạn 5 lần/giờ
-  mỗi địa chỉ; trang tra cứu không hiện nội dung hồ sơ.
+  mỗi địa chỉ; trang tra cứu không hiện nội dung hồ sơ. Địa chỉ lấy từ kết nối; chỉ khi máy chủ đặt sau reverse
+  proxy mới bật `TIEP_NHAN_TRUST_PROXY=1` để đọc `X-Forwarded-For` (lấy địa chỉ proxy ghi cuối cùng).
+- Sổ văn bản: người dùng chỉ thấy số của hồ sơ họ mở được và số họ tự cấp; cả sổ chỉ xem ở trang quản trị.
+- Máy chủ plugin trả mọi lỗi dạng JSON; lỗi ngoài dự kiến ghi vào nhật ký của container, không lộ chi tiết ra trang.
 - Container máy chủ plugin chạy bằng người dùng thường, hệ tệp chỉ đọc, `no-new-privileges`. Gói máy chủ không bao
   giờ chứa `deploy/.env`.
 

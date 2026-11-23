@@ -2,7 +2,7 @@
   "schema": "desktiny-pack/1",
   "id": "vn.mo-rong.mot-cua-xa",
   "name": "Một cửa cấp xã",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "Apache-2.0",
   "authors": [
     "Desktiny Expansion Pack contributors"
@@ -83,5 +83,10 @@
     "knowledge/huong-dan-tiep-nhan.md",
     "knowledge/thoi-han-giai-quyet.md",
     "knowledge/nop-truc-tuyen.md"
+  ],
+  "automations": [
+    "automations/bao-khi-tu-choi.json",
+    "automations/canh-bao-ho-so-qua-han.json",
+    "automations/nhac-ho-so-tra-lai.json"
   ]
 }

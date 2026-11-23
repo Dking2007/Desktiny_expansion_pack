@@ -1,0 +1,88 @@
+{
+  "name": "Nhắc hồ sơ bị trả lại chưa bổ sung",
+  "description": "Hồ sơ bị trả lại mà sau 1 ngày chưa trình lại thì nhắc người lập và trưởng bộ phận.",
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": {
+          "x": 0,
+          "y": 60
+        },
+        "data": {
+          "event": "case.needs_revision"
+        }
+      },
+      {
+        "id": "cho",
+        "type": "wait",
+        "label": "",
+        "position": {
+          "x": 300,
+          "y": 60
+        },
+        "data": {
+          "minutes": 1440
+        }
+      },
+      {
+        "id": "van_tra_lai",
+        "type": "if",
+        "label": "",
+        "position": {
+          "x": 600,
+          "y": 60
+        },
+        "data": {
+          "mode": "all",
+          "conditions": [
+            {
+              "field": "status",
+              "operator": "eq",
+              "value": "needs_revision"
+            }
+          ]
+        }
+      },
+      {
+        "id": "nhac",
+        "type": "notify",
+        "label": "",
+        "position": {
+          "x": 920,
+          "y": 60
+        },
+        "data": {
+          "recipients": [
+            "owner",
+            "department_manager"
+          ],
+          "title": "Chưa bổ sung sau 1 ngày: {title}"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "trigger->cho",
+        "source": "trigger",
+        "target": "cho",
+        "branch": null
+      },
+      {
+        "id": "cho->van_tra_lai",
+        "source": "cho",
+        "target": "van_tra_lai",
+        "branch": null
+      },
+      {
+        "id": "van_tra_lai:true->nhac",
+        "source": "van_tra_lai",
+        "target": "nhac",
+        "branch": "true"
+      }
+    ]
+  },
+  "scope": "all"
+}

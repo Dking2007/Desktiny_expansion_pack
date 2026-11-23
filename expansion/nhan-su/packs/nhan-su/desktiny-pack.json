@@ -2,7 +2,7 @@
   "schema": "desktiny-pack/1",
   "id": "vn.mo-rong.nhan-su",
   "name": "Nhân sự doanh nghiệp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "Apache-2.0",
   "authors": [
     "Desktiny Expansion Pack contributors"
@@ -81,5 +81,10 @@
     "knowledge/quy-che-nghi-phep.md",
     "knowledge/cach-tinh-luong.md",
     "knowledge/danh-gia-kpi.md"
+  ],
+  "automations": [
+    "automations/bao-viec-qua-han.json",
+    "automations/canh-bao-don-qua-han.json",
+    "automations/nhac-don-tra-lai.json"
   ]
 }

@@ -1,0 +1,44 @@
+{
+  "name": "Báo lãnh đạo khi hồ sơ bị từ chối",
+  "description": "Hồ sơ của người dân bị từ chối thì báo lãnh đạo bộ phận để nắm tình hình.",
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": {
+          "x": 0,
+          "y": 60
+        },
+        "data": {
+          "event": "case.rejected"
+        }
+      },
+      {
+        "id": "bao",
+        "type": "notify",
+        "label": "",
+        "position": {
+          "x": 320,
+          "y": 60
+        },
+        "data": {
+          "recipients": [
+            "department_manager"
+          ],
+          "title": "Hồ sơ bị từ chối: {title}"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "trigger->bao",
+        "source": "trigger",
+        "target": "bao",
+        "branch": null
+      }
+    ]
+  },
+  "scope": "all"
+}
