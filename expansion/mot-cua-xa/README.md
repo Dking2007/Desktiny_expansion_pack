@@ -28,6 +28,9 @@ expansion/mot-cua-xa/
     └── doc-giay-to/          Đọc giấy tờ, điền sẵn     (plugin đóng gói)
 ```
 
+Sổ văn bản, Ký số và Tính hạn cũng được bản [Văn thư – điều hành](../van-thu/README.md) dùng chung. Sửa các plugin
+này thì nhớ kiểm tra cả bản đó.
+
 ## Gói giao diện `vn.mo-rong.mot-cua-xa`
 
 | Phần | Nội dung |

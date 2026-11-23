@@ -12,7 +12,7 @@ tệp `.zip`.
 
 Repo này có:
 
-- **Hai bản mẫu** dùng thử được ngay, để xem một bản mở rộng hoàn chỉnh trông thế nào.
+- **Ba bản mẫu** dùng thử được ngay, để xem một bản mở rộng hoàn chỉnh trông thế nào.
 - **Công cụ đóng gói**: bấm đúp `build.bat` là có các tệp `.zip` để cài.
 - **Bộ khung** để tự viết plugin: máy chủ plugin dựng sẵn, SDK cho trang, cấu hình Docker và test.
 - **Hướng dẫn tự tạo** bản mở rộng cho nghiệp vụ của bạn (mục [Tự tạo bản mở rộng](#tự-tạo-bản-mở-rộng)).
@@ -35,7 +35,8 @@ Mỗi bản mở rộng là một thư mục trong `expansion/`:
 expansion/<tên bản mở rộng>/
 ├── README.md                giới thiệu bản mở rộng
 ├── packs/<tên gói>/         gói giao diện (thường một gói)
-└── plugins/<tên plugin>/    các plugin (không bắt buộc)
+├── plugins/<tên plugin>/    các plugin (không bắt buộc)
+└── dung-chung.json          plugin mượn của bản mở rộng khác (không bắt buộc)
 ```
 
 Bên trong có ba loại thành phần:
@@ -76,6 +77,7 @@ Plugin chỉ làm được những gì quản trị viên đã duyệt khi cài.
 |---|---|---|---|
 | [**Nhân sự doanh nghiệp**](expansion/nhan-su/README.md) `nhan-su` | Bộ phận nhân sự của doanh nghiệp, cơ quan nhỏ | Nhân sự doanh nghiệp: 7 quy trình đơn từ, 3 luồng tự động, quy chế cho trợ lý AI | Chấm công GPS, Tiền lương và KPI, Nhắc hạn hồ sơ |
 | [**Một cửa cấp xã**](expansion/mot-cua-xa/README.md) `mot-cua-xa` | Bộ phận một cửa của UBND cấp xã | Một cửa cấp xã: 6 thủ tục hộ tịch, chứng thực, hoà giải; 3 luồng tự động | Sổ văn bản, Ký số, Tiếp nhận trực tuyến, Tính hạn, Đọc giấy tờ |
+| [**Văn thư – điều hành**](expansion/van-thu/README.md) `van-thu` | Văn thư, văn phòng của cơ quan | Văn thư – điều hành: xử lý văn bản đến, ban hành văn bản đi, nộp lưu hồ sơ; 3 luồng tự động; hướng dẫn văn thư cho trợ lý AI | Sổ văn bản đến; dùng chung Sổ văn bản, Ký số, Tính hạn của bản Một cửa |
 
 Mỗi bản mẫu có README riêng: nội dung, cách cài, cấu hình, luồng gợi ý và những gì cần sửa trước khi dùng thật. Tên
 cơ quan trong bản mẫu là tên giả; quy chế, thời hạn và mức tiền chỉ để minh hoạ.
@@ -213,6 +215,16 @@ expansion/ke-toan/
 Cách nhanh nhất là **chép một bản mẫu** gần với nghiệp vụ của bạn rồi sửa. Tên gói và tên plugin không được trùng giữa
 các bản mở rộng. Bước đóng gói tự tìm thư mục mới; không phải khai báo ở đâu cả.
 
+Cần một plugin mà bản mở rộng khác đã có (ví dụ Sổ văn bản, Ký số)? Đừng chép mã. Hãy khai nó trong
+`dung-chung.json`:
+
+```json
+{ "plugins": ["so-van-ban", "ky-so"] }
+```
+
+Khi đóng gói bản của bạn, các plugin này được đóng gói kèm vào `dist/<tên bản>/`, nên thư mục đó vẫn đủ để cài. Bản
+Văn thư là ví dụ.
+
 ### Bước 2. Gói giao diện
 
 **Cách 1 (khuyên dùng): tạo ngay trong Desktiny rồi xuất ra.**
@@ -339,7 +351,7 @@ Dùng plugin kết nối khi chức năng cần một trong các việc sau:
 - trả lời trợ lý AI;
 - có trang công khai cho người ngoài.
 
-Ví dụ gọn nhất: `expansion/nhan-su/plugins/nhac-han/`.
+Ví dụ gọn: `expansion/nhan-su/plugins/nhac-han/`, `expansion/van-thu/plugins/so-van-ban-den/`.
 
 ```
 plugins/so-quy/
@@ -379,7 +391,7 @@ def build(settings: Settings | None = None, store: Store | None = None) -> App:
 
 
 if __name__ == "__main__":
-    build().run(9207)
+    build().run(9208)
 ```
 
 Trang gọi máy chủ của chính plugin bằng `sdk/mo-rong.js`: `import { server } from './mo-rong.js'`, rồi
@@ -389,8 +401,8 @@ Trang gọi máy chủ của chính plugin bằng `sdk/mo-rong.js`: `import { se
 - một dịch vụ trong `deploy/compose.yaml` (chép dịch vụ có sẵn, đổi `PLUGIN`, `PORT`, tên biến, volume);
 - cặp biến `<TÊN>_TOKEN`, `<TÊN>_SECRET` trong `deploy/.env.example`.
 
-Cổng trong `base_url`, `server.py` và `compose.yaml` phải trùng nhau. Bản mẫu đang dùng 9201–9206, nên plugin mới bắt
-đầu từ 9207.
+Cổng trong `base_url`, `server.py` và `compose.yaml` phải trùng nhau. Bản mẫu đang dùng 9201–9207, nên plugin mới bắt
+đầu từ 9208.
 
 Manifest của plugin kết nối có thể khai thêm:
 - `events` (nhận sự kiện của Desktiny), `emits` (phát sự kiện riêng);
@@ -399,7 +411,12 @@ Manifest của plugin kết nối có thể khai thêm:
 - `settings_schema` (cấu hình theo cơ quan);
 - `health_endpoint`.
 
-Đặc tả có trong `docs/plugins.md` của Desktiny; sáu plugin kết nối trong bản mẫu dùng đủ các loại này.
+Đặc tả có trong `docs/plugins.md` của Desktiny; các plugin kết nối trong bản mẫu dùng đủ các loại này.
+
+Lưu ý khi ghi vào biểu mẫu (quyền `cases.fields.write`): Desktiny chỉ cho plugin ghi trường **trong phiên của một
+người dùng**, tức từ nút hay khung mà người đó đang mở. Trong bước quy trình, plugin chạy bằng token cài đặt nên không
+ghi được. Hãy trả giá trị ra làm đầu ra của bước, rồi để quy trình ghi bằng bước **Cập nhật hồ sơ** có sẵn (ví dụ
+`form.so_den` = `{vao_so.so_den}`).
 
 ### Bước 5. Đóng gói, thử, viết README
 
