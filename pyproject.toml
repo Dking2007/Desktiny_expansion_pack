@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
 [project]
 name = "desktiny-expansion-pack"
-version = "1.0.0"
+version = "1.1.0"
 description = "Gói giao diện và plugin mở rộng cho Desktiny: nhân sự doanh nghiệp, một cửa cấp xã."
 license = "Apache-2.0"
 requires-python = ">=3.11"

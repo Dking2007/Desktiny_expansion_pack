@@ -10,7 +10,7 @@ Sources, one folder per expansion:
 Output:
 
     dist/
-      <bản mở rộng>/goi-<gói>-<phiên bản>.zip            Quản trị › Gói giao diện › Tải gói lên
+      <bản mở rộng>/goi-<gói>-<phiên bản>.zip            Quản trị › Gói giao diện › Tải gói lên (.zip)
       <bản mở rộng>/plugin-<plugin>-<phiên bản>.zip      Quản trị › Plugin › Cài plugin
       may-chu-plugin/may-chu-plugin-<phiên bản>.zip    servers of every connected plugin (Docker Compose)
       HUONG-DAN-CAI.txt                               what to upload where, in order
@@ -310,8 +310,9 @@ def ask() -> list[str]:
 def guide(built: list[tuple[str, str, str]], host: str | None, services: list[str]) -> str:
     """HUONG-DAN-CAI.txt: each file and where it goes, in the order to install them."""
     lines = ["BỘ MỞ RỘNG DESKTINY — CÁC TỆP CẦN CÀI", "=" * 40, "",
+             "Cần Desktiny 3.1.0 trở lên (API plugin bản 2, cài plugin bằng tệp .zip).", "",
              "Mỗi thư mục là một bản mở rộng. Cài gói giao diện trước, rồi plugin:",
-             "  goi-*.zip     Quản trị › Gói giao diện › Tải gói lên → xem trước → cài → Dùng giao diện này",
+             "  goi-*.zip     Quản trị › Gói giao diện › Tải gói lên (.zip) → xem trước → cài → Dùng giao diện này",
              "  plugin-*.zip  Quản trị › Plugin › Cài plugin → chọn tệp .zip → Duyệt quyền", ""]  # fmt: skip
     for directory in [*expansions(), SERVER_DIR]:
         rows = [(path, kind, note) for path, kind, note in built if path.startswith(directory + "/")]

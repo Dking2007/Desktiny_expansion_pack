@@ -37,7 +37,7 @@ def test_each_expansion_gets_its_pack_and_plugins_as_zips_with_an_install_guide(
         "nhan-su/goi-nhan-su-1.1.0.zip", "nhan-su/plugin-cham-cong-1.0.0.zip", "nhan-su/plugin-luong-kpi-1.0.0.zip",
         "nhan-su/plugin-nhac-han-1.0.0.zip", "mot-cua-xa/goi-mot-cua-xa-1.1.0.zip", "mot-cua-xa/plugin-so-van-ban-1.0.0.zip",
         "mot-cua-xa/plugin-ky-so-1.0.0.zip", "mot-cua-xa/plugin-tiep-nhan-1.0.0.zip", "mot-cua-xa/plugin-tinh-han-1.0.0.zip",
-        "mot-cua-xa/plugin-doc-giay-to-1.0.0.zip", "may-chu-plugin/may-chu-plugin-1.0.0.zip",
+        "mot-cua-xa/plugin-doc-giay-to-1.0.0.zip", "may-chu-plugin/may-chu-plugin-1.1.0.zip",
     } == paths  # fmt: skip
     guide = (out / "HUONG-DAN-CAI.txt").read_text(encoding="utf-8")
     assert all(path in guide for path in paths)
@@ -48,7 +48,7 @@ def test_each_expansion_gets_its_pack_and_plugins_as_zips_with_an_install_guide(
     assert {"desktiny-plugin.json", "ui/tinh-han.html", "ui/desktiny-plugin-sdk.js", "ui/chung.css"} <= tinh_han
     # A connected plugin's zip is its manifest; its server is in the server bundle, in the same layout as here.
     assert names(out / "mot-cua-xa/plugin-so-van-ban-1.0.0.zip") == {"desktiny-plugin.json"}
-    server = names(out / "may-chu-plugin/may-chu-plugin-1.0.0.zip")
+    server = names(out / "may-chu-plugin/may-chu-plugin-1.1.0.zip")
     assert {"lib/mo_rong/server.py", "deploy/compose.yaml", "deploy/Dockerfile",
             "expansion/mot-cua-xa/plugins/so-van-ban/server.py", "expansion/nhan-su/plugins/cham-cong/server.py"} <= server  # fmt: skip
     assert not any("tinh-han" in path or "packs/" in path for path in server)
@@ -75,9 +75,9 @@ def test_host_points_connected_plugins_at_the_real_server(tmp_path):
 def test_only_the_chosen_packs_and_plugins_are_built(tmp_path):
     built = {path for path, _, _ in dong_goi.build(out=tmp_path, only=["tinh-han", "plugin-cham-cong, ky-so"])}
     assert built == {"mot-cua-xa/plugin-tinh-han-1.0.0.zip", "nhan-su/plugin-cham-cong-1.0.0.zip",
-                     "mot-cua-xa/plugin-ky-so-1.0.0.zip", "may-chu-plugin/may-chu-plugin-1.0.0.zip"}  # fmt: skip
+                     "mot-cua-xa/plugin-ky-so-1.0.0.zip", "may-chu-plugin/may-chu-plugin-1.1.0.zip"}  # fmt: skip
     # The server bundle holds only the chosen connected plugins, and the guide starts just those services.
-    server = names(tmp_path / "may-chu-plugin/may-chu-plugin-1.0.0.zip")
+    server = names(tmp_path / "may-chu-plugin/may-chu-plugin-1.1.0.zip")
     assert "expansion/nhan-su/plugins/cham-cong/server.py" in server and "expansion/mot-cua-xa/plugins/ky-so/server.py" in server
     assert not any("so-van-ban" in path or "luong-kpi" in path for path in server)
     assert "up -d --build ky-so cham-cong" in (tmp_path / "HUONG-DAN-CAI.txt").read_text(encoding="utf-8")

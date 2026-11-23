@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: 2026 Desktiny contributors
-"""(Bản sao của packages/desktiny-plugin trong Desktiny, để repo này tự chạy được; cập nhật cùng Desktiny.)
+"""(Bản sao của packages/desktiny-plugin 0.3.0 trong Desktiny 3.1.0, để repo này tự chạy được; cập nhật cùng Desktiny.)
 
 Write a connected Desktiny plugin (desktiny-plugin/1) without guessing the wire format.
 
