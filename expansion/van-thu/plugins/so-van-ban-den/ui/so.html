@@ -7,62 +7,237 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sổ văn bản đến</title>
     <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <link rel="stylesheet" href="so-den.css" />
+    <style>
+      .sd-tools {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+    </style>
   </head>
   <body>
-    <h1>Sổ văn bản đến</h1>
-    <div class="row" id="counts"></div>
-    <div class="grid">
-      <label>Năm <input id="year" type="number" min="2000" max="2100" /></label>
-      <label>Tình trạng
-        <select id="state">
-          <option value="">Tất cả</option>
-          <option value="open">Đang xử lý</option>
-          <option value="due_soon">Sắp đến hạn</option>
-          <option value="overdue">Quá hạn</option>
-          <option value="done">Đã xử lý</option>
-          <option value="cancelled">Đã huỷ số</option>
-        </select>
-      </label>
-      <label>Tìm <input id="q" placeholder="Trích yếu, nơi gửi, số ký hiệu" /></label>
-      <label>&nbsp;<button id="export" type="button" class="secondary">Xuất CSV</button></label>
-    </div>
-    <div id="export-box"></div>
-    <table>
-      <thead><tr><th class="num">Số đến</th><th>Ngày đến</th><th>Nơi gửi, số ký hiệu</th><th>Trích yếu</th><th>Hạn xử lý</th><th>Tình trạng</th><th></th></tr></thead>
-      <tbody id="rows"><tr><td colspan="7" class="muted">Đang tải…</td></tr></tbody>
-    </table>
+    <header class="gd-hero">
+      <div>
+        <h1>Sổ văn bản đến</h1>
+        <p>Văn bản đến đã vào sổ, hạn xử lý và văn bản nào đang chậm.</p>
+      </div>
+      <div class="gd-stepper" id="years"></div>
+    </header>
+    <div class="sd-tally" id="tally" role="group" aria-label="Lọc theo tình trạng"></div>
+    <section class="sd-book" aria-labelledby="book-title">
+      <div class="sd-book-head">
+        <h2 id="book-title">Sổ đăng ký văn bản đến</h2>
+        <p id="book-sub" aria-live="polite"></p>
+      </div>
+      <div class="sd-tools">
+        <div class="sd-months" id="months" role="group" aria-label="Chọn tháng"></div>
+        <div class="sd-search">
+          <label><span class="sr-only">Tìm văn bản đến</span><input id="q" type="search" placeholder="Tìm số, nơi gửi, ký hiệu, trích yếu" autocomplete="off" /></label>
+          <button id="export" type="button" class="gd-ghost" aria-expanded="false"></button>
+        </div>
+      </div>
+      <div id="export-box"></div>
+      <div class="gd-scroll" id="table" aria-busy="true"></div>
+    </section>
+    <p class="gd-sub">Bạn thấy văn bản bạn mở được và văn bản do chính bạn vào sổ. Cả sổ của cơ quan nằm ở trang quản trị.</p>
+
     <script type="module">
       import { $, desktiny, h, server } from './mo-rong.js'
-      import { STATUS, badge, day } from './so-den.js'
-      $('#year').value = new Date().getFullYear()
-      const query = () => `nam=${$('#year').value}&tinh_trang=${$('#state').value}&q=${encodeURIComponent($('#q').value)}`
-      const open = (id) => (event) => { event.preventDefault(); desktiny.navigate(`/cases/${id}`) }
-      async function load() {
+      import { chip, empty, icon, skeleton } from './bieu-do.js'
+      import { STATUS, badge, countdown, day, dueLeaf, searchIcon, timeOf } from './so-den.js'
+
+      const now = new Date()
+      const PENDING = new Set(['open', 'due_soon', 'overdue'])
+      const state = { year: now.getFullYear(), month: 0, view: '', q: '', shown: 100 }
+      let data = null
+      $('#export').append(icon('download', 15), 'Xuất bảng')
+      $('#q').closest('label').prepend(searchIcon())
+
+      function years() {
+        const known = data?.years || [state.year]
+        const oldest = Math.min(...known, state.year)
+        $('#years').replaceChildren(
+          h('button', { type: 'button', 'aria-label': 'Năm trước', disabled: state.year <= oldest ? true : null, onclick: () => go(state.year - 1) }, icon('chevronLeft', 15)),
+          h('strong', { 'aria-live': 'polite' }, `Năm ${state.year}`),
+          h('button', { type: 'button', 'aria-label': 'Năm sau', disabled: state.year >= now.getFullYear() ? true : null, onclick: () => go(state.year + 1) }, icon('chevronRight', 15)),
+        )
+      }
+
+      const monthOf = (e) => Number(e.received_at.slice(5, 7))
+      const norm = (text) => String(text ?? '').toLocaleLowerCase('vi').normalize('NFC')
+      const matches = (e, q) => !q || [e.number, e.sender, e.original_number, e.summary, e.kind, e.registered_by].some((v) => norm(v).includes(q))
+      const inView = (e, view) => !view || (view === 'pending' ? PENDING.has(e.status) : view === 'all' ? e.status !== 'cancelled' : e.status === view)
+
+      function filtered({ month = state.month, view = state.view } = {}) {
+        const q = norm(state.q.trim())
+        return data.entries.filter((e) => (!month || monthOf(e) === month) && inView(e, view) && matches(e, q))
+      }
+
+      function scope() {
+        return state.month ? `tháng ${state.month}/${state.year}` : `năm ${state.year}`
+      }
+
+      function tally() {
+        const rows = filtered({ view: '' })
+        const n = (test) => rows.filter(test).length
+        const cancelled = n((e) => e.status === 'cancelled')
+        const soon = n((e) => e.status === 'due_soon')
+        const items = [
+          { view: 'all', label: 'Đã vào sổ', value: rows.length - cancelled, hint: cancelled ? `${cancelled} số đã huỷ` : scope(), tone: 'accent' },
+          { view: 'pending', label: 'Đang xử lý', value: n((e) => PENDING.has(e.status)), hint: soon ? `${soon} sắp đến hạn` : 'chưa có văn bản sắp đến hạn', tone: 'warn' },
+          { view: 'overdue', label: 'Quá hạn', value: n((e) => e.status === 'overdue'), hint: 'đã qua hạn xử lý', tone: 'bad' },
+          { view: 'done', label: 'Đã xử lý', value: n((e) => e.status === 'done'), hint: 'văn bản đã kết thúc', tone: 'ok' },
+        ]
+        $('#tally').replaceChildren(...items.map((item) => {
+          const on = state.view === item.view || (!state.view && item.view === 'all')
+          return h('button', {
+            type: 'button',
+            class: `tone-${item.tone}${item.view === 'overdue' && item.value ? ' is-overdue' : ''}`,
+            'aria-pressed': on ? 'true' : 'false',
+            'aria-label': `${item.label}: ${item.value}. ${item.hint}`,
+            onclick: () => { state.view = item.view === 'all' || state.view === item.view ? '' : item.view; state.shown = 100; render() },
+          }, h('span', { class: 'label' }, item.label), h('span', { class: 'value' }, item.value), h('span', { class: 'hint' }, item.hint))
+        }))
+      }
+
+      function months() {
+        const rows = filtered({ month: 0 })
+        const per = Array.from({ length: 12 }, (_, i) => rows.filter((e) => monthOf(e) === i + 1))
+        const top = Math.max(1, ...per.map((m) => m.length))
+        const future = (m) => state.year === now.getFullYear() && m > now.getMonth() + 1
+        const pick = (m) => { state.month = state.month === m ? 0 : m; state.shown = 100; render() }
+        $('#months').replaceChildren(
+          h('button', { type: 'button', class: 'all', 'aria-pressed': state.month === 0 ? 'true' : 'false', onclick: () => pick(0), 'aria-label': `Cả năm: ${rows.length} văn bản` }, h('b', {}, rows.length), 'Cả năm'),
+          ...per.map((list, i) => {
+            const late = list.filter((e) => e.status === 'overdue').length
+            const label = `Tháng ${i + 1}: ${list.length} văn bản${late ? `, ${late} quá hạn` : ''}`
+            return h('button', { type: 'button', 'aria-pressed': state.month === i + 1 ? 'true' : 'false', disabled: future(i + 1) && !list.length ? true : null, onclick: () => pick(i + 1), 'aria-label': label, title: label },
+              h('span', { class: `bar${late ? ' has-overdue' : ''}`, style: `height:${list.length ? Math.max(4, Math.round((list.length / top) * 30)) : 2}px` }), `T${i + 1}`)
+          }),
+        )
+      }
+
+      function dueCell(e) {
+        if (!e.due) return h('span', { class: 'sd-due' }, dueLeaf(null), h('small', {}, 'Chưa đặt hạn'))
+        const words = PENDING.has(e.status) ? countdown(e.left) : e.status === 'done' ? 'đã xử lý' : ''
+        return h('span', { class: 'sd-due', title: `Hạn xử lý ${day(e.due)}` }, dueLeaf(e.due, e.status),
+          h('span', {}, h('span', { class: 'tabular', style: 'display:block' }, day(e.due)),
+            words ? h('small', { class: e.status === 'overdue' ? 'is-overdue' : e.status === 'due_soon' ? 'is-soon' : '' }, words) : null))
+      }
+
+      function noteCell(e) {
+        const parts = [badge(e, { days: false })]
+        if (e.status === 'done' && e.closed_at) parts.push(h('span', { class: 'gd-sub' }, `Kết thúc ngày ${day(e.closed_at)}`))
+        if (e.status === 'cancelled') parts.push(h('span', { class: 'sd-reason' }, `Lý do: ${e.cancel_reason || 'không ghi'}`))
+        parts.push(h('span', { class: 'gd-sub' }, `Vào sổ: ${e.registered_by}`))
+        return parts
+      }
+
+      function table(rows) {
+        if (!rows.length) {
+          const q = state.q.trim()
+          if (q) return empty('Không tìm thấy văn bản nào', `Không có văn bản đến nào khớp “${q}” trong ${scope()}.`)
+          if (state.view) return empty('Không có văn bản nào ở mục này', `Trong ${scope()} không có văn bản nào ${state.view === 'pending' ? 'đang xử lý' : state.view === 'overdue' ? 'quá hạn' : 'đã xử lý'}.`, state.view === 'overdue' ? 'check' : 'file')
+          return empty('Sổ chưa có văn bản nào', `Chưa vào sổ văn bản đến nào trong ${scope()}. Văn bản được vào sổ từ nút “Vào sổ văn bản đến” trên văn bản.`)
+        }
+        const latest = data.entries.find((e) => e.status !== 'cancelled')
+        const body = rows.slice(0, state.shown).map((e) => {
+          const isLatest = latest && e.id === latest.id
+          const cls = [e.status === 'cancelled' ? 'is-cancelled' : '', e.status === 'overdue' ? 'is-overdue' : '', isLatest ? 'is-latest' : ''].filter(Boolean).join(' ')
+          return h('tr', { class: cls },
+            h('td', {}, h('b', { 'aria-label': e.status === 'cancelled' ? `Số đến ${e.number}, đã huỷ` : `Số đến ${e.number}` }, e.number)),
+            h('td', { class: 'sd-when' }, h('b', {}, day(e.received_at)), timeOf(e.received_at)),
+            h('td', { class: 'sd-from' }, h('b', {}, e.sender),
+              h('span', { class: 'gd-sub' }, [e.original_number || 'Không có số ký hiệu', e.document_date ? `ngày ${day(e.document_date)}` : ''].filter(Boolean).join(', '))),
+            h('td', { class: 'sd-summary' },
+              e.kind ? h('span', { class: 'sd-kind', style: 'display:block' }, e.kind) : null,
+              e.summary,
+              e.urgent ? chip(e.urgency, 'bad') : null,
+              isLatest ? chip('Mới vào sổ', 'accent') : null),
+            h('td', { class: 'sd-due-cell' }, dueCell(e)),
+            h('td', { class: 'sd-note-cell' }, noteCell(e)),
+            h('td', { class: 'sd-open' }, e.case_id
+              ? h('button', { type: 'button', class: 'gd-ghost sd-small', onclick: () => desktiny.navigate(`/cases/${e.case_id}`), 'aria-label': `Mở hồ sơ văn bản số đến ${e.number}` }, 'Mở hồ sơ')
+              : null))
+        })
+        return h('div', {},
+          h('table', { class: 'gd-register sd-register' },
+            h('caption', { class: 'sr-only' }, `Sổ đăng ký văn bản đến, ${scope()}`),
+            h('thead', {}, h('tr', {},
+              ['Số đến', 'Ngày đến', 'Cơ quan gửi, số và ký hiệu', 'Tên loại và trích yếu', 'Hạn xử lý', 'Ghi chú'].map((t) => h('th', { scope: 'col' }, t)),
+              h('th', { scope: 'col' }, h('span', { class: 'sr-only' }, 'Hồ sơ')))),
+            h('tbody', {}, body)),
+          rows.length > state.shown
+            ? h('div', { class: 'sd-more' }, h('button', { type: 'button', class: 'gd-ghost', onclick: () => { state.shown += 100; render() } }, `Hiện thêm (còn ${rows.length - state.shown} văn bản)`))
+            : null)
+      }
+
+      function render() {
+        const rows = filtered()
+        $('#book-title').textContent = `Sổ đăng ký văn bản đến, năm ${state.year}`
+        const what = state.view ? ({ all: '', pending: 'đang xử lý', overdue: 'quá hạn', done: 'đã xử lý' })[state.view] : ''
+        $('#book-sub').textContent = `${scope().replace(/^./, (c) => c.toLocaleUpperCase('vi'))}: ${rows.length} văn bản${what ? ' ' + what : ''}`
+        tally()
+        months()
+        $('#table').replaceChildren(table(rows))
+        if ($('#export-box').firstChild) exportBox(rows)
+      }
+
+      // The rows on screen as CSV (the columns of the server's export), to copy into a spreadsheet: a frame cannot
+      // download files.
+      const csvCell = (value) => (/[",\n]/.test(String(value)) ? `"${String(value).replaceAll('"', '""')}"` : String(value))
+      function exportBox(rows) {
+        const lines = [['Số đến', 'Ngày đến', 'Cơ quan gửi', 'Số, ký hiệu', 'Ngày văn bản', 'Trích yếu', 'Mức độ khẩn', 'Hạn xử lý', 'Tình trạng'],
+          ...rows.map((e) => [e.number, e.received_at.slice(0, 10), e.sender, e.original_number, e.document_date || '', e.summary, e.urgency, e.due || '', STATUS[e.status] ?? e.status])]
+        const box = h('textarea', { rows: 7, readonly: true, 'aria-label': 'Sổ văn bản đến dạng CSV' })
+        box.value = lines.map((line) => line.map(csvCell).join(',')).join('\n')
+        const note = h('span', { class: 'gd-sub', 'aria-live': 'polite' }, `${rows.length} dòng của ${scope()}. Dán vào bảng tính.`)
+        $('#export-box').replaceChildren(h('div', { style: 'display:grid;gap:6px;margin:0 0 12px' }, box,
+          h('div', { class: 'sd-actions' },
+            h('button', { type: 'button', class: 'sd-small', onclick: async () => {
+              box.select()
+              try {
+                await navigator.clipboard.writeText(box.value)
+                note.textContent = 'Đã sao chép. Dán vào bảng tính.'
+              } catch {
+                note.textContent = 'Đã chọn hết; bấm Ctrl+C để sao chép.'
+              }
+            } }, 'Sao chép'),
+            h('button', { type: 'button', class: 'gd-ghost sd-small', onclick: closeExport }, 'Đóng'),
+            note)))
+        $('#export').setAttribute('aria-expanded', 'true')
+      }
+      function closeExport() {
+        $('#export-box').replaceChildren()
+        $('#export').setAttribute('aria-expanded', 'false')
+      }
+      $('#export').addEventListener('click', () => (!data ? null : $('#export-box').firstChild ? closeExport() : exportBox(filtered())))
+
+      let typing
+      $('#q').addEventListener('input', () => {
+        clearTimeout(typing)
+        typing = setTimeout(() => { state.q = $('#q').value; state.shown = 100; if (data) render() }, 120)
+      })
+
+      async function go(year) {
+        state.year = year
+        state.month = 0
+        years()
+        $('#table').setAttribute('aria-busy', 'true')
+        if (!data) $('#table').replaceChildren(skeleton(5, 16))
         try {
-          const data = await server(`/api/so?${query()}`)
-          $('#counts').replaceChildren(...['open', 'due_soon', 'overdue', 'done'].map((key) =>
-            h('div', { class: 'card' }, h('div', { class: 'big ' + (key === 'overdue' && data.counts[key] ? 'bad' : '') }, data.counts[key]), h('div', { class: 'muted' }, STATUS[key]))))
-          $('#rows').replaceChildren(...(data.entries.length ? data.entries.map((e) => h('tr', { class: e.status === 'cancelled' ? 'muted' : '' },
-            h('td', { class: 'num' }, h('strong', {}, e.number)), h('td', {}, day(e.received_at)),
-            h('td', {}, e.sender, h('br'), h('small', { class: 'muted' }, e.original_number || '—')),
-            h('td', {}, e.urgent ? h('span', { class: 'tag bad' }, e.urgency) : null, ' ', e.summary, e.status === 'cancelled' ? h('small', { class: 'muted' }, ` (huỷ: ${e.cancel_reason})`) : null),
-            h('td', {}, e.due ? day(e.due) : '—'), h('td', {}, badge(e)),
-            h('td', {}, e.case_id ? h('a', { href: '#', onclick: open(e.case_id) }, 'Mở') : '—')))
-            : [h('tr', {}, h('td', { colspan: 7, class: 'muted' }, 'Chưa có văn bản đến nào phù hợp.'))]))
+          data = await server(`/api/so?nam=${year}`)
+          years()
+          render()
         } catch (error) {
-          $('#rows').replaceChildren(h('tr', {}, h('td', { colspan: 7, class: 'bad' }, error.message)))
+          $('#table').replaceChildren(h('p', { class: 'gd-note tone-bad', role: 'alert' }, icon('alert', 15), error.message))
+        } finally {
+          $('#table').setAttribute('aria-busy', 'false')
         }
       }
-      for (const id of ['#year', '#state', '#q']) $(id).addEventListener('change', load)
-      $('#export').addEventListener('click', async () => {
-        const session = await desktiny.token()
-        const text = await (await fetch(`/api/xuat?${query()}`, { headers: { 'X-Desktiny-Session': session.token } })).text()
-        const box = h('textarea', { rows: 8, readonly: true, style: 'width: 100%' })
-        box.value = text.replace(/^﻿/, '')
-        $('#export-box').replaceChildren(h('p', { class: 'muted' }, 'Chọn hết, sao chép rồi dán vào bảng tính.'), box)
-        box.select()
-      })
-      load()
+      go(state.year)
     </script>
   </body>
 </html>

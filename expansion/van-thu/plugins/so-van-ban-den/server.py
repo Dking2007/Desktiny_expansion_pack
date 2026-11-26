@@ -131,6 +131,23 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
     def counts(rows: list[dict]) -> dict:
         return {key: sum(1 for row in rows if row["status"] == key) for key in ("open", "due_soon", "overdue", "done")}
 
+    def next_number(year: int) -> int:
+        """The số đến the next document registered this year would get (cancelled numbers are never reused)."""
+        return (db.one("SELECT MAX(number) AS last FROM entries WHERE year = ?", year)["last"] or 0) + 1
+
+    def years() -> list[int]:
+        """The years the register has entries for, and this year, newest first."""
+        found = {row["year"] for row in db.all("SELECT DISTINCT year FROM entries")}
+        return sorted(found | {now().year}, reverse=True)
+
+    def deadline(due) -> dict | None:
+        """How a deadline stands today: the date, days left and whether it is due soon or overdue."""
+        day = parse_date(due)
+        if not day:
+            return None
+        left = (day - now().date()).days
+        return {"due": day.isoformat(), "left": left, "status": "overdue" if left < 0 else "due_soon" if left <= soon_days() else "open"}
+
     # ---- Flow step ------------------------------------------------------------------------------
 
     @app.route("POST", "/nodes/vao-so", signed=True)
@@ -155,8 +172,14 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
         payload = case.get("payload") or {}
         draft = {"noi_gui": payload.get("noi_gui") or "", "so_ky_hieu_goc": payload.get("so_ky_hieu_goc") or "",
                  "trich_yeu": payload.get("trich_yeu") or case.get("title") or "", "do_khan": payload.get("do_khan") or "Thường",
-                 "han_xu_ly": payload.get("han_xu_ly") or ""}  # fmt: skip
-        return {"case": {"id": case["id"], "title": case["title"]}, "entry": shown(entry) if entry else None, "draft": draft}
+                 "han_xu_ly": payload.get("han_xu_ly") or "", "ngay_van_ban": payload.get("ngay_van_ban") or "",
+                 "loai_van_ban": payload.get("loai_van_ban") or "", "nguoi_xu_ly": payload.get("nguoi_xu_ly") or ""}  # fmt: skip
+        # The deadline as the dossier has it now: the leader often sets “Hạn xử lý” after the document is registered.
+        due = payload.get("han_xu_ly") or (entry or {}).get("due") or case.get("due_at")
+        return {"case": {"id": case["id"], "title": case["title"]}, "entry": shown(entry) if entry else None, "draft": draft,
+                "today": now().date().isoformat(), "next_number": None if entry else next_number(now().year),
+                "deadline": deadline(due) if not entry or entry["state"] == "open" else None,
+                "bao_truoc_ngay": soon_days()}  # fmt: skip
 
     @app.route("POST", "/api/van-ban/{case_id}/vao-so", viewer=True)
     def register_case(request):
@@ -170,14 +193,14 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
     @app.route("GET", "/api/so", viewer=True)
     def register_page(request):
         rows = listing(request)
-        return {"entries": rows, "counts": counts(rows), "states": STATES}
+        return {"entries": rows, "counts": counts(rows), "states": STATES, "years": years(), "bao_truoc_ngay": soon_days()}
 
     @app.route("GET", "/api/can-xu-ly", viewer=True)
     def to_handle(request):
         """Home block: open documents the viewer may see, the most pressing first."""
         rows = [shown(row) for row in visible(request, db.all("SELECT * FROM entries WHERE state = 'open' ORDER BY number DESC LIMIT 500"))]
         rows.sort(key=lambda r: (r["status"] != "overdue", not r["urgent"], r["left"] if r["left"] is not None else 9999))
-        return {"items": rows[:10], "counts": counts(rows)}
+        return {"items": rows[:10], "counts": counts(rows), "bao_truoc_ngay": soon_days()}
 
     @app.route("GET", "/api/xuat", viewer=True)
     def export(request):
@@ -190,6 +213,17 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
             writer.writerow([row["number"], row["received_at"][:10], row["sender"], row["original_number"], row["document_date"] or "",
                              row["summary"], row["urgency"], row["due"] or "", labels.get(row["status"], row["status"])])  # fmt: skip
         return Response(200, ("﻿" + out.getvalue()).encode(), "text/csv; charset=utf-8")
+
+    @app.route("GET", "/api/quan-tri/tong-quan", admin=True)
+    def overview(request):
+        """The register's settings and where it stands, for the admin page: the next số đến and the year by month."""
+        year = now().year
+        months = [0] * 12
+        for row in db.all("SELECT received_at FROM entries WHERE year = ? AND state != 'cancelled'", year):
+            months[int(row["received_at"][5:7]) - 1] += 1
+        cancelled = db.one("SELECT COUNT(*) AS n FROM entries WHERE year = ? AND state = 'cancelled'", year)["n"]
+        return {"year": year, "today": now().date().isoformat(), "next_number": next_number(year), "bao_truoc_ngay": soon_days(),
+                "months": months, "cancelled": cancelled, "years": years()}  # fmt: skip
 
     @app.route("POST", "/api/quan-tri/huy/{entry_id}", admin=True)
     def cancel(request):

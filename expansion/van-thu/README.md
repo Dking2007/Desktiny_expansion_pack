@@ -62,6 +62,20 @@ Biểu mẫu có sẵn các trường mà plugin dùng. Đổi mã trường th�
 Người dùng chỉ thấy trong sổ những văn bản họ mở được và những văn bản họ tự vào sổ. Cả sổ chỉ xem được ở trang quản
 trị.
 
+### Giao diện Sổ văn bản đến
+
+Các trang dùng bộ giao diện chung `sdk/giao-dien.css` và `sdk/bieu-do.js`, có phông chữ của Desktiny đi kèm. Điểm nhấn là
+**dấu “ĐẾN”** vẽ theo mẫu Nghị định 30 (Số, Ngày, Chuyển, Lưu hồ sơ số) bằng mực đỏ, chữ điền màu mực xanh; đây là hình
+vẽ chỉ trạng thái, không mô phỏng con dấu thật.
+
+| Trang | Thấy và làm được gì |
+|---|---|
+| *Sổ văn bản đến* | Chọn năm; bốn số liệu đồng thời là bộ lọc (đã vào sổ, đang xử lý, quá hạn, đã xử lý); sổ đăng ký kẻ dòng theo cột của sổ giấy, dải 12 tháng, tìm ngay khi gõ, hạn xử lý bằng tờ lịch nhỏ, đỏ khi quá hạn; mở hồ sơ; xuất bảng để sao chép |
+| *Vào sổ văn bản đến* | Thông tin văn bản bên trái, bản xem trước văn bản đến kèm dấu “ĐẾN” với số sẽ cấp bên phải; hỏi lại rồi đóng dấu, số đến hiện lớn |
+| Khung *Sổ văn bản đến* trên hồ sơ | Dấu “ĐẾN” đã điền, trạng thái, độ khẩn và hạn xử lý đếm ngược |
+| Khối *Văn bản đến cần xử lý* | Số văn bản đang mở, lọc quá hạn / sắp đến hạn / còn hạn, năm văn bản gấp nhất, bấm để mở |
+| Quản trị *Sổ văn bản đến* | Dấu xem trước cho số tiếp theo, cách sổ hoạt động bằng lời, thước ngày cho mốc “sắp đến hạn”, biểu đồ theo tháng, huỷ số có lý do |
+
 ## Cài đặt
 
 Cài theo [hướng dẫn chung](../../README.md#cài-vào-desktiny), với các điểm riêng sau:

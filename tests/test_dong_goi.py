@@ -37,7 +37,7 @@ def test_each_expansion_gets_its_pack_and_plugins_as_zips_with_an_install_guide(
         "nhan-su/goi-nhan-su-1.1.0.zip", "nhan-su/plugin-cham-cong-1.1.0.zip", "nhan-su/plugin-luong-kpi-1.1.0.zip",
         "nhan-su/plugin-nhac-han-1.1.0.zip", "mot-cua-xa/goi-mot-cua-xa-1.1.0.zip", "mot-cua-xa/plugin-so-van-ban-1.1.0.zip",
         "mot-cua-xa/plugin-ky-so-1.1.0.zip", "mot-cua-xa/plugin-tiep-nhan-1.1.0.zip", "mot-cua-xa/plugin-tinh-han-1.1.0.zip",
-        "mot-cua-xa/plugin-doc-giay-to-1.1.0.zip", "van-thu/goi-van-thu-1.0.0.zip", "van-thu/plugin-so-van-ban-den-1.0.0.zip",
+        "mot-cua-xa/plugin-doc-giay-to-1.1.0.zip", "van-thu/goi-van-thu-1.0.0.zip", "van-thu/plugin-so-van-ban-den-1.1.0.zip",
         # Văn thư borrows these from Một cửa: the same zips are also in its own folder.
         "van-thu/plugin-so-van-ban-1.1.0.zip", "van-thu/plugin-ky-so-1.1.0.zip", "van-thu/plugin-tinh-han-1.1.0.zip",
         "may-chu-plugin/may-chu-plugin-1.1.0.zip",

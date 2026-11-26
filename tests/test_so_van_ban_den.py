@@ -98,3 +98,40 @@ def test_people_see_documents_they_may_open_and_only_managers_cancel_numbers(mak
     assert call(app, "POST", "/api/van-ban/vb-3/vao-so", session="phien-an").data["entry"]["number"] == 3  # 2 is not reused
     cancelled = call(app, "GET", "/api/so?tinh_trang=cancelled", session="phien-qt").data["entries"]
     assert [e["cancel_reason"] for e in cancelled] == ["Vào sổ trùng"]
+
+
+def test_the_pages_see_the_number_to_come_the_deadline_as_set_later_and_the_years_of_the_register(make_app, desktiny):
+    clock = {"now": datetime(2026, 11, 20, 9, 0, tzinfo=VN)}
+    app = make_app("so-van-ban-den", now=lambda: clock["now"])
+    document(desktiny, "vb-1", ngay_van_ban="2026-11-18", loai_van_ban="Công văn", nguoi_xu_ly="Trần Thị Bình")
+    before = call(app, "GET", "/api/van-ban/vb-1", session="phien-an").data
+    assert before["entry"] is None and before["next_number"] == 1 and before["today"] == "2026-11-20"
+    assert before["deadline"] is None and before["bao_truoc_ngay"] == 2
+    assert before["draft"]["nguoi_xu_ly"] == "Trần Thị Bình" and before["draft"]["loai_van_ban"] == "Công văn"
+    assert call(app, "POST", "/api/van-ban/vb-1/vao-so", session="phien-an").data["entry"]["number"] == before["next_number"]
+    # The leader sets the deadline after the document was registered: the dossier's own deadline is what shows.
+    desktiny.cases["vb-1"]["payload"]["han_xu_ly"] = "21/11/2026"
+    after = call(app, "GET", "/api/van-ban/vb-1", session="phien-an").data
+    assert after["next_number"] is None and after["deadline"] == {"due": "2026-11-21", "left": 1, "status": "due_soon"}
+    document(desktiny, "vb-2")
+    assert call(app, "GET", "/api/van-ban/vb-2", session="phien-an").data["next_number"] == 2
+    clock["now"] = datetime(2027, 1, 3, 9, 0, tzinfo=VN)
+    register = call(app, "GET", "/api/so?nam=2026", session="phien-an").data
+    assert register["years"] == [2027, 2026] and register["bao_truoc_ngay"] == 2
+    assert call(app, "GET", "/api/can-xu-ly", session="phien-an").data["bao_truoc_ngay"] == 2
+
+
+def test_the_admin_overview_shows_the_next_number_and_the_year_by_month_and_is_for_the_admin_page_only(make_app, desktiny):
+    clock = {"now": datetime(2026, 3, 10, 9, 0, tzinfo=VN)}
+    app = make_app("so-van-ban-den", now=lambda: clock["now"])
+    desktiny.settings = {"bao_truoc_ngay": 4}
+    for i, month in enumerate((3, 3, 5)):
+        clock["now"] = datetime(2026, month, 10, 9, 0, tzinfo=VN)
+        document(desktiny, f"vb-{i}")
+        call(app, "POST", f"/api/van-ban/vb-{i}/vao-so", session="phien-an")
+    entry_id = call(app, "GET", "/api/van-ban/vb-2", session="phien-an").data["entry"]["id"]
+    call(app, "POST", f"/api/quan-tri/huy/{entry_id}", {"ly_do": "Vào sổ nhầm"}, "phien-qt")
+    assert call(app, "GET", "/api/quan-tri/tong-quan", session="phien-an").status == 403
+    data = call(app, "GET", "/api/quan-tri/tong-quan", session="phien-qt").data
+    assert data["year"] == 2026 and data["next_number"] == 4 and data["cancelled"] == 1 and data["bao_truoc_ngay"] == 4
+    assert data["months"][2] == 2 and sum(data["months"]) == 2 and data["years"] == [2026]

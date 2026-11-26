@@ -2,7 +2,7 @@
   "schema": "desktiny-plugin/1",
   "id": "vn.mo-rong.so-van-ban-den",
   "name": "Sổ văn bản đến",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "Apache-2.0",
   "authors": ["Desktiny Expansion Pack contributors"],
   "description": "Sổ văn bản đến: vào sổ văn bản đến với số đến liên tục theo năm (không nhảy số, không trùng), ghi số đến và ngày đến vào văn bản; theo dõi văn bản đang xử lý, sắp đến hạn, quá hạn; khối trang chủ “Văn bản đến cần xử lý”; trợ lý AI liệt kê văn bản đến chưa xử lý.",
@@ -43,9 +43,9 @@
   },
   "ui": [
     { "slot": "page", "title": "Sổ văn bản đến", "url": "/ui/so.html", "height": 720 },
-    { "slot": "case.side", "title": "Sổ văn bản đến", "url": "/ui/van-ban.html", "height": 190 },
-    { "slot": "case.action", "title": "Vào sổ văn bản đến", "url": "/ui/vao-so.html", "height": 360 },
-    { "slot": "home.widget", "title": "Văn bản đến cần xử lý", "url": "/ui/widget.html", "height": 240 },
+    { "slot": "case.side", "title": "Sổ văn bản đến", "url": "/ui/van-ban.html", "height": 300 },
+    { "slot": "case.action", "title": "Vào sổ văn bản đến", "url": "/ui/vao-so.html", "height": 560 },
+    { "slot": "home.widget", "title": "Văn bản đến cần xử lý", "url": "/ui/widget.html", "height": 320 },
     { "slot": "admin.page", "title": "Quản lý sổ văn bản đến", "url": "/ui/quan-tri.html", "height": 700 }
   ]
 }

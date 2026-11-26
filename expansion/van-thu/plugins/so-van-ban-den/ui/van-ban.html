@@ -7,23 +7,98 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sổ văn bản đến</title>
     <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <link rel="stylesheet" href="so-den.css" />
+    <style>
+      body {
+        padding: 12px 14px 14px;
+      }
+      #out {
+        display: grid;
+        gap: 12px;
+      }
+      .vb-stamp {
+        padding: 4px 2px 2px;
+      }
+      .vb-due {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-top: 10px;
+        border-top: 1px solid var(--gd-border);
+      }
+      .vb-due .gd-grow {
+        display: grid;
+        gap: 1px;
+      }
+      .vb-left {
+        font-family: var(--gd-display);
+        font-size: 18px;
+        font-weight: 600;
+        line-height: 1.2;
+        font-variant-numeric: tabular-nums;
+      }
+      .vb-left.is-overdue {
+        color: var(--gd-son);
+      }
+      .vb-left.is-soon {
+        color: var(--gd-warn);
+      }
+      .vb-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+      }
+      .vb-none {
+        display: grid;
+        gap: 8px;
+      }
+      .vb-none p {
+        margin: 0;
+      }
+    </style>
   </head>
   <body>
-    <div id="out" class="muted">Đang tải…</div>
+    <div id="out" aria-live="polite" aria-busy="true"></div>
     <script type="module">
       import { $, desktiny, h, server } from './mo-rong.js'
-      import { badge, day } from './so-den.js'
+      import { chip, icon, skeleton } from './bieu-do.js'
+      import { badge, countdown, day, dueLeaf, stampDen, timeOf } from './so-den.js'
+
+      $('#out').replaceChildren(skeleton(4, 14))
       const context = await desktiny.context
       try {
-        const { entry } = await server(`/api/van-ban/${context.record.case_id}`)
-        $('#out').className = ''
-        $('#out').replaceChildren(...(entry
-          ? [h('div', { class: 'row' }, h('span', { class: 'big' }, `Số đến ${entry.number}`), badge(entry)),
-             h('div', { class: 'muted' }, `Ngày đến ${day(entry.received_at)} · vào sổ: ${entry.registered_by}`),
-             h('div', {}, entry.due ? `Hạn xử lý: ${day(entry.due)}` : 'Chưa đặt hạn xử lý.')]
-          : [h('strong', {}, 'Chưa vào sổ văn bản đến.'), h('p', { class: 'muted' }, 'Bấm “Vào sổ văn bản đến” ở thanh thao tác để lấy số đến.')]))
+        const data = await server(`/api/van-ban/${context.record.case_id}`)
+        const { entry, deadline, draft } = data
+        const parts = []
+        if (entry) {
+          parts.push(h('div', { class: 'vb-stamp' }, stampDen({ number: entry.number, date: entry.received_at, time: timeOf(entry.received_at), to: draft.nguoi_xu_ly, cancelled: entry.status === 'cancelled', compact: true })))
+          parts.push(h('div', { class: 'vb-meta' }, badge(entry.state === 'open' && deadline ? { ...entry, status: deadline.status, left: deadline.left } : entry, { days: false }), entry.urgent ? chip(entry.urgency, 'bad') : null))
+          if (entry.status === 'cancelled') parts.push(h('p', { class: 'sd-reason', style: 'margin:0' }, `Số đến đã huỷ: ${entry.cancel_reason || 'không ghi lý do'}`))
+          if (entry.status === 'done') parts.push(h('p', { class: 'gd-sub', style: 'margin:0' }, `Đã xử lý xong${entry.closed_at ? ` ngày ${day(entry.closed_at)}` : ''}.`))
+          parts.push(h('p', { class: 'gd-sub', style: 'margin:0' }, `${entry.registered_by} vào sổ ngày ${day(entry.received_at)}.`))
+        } else {
+          parts.push(h('div', { class: 'vb-stamp' }, stampDen({ pending: true, compact: true, to: draft.nguoi_xu_ly })))
+          parts.push(h('div', { class: 'vb-none' },
+            h('strong', {}, 'Chưa vào sổ văn bản đến'),
+            h('p', { class: 'gd-sub' }, `Bấm “Vào sổ văn bản đến” ở thanh thao tác để lấy số đến; số tiếp theo của sổ là ${data.next_number}.`)))
+        }
+        if (deadline) {
+          const tone = deadline.status === 'overdue' ? 'is-overdue' : deadline.status === 'due_soon' ? 'is-soon' : ''
+          parts.push(h('div', { class: 'vb-due', role: 'group', 'aria-label': `Hạn xử lý ${day(deadline.due)}, ${countdown(deadline.left)}` },
+            dueLeaf(deadline.due, deadline.status),
+            h('span', { class: 'gd-grow' },
+              h('span', { class: `vb-left ${tone}` }, countdown(deadline.left).replace(/^./, (c) => c.toLocaleUpperCase('vi'))),
+              h('span', { class: 'gd-sub' }, `Hạn xử lý ${day(deadline.due)}${draft.nguoi_xu_ly ? `, ${draft.nguoi_xu_ly} xử lý` : ''}`))))
+        } else if (!entry || entry.status === 'open' || entry.status === 'due_soon' || entry.status === 'overdue') {
+          parts.push(h('div', { class: 'vb-due' }, dueLeaf(null), h('span', { class: 'gd-sub' }, 'Chưa có hạn xử lý. Lãnh đạo giao hạn khi cho ý kiến chỉ đạo.')))
+        }
+        $('#out').replaceChildren(...parts)
       } catch (error) {
-        $('#out').replaceChildren(h('span', { class: 'bad' }, error.message))
+        $('#out').replaceChildren(h('p', { class: 'gd-note tone-bad', role: 'alert' }, icon('alert', 15), error.message))
+      } finally {
+        $('#out').setAttribute('aria-busy', 'false')
       }
     </script>
   </body>

@@ -7,24 +7,202 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Văn bản đến cần xử lý</title>
     <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <link rel="stylesheet" href="so-den.css" />
+    <style>
+      body {
+        padding: 12px 14px 14px;
+      }
+      .head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .head strong {
+        color: var(--gd-muted);
+        font-size: 13px;
+        font-weight: 650;
+      }
+      .head .total {
+        font-family: var(--gd-display);
+        font-size: 24px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .bands {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+      .band {
+        display: grid;
+        padding: 6px 8px;
+        border: 1px solid var(--gd-border);
+        border-radius: 8px;
+        background: var(--gd-surface);
+        color: var(--gd-ink);
+        font-size: 11.5px;
+        font-weight: 600;
+        line-height: 1.25;
+        text-align: left;
+      }
+      .band b {
+        font-family: var(--gd-display);
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--tone);
+        font-variant-numeric: tabular-nums;
+      }
+      .band.tone-bad b {
+        color: var(--gd-son);
+      }
+      .band:hover:not(:disabled) {
+        border-color: var(--tone);
+      }
+      .band[aria-pressed='true'] {
+        border-color: var(--tone);
+        box-shadow: inset 0 -3px 0 var(--tone);
+      }
+      .band:disabled {
+        opacity: 0.5;
+      }
+      .list {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .item {
+        display: flex;
+        min-width: 0;
+        align-items: center;
+        gap: 9px;
+        width: 100%;
+        padding: 6px;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--gd-ink);
+        font-weight: 400;
+        text-align: left;
+      }
+      .item:hover {
+        background: var(--gd-surface-2);
+      }
+      .item .gd-leaf {
+        width: 38px;
+      }
+      .item .gd-leaf span {
+        font-size: 15px;
+      }
+      .item .gd-title {
+        font-size: 13px;
+      }
+      .item .gd-sub {
+        overflow: hidden;
+        font-size: 11.5px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .item .no {
+        font-family: var(--gd-display);
+        font-weight: 700;
+        color: var(--gd-ink);
+        font-variant-numeric: tabular-nums;
+      }
+      .item .gd-chip.tone-bad {
+        color: var(--gd-son);
+      }
+      .more {
+        margin: 6px 0 0;
+        color: var(--gd-muted);
+        font-size: 12px;
+        text-align: center;
+      }
+      .gd-empty {
+        padding: 14px 8px;
+      }
+      .gd-empty .gd-svg-icon {
+        color: var(--gd-ok);
+      }
+      @media (max-width: 300px) {
+        .item .gd-chip {
+          display: none;
+        }
+      }
+    </style>
   </head>
   <body>
-    <p id="summary" class="muted">Đang tải…</p>
-    <table><tbody id="rows"></tbody></table>
+    <main id="app" aria-busy="true"></main>
     <script type="module">
       import { $, desktiny, h, server } from './mo-rong.js'
-      import { left } from './so-den.js'
-      const open = (id) => (event) => { event.preventDefault(); desktiny.navigate(`/cases/${id}`) }
+      import { chip, empty, icon, skeleton } from './bieu-do.js'
+      import { countdown, day, dueLeaf } from './so-den.js'
+
+      const SHOWN = 5
+      let data
+      let picked = null
+      const BANDS = [
+        { key: 'overdue', label: 'Quá hạn', tone: 'bad' },
+        { key: 'due_soon', label: 'Sắp đến hạn', tone: 'warn' },
+        { key: 'open', label: 'Còn hạn', tone: 'accent' },
+      ]
+
+      function render() {
+        const root = $('#app')
+        root.removeAttribute('aria-busy')
+        const { items, counts } = data
+        const total = counts.open + counts.due_soon + counts.overdue
+        if (!total) {
+          root.replaceChildren(empty('Không có văn bản đến nào chờ xử lý', 'Văn bản đến đã vào sổ đều đã xử lý xong.', 'check'))
+          return
+        }
+        const head = h('div', { class: 'head' },
+          h('strong', {}, 'Văn bản đến đang xử lý'),
+          h('span', { class: 'total', 'aria-label': `${total} văn bản` }, total))
+        const bands = h('div', { class: 'bands', role: 'group', 'aria-label': 'Lọc theo mức gấp' },
+          BANDS.map((band) => h('button', {
+            type: 'button',
+            class: `band tone-${band.tone}`,
+            'aria-pressed': picked === band.key ? 'true' : 'false',
+            'aria-label': `${band.label}: ${counts[band.key]} văn bản${picked === band.key ? ' (đang lọc, bấm để bỏ lọc)' : ''}`,
+            disabled: counts[band.key] ? null : true,
+            onclick: () => { picked = picked === band.key ? null : band.key; render() },
+          }, h('b', {}, counts[band.key]), band.label)))
+        const list = picked ? items.filter((r) => r.status === picked) : items
+        const rows = h('ul', { class: 'list', 'aria-label': 'Văn bản cần xử lý trước' },
+          list.slice(0, SHOWN).map((r) => {
+            const tone = r.status === 'overdue' ? 'bad' : r.status === 'due_soon' ? 'warn' : 'muted'
+            const when = r.due ? `hạn ${day(r.due)}, ${countdown(r.left)}` : 'chưa có hạn'
+            return h('li', {},
+              h('button', { type: 'button', class: 'item', title: 'Mở văn bản', onclick: () => desktiny.navigate(`/cases/${r.case_id}`),
+                'aria-label': `Số đến ${r.number}: ${r.summary}, ${r.sender}, ${when}${r.urgent ? ', ' + r.urgency : ''}. Mở văn bản` },
+                dueLeaf(r.due, r.status),
+                h('span', { class: 'gd-grow' },
+                  h('div', { class: 'gd-title' }, r.summary),
+                  h('div', { class: 'gd-sub' }, h('span', { class: 'no' }, `Số ${r.number}`), `, ${r.sender}`)),
+                r.urgent ? chip(r.urgency, 'bad') : r.due ? chip(countdown(r.left), tone, r.status === 'overdue' ? 'alert' : 'clock') : null))
+          }))
+        const all = picked ? counts[picked] : total
+        const rest = all - Math.min(SHOWN, list.length)
+        root.replaceChildren(head, bands, rows,
+          rest > 0 ? h('p', { class: 'more' }, `và ${rest} văn bản khác trong Sổ văn bản đến`) : null)
+      }
+
+      $('#app').replaceChildren(skeleton(4, 16))
       server('/api/can-xu-ly')
-        .then(({ items, counts }) => {
-          const pending = counts.open + counts.due_soon + counts.overdue
-          $('#summary').replaceChildren(pending ? `${pending} văn bản đang xử lý` : 'Không có văn bản đến nào đang chờ xử lý.',
-            counts.overdue ? h('strong', { class: 'bad' }, ` · ${counts.overdue} quá hạn`) : '', counts.due_soon ? ` · ${counts.due_soon} sắp đến hạn` : '')
-          $('#rows').replaceChildren(...items.slice(0, 6).map((r) => h('tr', {},
-            h('td', { class: 'num' }, r.number), h('td', {}, r.urgent ? h('span', { class: 'tag bad' }, r.urgency) : null, ' ', h('a', { href: '#', onclick: open(r.case_id) }, r.summary)),
-            h('td', { class: 'num ' + (r.status === 'overdue' ? 'bad' : '') }, left(r)))))
+        .then((result) => {
+          data = result
+          render()
         })
-        .catch((error) => $('#summary').replaceChildren(h('span', { class: 'bad' }, error.message)))
+        .catch((error) => {
+          const root = $('#app')
+          root.removeAttribute('aria-busy')
+          root.replaceChildren(h('p', { class: 'gd-note tone-bad', role: 'alert' }, icon('alert', 15), error.message || 'Không tải được danh sách.'))
+        })
     </script>
   </body>
 </html>

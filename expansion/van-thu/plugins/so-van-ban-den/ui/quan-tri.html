@@ -7,33 +7,307 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Quản lý sổ văn bản đến</title>
     <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <link rel="stylesheet" href="so-den.css" />
+    <style>
+      .qt-top {
+        display: grid;
+        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+        gap: 16px;
+        align-items: stretch;
+      }
+      .qt-next {
+        display: grid;
+        align-content: start;
+        justify-items: start;
+        gap: 14px;
+      }
+      .qt-next p {
+        margin: 0;
+      }
+      .qt-next .sd-stamp {
+        margin: 4px 0 2px 4px;
+      }
+      /* The days around a deadline, as a ruler: overdue, due soon, still in time. */
+      .qt-ruler {
+        display: grid;
+        gap: 6px;
+        margin: 6px 0 2px;
+      }
+      .qt-ruler-days {
+        display: grid;
+        grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+        gap: 3px;
+      }
+      .qt-ruler-days span {
+        display: grid;
+        place-items: center;
+        height: 30px;
+        border-radius: 5px;
+        background: var(--gd-surface-2);
+        color: var(--gd-muted);
+        font-size: 11.5px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .qt-ruler-days .is-late {
+        background: var(--gd-son-soft);
+        color: var(--gd-son);
+      }
+      .qt-ruler-days .is-soon {
+        background: var(--gd-warn-soft);
+        color: var(--gd-warn);
+      }
+      .qt-ruler-days .is-due {
+        box-shadow: inset 0 0 0 2px var(--gd-warn);
+      }
+      .qt-ruler-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 14px;
+        color: var(--gd-muted);
+        font-size: 12px;
+      }
+      .qt-ruler-legend i {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        margin-right: 5px;
+        border-radius: 3px;
+        vertical-align: -1px;
+      }
+      .qt-chart {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 6px;
+        align-items: end;
+        height: 128px;
+        padding-top: 6px;
+      }
+      .qt-chart div {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        align-items: end;
+        justify-items: center;
+        height: 100%;
+        gap: 3px;
+        font-size: 11.5px;
+      }
+      .qt-chart b {
+        font-family: var(--gd-display);
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+      }
+      .qt-chart span {
+        width: min(100%, 22px);
+        min-height: 2px;
+        border-radius: 3px 3px 1px 1px;
+        background: color-mix(in srgb, var(--gd-accent) 55%, var(--gd-border));
+      }
+      .qt-chart .is-now span {
+        background: var(--gd-accent);
+      }
+      .qt-chart small {
+        color: var(--gd-muted);
+        font-weight: 600;
+      }
+      .qt-cancel-row td {
+        background: var(--gd-surface-2);
+      }
+      .gd-register .qt-cancel-row td:first-child {
+        width: auto;
+        border-right: 0;
+        font-family: var(--gd-font);
+        font-weight: 400;
+        text-align: left;
+        white-space: normal;
+      }
+      .qt-cancel-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .qt-cancel-form input {
+        flex: 1 1 220px;
+      }
+      .qt-entries td:first-child {
+        font-size: 15px;
+      }
+      @media (max-width: 760px) {
+        .qt-top {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 720px) {
+        .gd-register .qt-cancel-row td:first-child {
+          grid-column: 1 / -1;
+          grid-row: auto;
+          padding: 0;
+        }
+      }
+    </style>
   </head>
   <body>
-    <h1>Quản lý sổ văn bản đến</h1>
-    <p class="muted">Trang này thấy toàn bộ sổ. Mức báo “sắp đến hạn” đặt ở Quản trị › Plugin › Cấu hình. Số đến đã cấp không bao giờ cấp lại; số cấp nhầm thì huỷ (vẫn giữ trong sổ, ghi lý do).</p>
-    <p id="status" aria-live="polite"></p>
-    <div class="row" id="counts"></div>
-    <h2>Huỷ một số đến</h2>
-    <div class="grid">
-      <label>Số đến <select id="entry"></select></label>
-      <label>Lý do <input id="reason" maxlength="300" /></label>
-      <label>&nbsp;<button id="cancel" type="button" class="secondary">Huỷ số</button></label>
+    <header class="gd-hero">
+      <div>
+        <h1>Quản lý sổ văn bản đến</h1>
+        <p>Trang này thấy toàn bộ sổ. Số đến đã cấp không bao giờ cấp lại; vào sổ nhầm thì huỷ số, số vẫn nằm trong sổ cùng lý do.</p>
+      </div>
+    </header>
+    <div id="status" aria-live="polite"></div>
+    <div class="qt-top">
+      <section class="gd-panel" aria-labelledby="next-title">
+        <div class="gd-panel-head"><h2 id="next-title">Văn bản đến tiếp theo</h2></div>
+        <div class="gd-panel-body qt-next" id="next"></div>
+      </section>
+      <section class="gd-panel" aria-labelledby="rules-title">
+        <div class="gd-panel-head"><h2 id="rules-title">Cách sổ hoạt động</h2></div>
+        <div class="gd-panel-body" id="rules"></div>
+      </section>
     </div>
+    <div class="gd-stats" id="stats" aria-live="polite"></div>
+    <section class="gd-panel" aria-labelledby="chart-title">
+      <div class="gd-panel-head"><h2 id="chart-title">Văn bản đến theo tháng</h2><span class="gd-sub" id="chart-sub"></span></div>
+      <div class="gd-panel-body"><div class="qt-chart" id="chart" role="img"></div></div>
+    </section>
+    <section class="gd-panel" aria-labelledby="cancel-title">
+      <div class="gd-panel-head"><h2 id="cancel-title">Huỷ số đến</h2><span class="gd-sub">Chọn số vào nhầm, ghi lý do rồi huỷ.</span></div>
+      <div class="gd-panel-body">
+        <div class="sd-search" style="margin-bottom: 10px">
+          <label><span class="sr-only">Tìm số đến</span><input id="q" type="search" placeholder="Tìm số đến, nơi gửi hoặc trích yếu" autocomplete="off" /></label>
+        </div>
+        <div class="gd-scroll" id="entries" aria-busy="true"></div>
+      </div>
+    </section>
+
     <script type="module">
-      import { $, desktiny, h, server, show } from './mo-rong.js'
-      import { STATUS } from './so-den.js'
-      const fail = (error) => show($('#status'), error.message, 'bad')
-      async function load() {
-        const data = await server(`/api/so?nam=${new Date().getFullYear()}`).catch(fail)
-        if (!data) return
-        $('#counts').replaceChildren(...['open', 'due_soon', 'overdue', 'done'].map((key) =>
-          h('div', { class: 'card' }, h('div', { class: 'big' }, data.counts[key]), h('div', { class: 'muted' }, STATUS[key]))))
-        $('#entry').replaceChildren(...data.entries.filter((e) => e.status !== 'cancelled').map((e) => h('option', { value: e.id }, `${e.number} — ${e.summary.slice(0, 80)}`)))
+      import { $, desktiny, h, server } from './mo-rong.js'
+      import { empty, icon, skeleton, stat } from './bieu-do.js'
+      import { badge, day, searchIcon, stampDen, timeOf } from './so-den.js'
+
+      let overview
+      let register
+      let opened = null
+      let query = ''
+      const fail = (error) => $('#status').replaceChildren(h('p', { class: 'gd-note tone-bad', role: 'alert' }, icon('alert', 15), error.message))
+
+      function next() {
+        const o = overview
+        $('#next').replaceChildren(
+          stampDen({ number: o.next_number, date: o.today, pending: true }),
+          h('p', {}, `Văn bản vào sổ tiếp theo mang số đến `, h('strong', { class: 'tabular' }, o.next_number), `, ngày ${day(o.today)}.`),
+          h('p', { class: 'gd-sub' }, `Năm ${o.year} đã vào sổ ${o.next_number - 1} số${o.cancelled ? `, trong đó ${o.cancelled} số đã huỷ` : ''}. Ngày 01/01 sổ bắt đầu lại từ số 1.`),
+        )
       }
-      $('#cancel').addEventListener('click', async () => {
-        if (!$('#entry').value || !(await desktiny.confirm('Huỷ số đến này? Số vẫn nằm trong sổ và không được cấp lại.'))) return
-        await server(`/api/quan-tri/huy/${$('#entry').value}`, { method: 'POST', body: { ly_do: $('#reason').value } }).then(load, fail)
-      })
+
+      function rules() {
+        const n = overview.bao_truoc_ngay
+        const days = []
+        for (let d = -2; d <= n + 2; d++) days.push(d)
+        const ruler = h('div', { class: 'qt-ruler', role: 'img', 'aria-label': `Văn bản được báo sắp đến hạn từ ${n} ngày trước hạn; qua hạn là quá hạn.` },
+          h('div', { class: 'qt-ruler-days', style: `--n:${days.length}`, 'aria-hidden': 'true' },
+            [...days].reverse().map((left) => h('span', { class: left < 0 ? 'is-late' : left <= n ? `is-soon${left === 0 ? ' is-due' : ''}` : '', title: left < 0 ? `Quá ${-left} ngày` : left === 0 ? 'Ngày hạn' : `Còn ${left} ngày` }, left < 0 ? `+${-left}` : left === 0 ? 'Hạn' : `−${left}`))),
+          h('div', { class: 'qt-ruler-legend', 'aria-hidden': 'true' },
+            h('span', {}, h('i', { style: 'background:var(--gd-surface-2);box-shadow:inset 0 0 0 1px var(--gd-border)' }), 'Còn hạn'),
+            h('span', {}, h('i', { style: 'background:var(--gd-warn-soft);box-shadow:inset 0 0 0 1px var(--gd-warn)' }), `Sắp đến hạn (${n} ngày trước hạn)`),
+            h('span', {}, h('i', { style: 'background:var(--gd-son-soft);box-shadow:inset 0 0 0 1px var(--gd-son)' }), 'Quá hạn')))
+        $('#rules').replaceChildren(h('dl', { class: 'sd-facts' },
+          h('dt', {}, 'Đánh số'), h('dd', {}, 'Liên tục trong năm, không nhảy số, không trùng. Mỗi văn bản một số; vào sổ lại trả đúng số cũ.'),
+          h('dt', {}, 'Báo sắp đến hạn'), h('dd', {}, n ? `Trước hạn ${n} ngày.` : 'Chỉ báo vào đúng ngày hạn.', ruler,
+            h('span', { class: 'gd-sub' }, 'Đổi ở Quản trị › Plugin › Sổ văn bản đến › Cấu hình.')),
+          h('dt', {}, 'Ghi vào văn bản'), h('dd', {}, 'Số đến và ngày đến, khi người dùng bấm “Vào sổ văn bản đến”. Bước quy trình thì chuyển số cho bước “Cập nhật hồ sơ”.'),
+          h('dt', {}, 'Ai thấy gì'), h('dd', {}, 'Mỗi người thấy văn bản mình mở được và văn bản mình vào sổ. Trang này thấy cả sổ.')))
+      }
+
+      function stats() {
+        const c = register.counts
+        const pending = c.open + c.due_soon + c.overdue
+        $('#stats').replaceChildren(
+          stat({ label: 'Đã vào sổ', value: overview.next_number - 1 - overview.cancelled, hint: `năm ${overview.year}`, icon: 'file' }),
+          stat({ label: 'Đang xử lý', value: pending, hint: c.due_soon ? `${c.due_soon} sắp đến hạn` : 'không có văn bản sắp đến hạn', tone: 'warn', icon: 'clock' }),
+          stat({ label: 'Quá hạn', value: c.overdue, hint: 'đã qua hạn xử lý', tone: c.overdue ? 'bad' : 'muted', icon: 'alert' }),
+          stat({ label: 'Đã xử lý', value: c.done, hint: 'văn bản đã kết thúc', tone: 'ok', icon: 'check' }),
+        )
+      }
+
+      function chart() {
+        const months = overview.months
+        const top = Math.max(1, ...months)
+        const now = Number(overview.today.slice(5, 7))
+        $('#chart-sub').textContent = `Năm ${overview.year}, không tính số đã huỷ`
+        $('#chart').setAttribute('aria-label', months.map((n, i) => `tháng ${i + 1}: ${n}`).join(', '))
+        $('#chart').replaceChildren(...months.map((n, i) => h('div', { class: i + 1 === now ? 'is-now' : '', 'aria-hidden': 'true' },
+          h('b', {}, n || ''), h('span', { style: `height:${n ? Math.max(4, Math.round((n / top) * 86)) : 2}px` }), h('small', {}, `T${i + 1}`))))
+      }
+
+      function cancelRow(e) {
+        const reason = h('input', { maxlength: 300, placeholder: 'Lý do huỷ, ví dụ: vào sổ trùng', 'aria-label': `Lý do huỷ số đến ${e.number}` })
+        const go = h('button', { type: 'button', class: 'sd-small', onclick: async () => {
+          if (!reason.value.trim()) return reason.focus()
+          if (!(await desktiny.confirm(`Huỷ số đến ${e.number}? Số vẫn nằm trong sổ và không được cấp lại.`))) return
+          go.disabled = true
+          try {
+            await server(`/api/quan-tri/huy/${e.id}`, { method: 'POST', body: { ly_do: reason.value } })
+            opened = null
+            desktiny.toast(`Đã huỷ số đến ${e.number}`)
+            await load()
+          } catch (error) {
+            go.disabled = false
+            fail(error)
+          }
+        } }, 'Huỷ số')
+        queueMicrotask(() => reason.focus())
+        return h('tr', { class: 'qt-cancel-row' }, h('td', { colspan: 5 }, h('div', { class: 'qt-cancel-form' }, reason, go,
+          h('button', { type: 'button', class: 'gd-ghost sd-small', onclick: () => { opened = null; entries() } }, 'Thôi'))))
+      }
+
+      function entries() {
+        const q = query.trim().toLocaleLowerCase('vi')
+        const rows = register.entries.filter((e) => !q || [e.number, e.sender, e.summary, e.original_number].some((v) => String(v ?? '').toLocaleLowerCase('vi').includes(q)))
+        if (!register.entries.length) {
+          $('#entries').replaceChildren(empty(`Năm ${overview.year} chưa có văn bản đến nào`, 'Khi văn thư vào sổ, các số đến hiện ở đây.'))
+          return
+        }
+        const body = []
+        for (const e of rows.slice(0, 200)) {
+          const cancelled = e.status === 'cancelled'
+          body.push(h('tr', { class: cancelled ? 'is-cancelled' : '' },
+            h('td', {}, h('b', {}, e.number)),
+            h('td', { class: 'sd-when' }, h('b', {}, day(e.received_at)), timeOf(e.received_at)),
+            h('td', { class: 'sd-summary' }, h('span', { class: 'sd-kind', style: 'display:block' }, e.sender), e.summary,
+              cancelled ? h('span', { class: 'sd-reason' }, `Đã huỷ: ${e.cancel_reason || 'không ghi lý do'}`) : null),
+            h('td', { class: 'sd-note-cell' }, badge(e)),
+            h('td', { class: 'sd-open' }, cancelled ? null : h('button', { type: 'button', class: 'gd-ghost sd-small', 'aria-expanded': opened === e.id ? 'true' : 'false', 'aria-label': `Huỷ số đến ${e.number}`, onclick: () => { opened = opened === e.id ? null : e.id; entries() } }, 'Huỷ số'))))
+          if (opened === e.id) body.push(cancelRow(e))
+        }
+        $('#entries').replaceChildren(rows.length
+          ? h('table', { class: 'gd-register sd-register qt-entries' },
+            h('caption', { class: 'sr-only' }, `Số đến năm ${overview.year}`),
+            h('thead', {}, h('tr', {}, ['Số đến', 'Ngày đến', 'Nơi gửi và trích yếu', 'Tình trạng'].map((t) => h('th', { scope: 'col' }, t)), h('th', { scope: 'col' }, h('span', { class: 'sr-only' }, 'Huỷ')))),
+            h('tbody', {}, body))
+          : empty('Không tìm thấy số nào', `Không có số đến nào khớp “${query.trim()}”.`))
+      }
+
+      async function load() {
+        try {
+          overview = await server('/api/quan-tri/tong-quan')
+          register = await server(`/api/so?nam=${overview.year}`)
+          $('#status').replaceChildren()
+          next()
+          rules()
+          stats()
+          chart()
+          entries()
+        } catch (error) {
+          fail(error)
+        } finally {
+          $('#entries').setAttribute('aria-busy', 'false')
+        }
+      }
+      $('#q').closest('label').prepend(searchIcon())
+      $('#q').addEventListener('input', () => { query = $('#q').value; opened = null; if (register) entries() })
+      $('#entries').replaceChildren(skeleton(4, 16))
       load()
     </script>
   </body>

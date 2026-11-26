@@ -1,0 +1,605 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/* SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors */
+/* Sổ văn bản đến's own pieces, on top of giao-dien.css: the "ĐẾN" stamp, the incoming document sheet, the register
+   book and its rows, the counts that filter it, and the stamp landing. */
+
+:root {
+  /* The clerk's pen: what is written into the stamp's blanks. */
+  --sd-pen: #1f3c8f;
+}
+:root[data-theme='dark'] {
+  --sd-pen: #a8c0ff;
+}
+input,
+select,
+textarea,
+button {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+.gd-note > svg {
+  flex: none;
+  margin-top: 2px;
+}
+button.gd-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+button.sd-small {
+  padding: 5px 10px;
+  font-size: 13px;
+}
+.sd-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+/* ---- Dấu ĐẾN: a red rectangular stamp; the template is red ink, the values are written in pen ---- */
+.sd-stamp {
+  --ink: var(--gd-son);
+  container-type: inline-size;
+  display: block;
+  width: min(100%, 268px);
+  padding: 3px;
+  border: 2px solid var(--ink);
+  border-radius: 3px;
+  color: var(--ink);
+  transform: rotate(-2.2deg);
+  transform-origin: 30% 50%;
+}
+.sd-stamp-in {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: end;
+  gap: 2px 10px;
+  padding: 7px 10px 8px;
+  border: 1px solid var(--ink);
+  font-family: var(--gd-display);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.sd-stamp-word {
+  grid-row: 1 / span 2;
+  align-self: center;
+  padding-right: 10px;
+  border-right: 1px solid var(--ink);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+.sd-stamp-line {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.sd-stamp-line > span {
+  flex: none;
+}
+.sd-wide {
+  grid-column: 1 / -1;
+}
+.sd-pen {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--sd-pen);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+.sd-stamp-no {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+}
+.sd-time {
+  flex: none;
+  font-size: 11px;
+}
+/* A blank still to be filled by hand: a dotted rule to the end of the line. */
+.sd-blank {
+  flex: 1;
+  min-width: 24px;
+  height: 0.9em;
+  border-bottom: 1.5px dotted color-mix(in srgb, var(--ink) 70%, transparent);
+}
+.sd-pending-tag {
+  flex: none;
+  color: var(--gd-muted);
+  font-family: var(--gd-font);
+  font-size: 11px;
+  font-weight: 600;
+}
+/* Preview: the outline of the stamp still to come. */
+.sd-stamp.is-pending {
+  border-style: dashed;
+  transform: none;
+  opacity: 0.92;
+}
+.sd-stamp.is-pending .sd-stamp-in {
+  border-style: dashed;
+}
+.sd-stamp.is-pending .sd-stamp-no {
+  border-bottom: 1.5px dashed currentColor;
+}
+.sd-stamp.is-cancelled .sd-stamp-no {
+  color: var(--gd-son);
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+.sd-stamp.is-compact .sd-stamp-word {
+  font-size: 22px;
+}
+.sd-stamp.is-compact .sd-stamp-no {
+  font-size: 26px;
+}
+/* Narrow sheets: the word over the lines. */
+@container (max-width: 200px) {
+  .sd-stamp-in {
+    grid-template-columns: 1fr;
+  }
+  .sd-stamp-word {
+    grid-row: auto;
+    padding: 0 0 3px;
+    border-right: 0;
+    border-bottom: 1px solid var(--ink);
+  }
+}
+.sd-stamp.is-landing {
+  animation: sd-stamp 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+@keyframes sd-stamp {
+  0% {
+    opacity: 0;
+    transform: scale(1.6) rotate(-9deg);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(0.97) rotate(-1.8deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(-2.2deg);
+  }
+}
+
+/* ---- The incoming document as a sheet ---- */
+.sd-doc {
+  overflow: hidden;
+}
+.sd-doc-vv {
+  margin-top: 4px;
+  font-family: var(--gd-font);
+  font-size: 11.5px;
+  font-weight: 400;
+}
+.sd-urgency {
+  display: inline-block;
+  margin: 10px 0 0 6%;
+  padding: 1px 8px;
+  border: 1.5px solid var(--gd-son);
+  color: var(--gd-son);
+  font-family: var(--gd-display);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.sd-doc-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.7fr);
+  gap: 16px;
+  align-items: start;
+  margin-top: 16px;
+}
+.sd-stamp-spot {
+  min-height: 112px;
+}
+.sd-lines {
+  display: grid;
+  gap: 8px;
+  padding-top: 6px;
+}
+.sd-lines i {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--gd-border);
+}
+.sd-lines i:nth-child(2n) {
+  width: 86%;
+}
+.sd-lines i:last-child {
+  width: 52%;
+}
+@container (max-width: 380px) {
+  .sd-doc-body {
+    grid-template-columns: 1fr;
+  }
+  .sd-lines {
+    display: none;
+  }
+}
+
+/* ---- A label and value list ---- */
+.sd-facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 7px 14px;
+  margin: 0;
+  font-size: 14px;
+}
+.sd-facts dt {
+  color: var(--gd-muted);
+}
+.sd-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.sd-missing {
+  color: var(--gd-son);
+  font-weight: 600;
+}
+@media (max-width: 420px) {
+  .sd-facts {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .sd-facts dd {
+    margin-bottom: 8px;
+  }
+}
+
+/* ---- Counts that filter: a ledger line of figures ---- */
+.sd-tally {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 18px;
+  border-top: 1px solid var(--gd-border);
+  border-bottom: 1px solid var(--gd-border);
+}
+.sd-tally button {
+  display: grid;
+  align-content: start;
+  gap: 1px;
+  padding: 11px 14px 12px;
+  border: 0;
+  border-left: 1px solid var(--gd-border);
+  border-radius: 0;
+  background: none;
+  color: var(--gd-ink);
+  font-weight: 400;
+  text-align: left;
+}
+.sd-tally button:first-child {
+  border-left: 0;
+}
+.sd-tally button:hover:not(:disabled) {
+  background: var(--gd-surface-2);
+}
+.sd-tally button[aria-pressed='true'] {
+  background: var(--gd-surface-2);
+  box-shadow: inset 0 -3px 0 var(--tone, var(--gd-accent));
+}
+.sd-tally .label {
+  color: var(--gd-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.sd-tally .value {
+  font-family: var(--gd-display);
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.sd-tally .is-overdue .value {
+  color: var(--gd-son);
+}
+.sd-tally .hint {
+  color: var(--gd-muted);
+  font-size: 12px;
+}
+@media (max-width: 640px) {
+  .sd-tally {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sd-tally button:nth-child(3) {
+    border-left: 0;
+  }
+  .sd-tally button:nth-child(n + 3) {
+    border-top: 1px solid var(--gd-border);
+  }
+  .sd-tally .value {
+    font-size: 24px;
+  }
+}
+
+/* ---- Sổ đăng ký văn bản đến: the book, with a stitched binding down the left edge ---- */
+.sd-book {
+  position: relative;
+  margin: 4px 0 16px;
+  padding: 18px 18px 12px 34px;
+  border-radius: 3px 8px 8px 3px;
+  background: var(--gd-surface);
+  box-shadow: var(--gd-paper-shadow), inset 0 0 0 1px var(--gd-border);
+}
+.sd-book::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 16px;
+  border-right: 1px dashed color-mix(in srgb, var(--gd-ink) 22%, transparent);
+  border-radius: 3px 0 0 3px;
+  background: color-mix(in srgb, var(--gd-son) 9%, var(--gd-surface-2));
+}
+.sd-book-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--gd-border);
+}
+.sd-book-head h2 {
+  margin: 0;
+  font-size: 17px;
+}
+.sd-book-head p {
+  margin: 0;
+  color: var(--gd-muted);
+  font-size: 13px;
+}
+
+/* Twelve months, each a column whose height is the count of documents received in it. */
+.sd-months {
+  display: grid;
+  grid-template-columns: minmax(64px, auto) repeat(12, minmax(30px, 1fr));
+  gap: 4px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+.sd-months button {
+  display: grid;
+  grid-template-rows: 30px auto;
+  align-items: end;
+  justify-items: center;
+  gap: 3px;
+  padding: 5px 2px 4px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gd-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.sd-months button:hover:not(:disabled) {
+  background: var(--gd-surface-2);
+}
+.sd-months button[aria-pressed='true'] {
+  border-color: var(--gd-accent);
+  background: var(--gd-accent-soft);
+  color: var(--gd-ink);
+}
+.sd-months button:disabled {
+  opacity: 0.45;
+}
+.sd-months .bar {
+  display: block;
+  width: 14px;
+  min-height: 2px;
+  border-radius: 3px 3px 1px 1px;
+  background: color-mix(in srgb, var(--gd-accent) 50%, var(--gd-border));
+}
+.sd-months .bar.has-overdue {
+  box-shadow: inset 0 3px 0 var(--gd-son);
+}
+.sd-months button[aria-pressed='true'] .bar {
+  background: var(--gd-accent);
+}
+.sd-months .all {
+  align-items: center;
+  padding: 5px 8px 4px;
+  color: var(--gd-ink);
+}
+.sd-months .all b {
+  font-family: var(--gd-display);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.sd-search {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.sd-search label {
+  position: relative;
+  display: block;
+  flex: 1 1 220px;
+}
+.sd-search label .gd-svg-icon {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  color: var(--gd-muted);
+}
+.sd-search input {
+  width: 100%;
+  padding-left: 34px;
+}
+
+/* The register's rows. */
+.sd-register td:first-child {
+  font-size: 17px;
+}
+.sd-register .sd-when {
+  color: var(--gd-muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.sd-register .sd-when b {
+  display: block;
+  color: var(--gd-ink);
+  font-weight: 600;
+}
+.sd-register .sd-from {
+  min-width: 150px;
+}
+.sd-register .sd-from b {
+  display: block;
+  font-weight: 650;
+}
+.sd-register .sd-summary {
+  min-width: 200px;
+}
+.sd-register .sd-kind {
+  color: var(--gd-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.sd-register .sd-summary .gd-chip {
+  margin-left: 6px;
+  vertical-align: 1px;
+}
+.sd-due {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.sd-due .gd-leaf {
+  width: 38px;
+}
+.sd-due .gd-leaf span {
+  font-size: 15px;
+}
+.sd-due small {
+  color: var(--gd-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.sd-due small.is-overdue {
+  color: var(--gd-son);
+}
+.sd-due small.is-soon {
+  color: var(--gd-warn);
+}
+.sd-leaf-blank {
+  opacity: 0.55;
+  box-shadow: inset 0 0 0 1px var(--gd-border);
+}
+.sd-leaf-blank b {
+  background: var(--gd-border);
+  color: var(--gd-muted);
+}
+.sd-leaf-blank span {
+  color: var(--gd-muted);
+}
+.sd-note-cell {
+  min-width: 130px;
+}
+.sd-note-cell .gd-sub {
+  display: block;
+  margin-top: 3px;
+}
+.sd-reason {
+  display: block;
+  margin-top: 3px;
+  color: var(--gd-son);
+  font-size: 12.5px;
+}
+.sd-register tr.is-latest td {
+  background: var(--gd-accent-soft);
+}
+.sd-register tr.is-latest td:first-child {
+  box-shadow: inset 3px 0 0 var(--gd-accent);
+}
+.sd-register tr.is-cancelled td:first-child b {
+  color: var(--gd-son);
+  text-decoration: line-through;
+}
+.sd-register tr.is-cancelled td:not(:first-child) {
+  color: var(--gd-muted);
+}
+.sd-register tr.is-overdue td:first-child {
+  color: var(--gd-son);
+}
+.sd-open button {
+  white-space: nowrap;
+}
+.sd-more {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 4px;
+}
+#export-box textarea {
+  width: 100%;
+  font: 12.5px/1.45 ui-monospace, Consolas, monospace;
+}
+
+@media (max-width: 720px) {
+  .sd-book {
+    padding: 14px 12px 8px 24px;
+  }
+  .sd-book::before {
+    width: 10px;
+  }
+  /* The register as stacked entries: number and date on one line, the rest below. */
+  .sd-register thead {
+    display: none;
+  }
+  .sd-register tr {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 4px 12px;
+    padding: 11px 4px;
+    border-bottom: 1px solid var(--gd-border);
+  }
+  .sd-register td,
+  .sd-register td:first-child {
+    padding: 0;
+    border: 0;
+  }
+  .sd-register td:first-child {
+    grid-row: span 2;
+    width: auto;
+    min-width: 34px;
+    padding-right: 10px;
+    border-right: 1.5px solid color-mix(in srgb, var(--gd-son) 55%, transparent);
+  }
+  .sd-register .sd-when b {
+    display: inline;
+    margin-right: 6px;
+  }
+  .sd-register td.sd-from,
+  .sd-register td.sd-summary {
+    min-width: 0;
+  }
+  .sd-register td.sd-summary,
+  .sd-register td.sd-due-cell,
+  .sd-register td.sd-note-cell,
+  .sd-register td.sd-open {
+    grid-column: 2;
+    min-width: 0;
+  }
+  .sd-register tr.is-latest {
+    background: var(--gd-accent-soft);
+    box-shadow: inset 3px 0 0 var(--gd-accent);
+  }
+  .sd-register tr.is-latest td {
+    background: none;
+  }
+  .sd-register tr.is-latest td:first-child {
+    box-shadow: none;
+  }
+}

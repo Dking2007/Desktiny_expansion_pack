@@ -7,46 +7,180 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Vào sổ văn bản đến</title>
     <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <link rel="stylesheet" href="so-den.css" />
+    <style>
+      body {
+        padding-top: 14px;
+      }
+      .vs-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+        gap: 24px;
+        align-items: start;
+      }
+      .vs-side {
+        display: grid;
+        gap: 14px;
+      }
+      .vs-side h1 {
+        margin: 0;
+        font-size: 18px;
+      }
+      #body {
+        display: grid;
+        gap: 14px;
+      }
+      .vs-side p {
+        margin: 0;
+      }
+      .vs-done {
+        display: grid;
+        gap: 6px;
+      }
+      .vs-big {
+        font-family: var(--gd-display);
+        font-size: 56px;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: -0.03em;
+        font-variant-numeric: tabular-nums;
+      }
+      .vs-big small {
+        margin-right: 8px;
+        color: var(--gd-muted);
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0;
+      }
+      .vs-preview {
+        margin: 0;
+      }
+      .vs-preview figcaption {
+        margin-top: 10px;
+        color: var(--gd-muted);
+        font-size: 12.5px;
+        text-align: center;
+      }
+      @media (max-width: 700px) {
+        .vs-layout {
+          grid-template-columns: 1fr;
+        }
+        .vs-preview {
+          order: -1;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="detail" class="card muted">Đang tải…</div>
-    <p class="muted">Số đến chạy liên tục trong năm. Mỗi văn bản chỉ được một số đến; bấm lại trả về đúng số đã cấp. Số đến và ngày đến được ghi vào văn bản.</p>
-    <div class="row"><button id="register" type="button" disabled>Vào sổ</button> <button type="button" class="secondary" id="close">Đóng</button></div>
-    <p id="status" aria-live="polite"></p>
+    <div class="vs-layout">
+      <div class="vs-side">
+        <h1>Vào sổ văn bản đến</h1>
+        <div id="body" aria-live="polite"></div>
+      </div>
+      <figure class="vs-preview">
+        <div id="sheet"></div>
+        <figcaption id="caption"></figcaption>
+      </figure>
+    </div>
     <script type="module">
-      import { $, desktiny, h, server, show } from './mo-rong.js'
-      import { day } from './so-den.js'
+      import { $, desktiny, h, server } from './mo-rong.js'
+      import { icon, skeleton } from './bieu-do.js'
+      import { countdown, day, docSheet, isoDate, land, stampDen, timeOf } from './so-den.js'
+
       const context = await desktiny.context
       const caseId = context.record.case_id
-      $('#close').addEventListener('click', () => desktiny.close(null))
-      const line = (label, value) => h('div', {}, h('span', { class: 'muted' }, `${label}: `), value || h('em', { class: 'bad' }, 'chưa có'))
-      try {
-        const data = await server(`/api/van-ban/${caseId}`)
-        const d = data.draft
-        $('#detail').className = 'card'
-        $('#detail').replaceChildren(line('Nơi gửi', d.noi_gui), line('Số, ký hiệu', d.so_ky_hieu_goc), line('Trích yếu', d.trich_yeu),
-          line('Mức độ khẩn', d.do_khan), line('Hạn xử lý', d.han_xu_ly ? day(d.han_xu_ly) : 'chưa đặt'))
-        if (data.entry) {
-          show($('#status'), `Văn bản đã có số đến ${data.entry.number} (ngày ${day(data.entry.received_at)}).`, 'ok')
-          $('#register').textContent = 'Ghi lại số đến vào văn bản'
-        }
-        $('#register').disabled = !d.noi_gui || !d.trich_yeu
-        if ($('#register').disabled) show($('#status'), 'Điền “Cơ quan, tổ chức gửi” và “Trích yếu nội dung” trong văn bản trước khi vào sổ.', 'bad')
-      } catch (error) {
-        show($('#status'), error.message, 'bad')
+      let data
+
+      const alertNote = (message) => h('p', { class: 'gd-note tone-bad', role: 'alert' }, icon('alert', 15), message)
+
+      function facts(d) {
+        const missing = (text = 'Chưa có') => h('span', { class: text === 'Chưa có' ? 'gd-sub' : 'sd-missing' }, text)
+        const rows = [
+          ['Cơ quan gửi', d.noi_gui || missing('Chưa có, cần điền')],
+          ['Số, ký hiệu', d.so_ky_hieu_goc || missing()],
+          ['Ngày văn bản', d.ngay_van_ban ? day(isoDate(d.ngay_van_ban)) || d.ngay_van_ban : missing()],
+          ['Loại văn bản', d.loai_van_ban || missing()],
+          ['Trích yếu', d.trich_yeu || missing('Chưa có, cần điền')],
+          ['Mức độ khẩn', d.do_khan],
+          ['Hạn xử lý', data.deadline ? `${day(data.deadline.due)}, ${countdown(data.deadline.left)}` : 'Chưa đặt; lãnh đạo giao hạn khi chỉ đạo'],
+        ]
+        return h('dl', { class: 'sd-facts' }, rows.flatMap(([label, value]) => [h('dt', {}, label), h('dd', {}, value)]))
       }
-      $('#register').addEventListener('click', async () => {
-        $('#register').disabled = true
+
+      function stampFor(entry) {
+        if (entry) return stampDen({ number: entry.number, date: entry.received_at, time: timeOf(entry.received_at), to: data.draft.nguoi_xu_ly, cancelled: entry.status === 'cancelled' })
+        return stampDen({ number: data.next_number, date: data.today, to: data.draft.nguoi_xu_ly, pending: true })
+      }
+
+      function sheet(entry, landing = false) {
+        const stamp = stampFor(entry)
+        if (landing) land(stamp)
+        $('#sheet').replaceChildren(docSheet(data.draft, stamp))
+        $('#caption').textContent = entry
+          ? entry.status === 'cancelled' ? `Số đến ${entry.number} đã huỷ: ${entry.cancel_reason || 'không ghi lý do'}.` : `Văn bản đã vào sổ, số đến ${entry.number}.`
+          : 'Bản xem trước. Số dự kiến có thể lớn hơn nếu có người vào sổ cùng lúc.'
+      }
+
+      function form() {
+        const d = data.draft
+        const ready = Boolean(d.noi_gui && d.trich_yeu)
+        const entry = data.entry
+        const go = h('button', { type: 'button', id: 'go', disabled: ready ? null : true, onclick: register },
+          entry ? 'Ghi lại số đến vào văn bản' : `Vào sổ, lấy số ${data.next_number}`)
+        $('#body').replaceChildren(...[
+          facts(d),
+          entry
+            ? h('p', { class: 'gd-note tone-ok' }, icon('check', 15), `Văn bản đã có số đến ${entry.number}, vào sổ ngày ${day(entry.received_at)} lúc ${timeOf(entry.received_at)}. Bấm lại chỉ ghi lại đúng số này.`)
+            : h('p', { class: 'gd-sub' }, 'Số đến chạy liên tục trong năm và bắt đầu lại từ 1 vào ngày 01/01. Mỗi văn bản chỉ được một số; số và ngày đến được ghi vào văn bản.'),
+          ready ? null : alertNote('Điền “Cơ quan, tổ chức gửi” và “Trích yếu nội dung” trong văn bản trước khi vào sổ.'),
+          h('div', { class: 'sd-actions' }, go, h('button', { type: 'button', class: 'gd-ghost', onclick: () => desktiny.close(null) }, 'Đóng')),
+          h('div', { id: 'status' }),
+        ].filter(Boolean))
+        sheet(entry)
+      }
+
+      async function register() {
+        const had = Boolean(data.entry)
+        if (!had && !(await desktiny.confirm(`Vào sổ văn bản đến với số ${data.next_number}? Số đã cấp không lấy lại được; vào sổ nhầm thì chỉ huỷ được.`))) return
+        $('#go').disabled = true
+        $('#go').textContent = had ? 'Đang ghi…' : 'Đang vào sổ…'
         try {
           const result = await server(`/api/van-ban/${caseId}/vao-so`, { method: 'POST' })
-          desktiny.toast(`Số đến: ${result.entry.number}`)
           desktiny.refresh()
-          desktiny.close({ so_den: result.entry.number })
+          done(result, had)
         } catch (error) {
-          show($('#status'), error.message, 'bad')
-          $('#register').disabled = false
+          $('#status').replaceChildren(alertNote(error.message))
+          $('#go').disabled = false
+          $('#go').textContent = had ? 'Ghi lại số đến vào văn bản' : `Vào sổ, lấy số ${data.next_number}`
         }
-      })
+      }
+
+      function done(result, had) {
+        const entry = result.entry
+        data.entry = entry
+        sheet(entry, !had)
+        const wrote = result.written.includes('so_den')
+        const finish = h('button', { type: 'button', onclick: () => desktiny.close({ so_den: entry.number }) }, 'Xong')
+        $('#body').replaceChildren(h('div', { class: 'vs-done' },
+          h('span', { class: 'gd-sub' }, had ? 'Số đến đã cấp trước đây cho văn bản này' : 'Văn bản đã vào sổ với'),
+          h('div', { class: 'vs-big' }, h('small', {}, 'Số đến'), entry.number),
+          h('p', { class: 'gd-sub' }, `Ngày đến ${day(entry.received_at)} lúc ${timeOf(entry.received_at)}, ${entry.registered_by} vào sổ.`),
+          h('p', { class: `gd-note ${wrote || result.written.length || had ? 'tone-ok' : ''}` }, icon(wrote || had ? 'check' : 'file', 15),
+            wrote ? 'Đã ghi số đến và ngày đến vào văn bản.' : had ? 'Văn bản đã ghi đúng số đến này.' : 'Biểu mẫu của văn bản không có trường số đến; hãy ghi số này lên văn bản.'),
+          h('p', { class: 'gd-sub' }, 'Bước tiếp theo: trình lãnh đạo cho ý kiến chỉ đạo.'),
+          h('div', { class: 'sd-actions', style: 'margin-top:6px' }, finish)))
+        finish.focus()
+        desktiny.toast(`Số đến: ${entry.number}`)
+      }
+
+      $('#body').replaceChildren(skeleton(5, 16))
+      try {
+        data = await server(`/api/van-ban/${caseId}`)
+        form()
+      } catch (error) {
+        $('#body').replaceChildren(alertNote(error.message), h('div', { class: 'sd-actions' }, h('button', { type: 'button', class: 'gd-ghost', onclick: () => desktiny.close(null) }, 'Đóng')))
+      }
     </script>
   </body>
 </html>
