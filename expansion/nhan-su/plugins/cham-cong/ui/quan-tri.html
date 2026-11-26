@@ -7,97 +7,961 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Ca làm và địa điểm</title>
     <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <style>
+      button .gd-svg-icon {
+        vertical-align: -2px;
+      }
+      .qt-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .qt-tabs .gd-seg {
+        flex-wrap: wrap;
+      }
+      .qt-tabs .gd-seg button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .qt-count {
+        padding: 0 6px;
+        border-radius: 999px;
+        background: var(--gd-surface-2);
+        color: var(--gd-muted);
+        font-size: 11.5px;
+      }
+      [aria-pressed='true'] .qt-count {
+        background: var(--gd-accent-soft);
+        color: var(--gd-accent-ink);
+      }
+      [aria-busy='true'] {
+        opacity: 0.6;
+        transition: opacity 0.2s;
+      }
+      .qt-steps {
+        display: grid;
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .qt-steps li {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 12px;
+        border: 1px solid var(--gd-border);
+        border-radius: 10px;
+      }
+      .qt-steps .qt-step-mark {
+        display: grid;
+        place-items: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: var(--tone-soft);
+        color: var(--tone);
+        font-weight: 800;
+      }
+      /* Days of the month as columns: on time (accent) under late (warn). */
+      .qt-cols {
+        display: grid;
+        grid-auto-columns: minmax(0, 1fr);
+        grid-auto-flow: column;
+        align-items: end;
+        gap: 3px;
+        height: 130px;
+      }
+      .qt-col {
+        display: flex;
+        flex-direction: column-reverse;
+        height: 100%;
+        overflow: hidden;
+        border-radius: 4px 4px 2px 2px;
+        background: var(--gd-surface-2);
+      }
+      .qt-col.off {
+        background: repeating-linear-gradient(135deg, var(--gd-surface-2) 0 4px, var(--gd-surface) 4px 8px);
+      }
+      .qt-col i {
+        display: block;
+        flex: none;
+      }
+      .qt-col .on {
+        background: var(--gd-accent);
+      }
+      .qt-col .late {
+        background: var(--gd-warn);
+      }
+      .qt-col.today {
+        outline: 2px solid var(--gd-accent);
+        outline-offset: 1px;
+      }
+      .qt-col-axis {
+        display: grid;
+        grid-auto-columns: minmax(0, 1fr);
+        grid-auto-flow: column;
+        gap: 3px;
+        margin-top: 4px;
+        color: var(--gd-muted);
+        font-size: 10.5px;
+        text-align: center;
+      }
+      /* One square per day of the month, per person. */
+      .qt-strip {
+        display: grid;
+        grid-auto-columns: 9px;
+        grid-auto-flow: column;
+        gap: 2px;
+      }
+      .qt-strip i {
+        width: 9px;
+        height: 14px;
+        border-radius: 2px;
+        background: var(--tone, var(--gd-surface-2));
+      }
+      .qt-strip i.off {
+        background: var(--gd-surface);
+        box-shadow: inset 0 0 0 1px var(--gd-surface-2);
+      }
+      .qt-who {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 160px;
+      }
+      .qt-table td {
+        vertical-align: middle;
+      }
+      /* Shifts on a 24-hour line. */
+      .qt-shifts {
+        display: grid;
+        gap: 12px;
+      }
+      .qt-shift {
+        display: grid;
+        grid-template-columns: minmax(120px, 190px) minmax(0, 1fr) 118px;
+        align-items: center;
+        gap: 12px;
+      }
+      .qt-band {
+        position: relative;
+        height: 24px;
+        border-radius: 7px;
+        background: repeating-linear-gradient(
+          to right,
+          var(--gd-surface-2) 0,
+          var(--gd-surface-2) calc(12.5% - 1px),
+          var(--gd-border) calc(12.5% - 1px),
+          var(--gd-border) 12.5%
+        );
+      }
+      .qt-band span {
+        position: absolute;
+        top: 3px;
+        bottom: 3px;
+        border-radius: 5px;
+        background: var(--gd-accent);
+      }
+      .qt-band span.grace {
+        background: color-mix(in srgb, var(--gd-warn) 70%, transparent);
+        border-radius: 0;
+      }
+      .qt-axis {
+        position: relative;
+        height: 16px;
+        color: var(--gd-muted);
+        font-size: 10.5px;
+      }
+      .qt-axis span {
+        position: absolute;
+        transform: translateX(-50%);
+      }
+      .qt-axis span:first-child {
+        transform: none;
+      }
+      .qt-axis span:last-child {
+        transform: translateX(-100%);
+      }
+      .qt-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 6px;
+      }
+      .qt-actions button,
+      .qt-small {
+        padding: 5px 10px;
+        font-size: 13px;
+      }
+      .qt-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+        align-items: end;
+      }
+      .qt-form-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      /* Places as cards. */
+      .qt-places {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+        gap: 12px;
+      }
+      .qt-place {
+        display: grid;
+        grid-template-columns: 64px minmax(0, 1fr);
+        gap: 12px;
+        align-items: center;
+        padding: 12px;
+        border: 1px solid var(--gd-border);
+        border-radius: 12px;
+        background: var(--gd-surface);
+        box-shadow: var(--gd-shadow);
+      }
+      .qt-place svg .zone {
+        fill: var(--gd-accent-soft);
+        stroke: var(--gd-accent);
+        stroke-dasharray: 3 3;
+      }
+      .qt-place svg .dot {
+        fill: var(--gd-accent);
+      }
+      .qt-place .coords {
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+      }
+      .qt-place .qt-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-end;
+      }
+      .qt-radius {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .qt-radius input[type='range'] {
+        flex: 1;
+        padding: 0;
+        accent-color: var(--gd-accent);
+      }
+      .qt-radius input[type='number'] {
+        width: 90px;
+      }
+      /* Who works which shift. */
+      .qt-groups {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+        gap: 12px;
+      }
+      .qt-group {
+        padding: 12px;
+        border: 1px solid var(--gd-border);
+        border-radius: 12px;
+      }
+      .qt-group h3 {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin: 0 0 8px;
+        font-size: 14px;
+      }
+      .qt-people {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .qt-people li {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 2px 10px 2px 2px;
+        border-radius: 999px;
+        background: var(--gd-surface-2);
+        font-size: 12.5px;
+      }
+      .qt-people .gd-avatar {
+        width: 24px;
+        height: 24px;
+        font-size: 10px;
+      }
+      textarea.qt-csv {
+        width: 100%;
+        box-sizing: border-box;
+        font-family: ui-monospace, monospace;
+        font-size: 12px;
+      }
+      @media (max-width: 640px) {
+        .qt-shift {
+          grid-template-columns: minmax(0, 1fr) auto;
+        }
+        .qt-shift .qt-band {
+          grid-column: 1 / -1;
+          grid-row: 2;
+        }
+        .qt-axis-row {
+          display: none;
+        }
+      }
+    </style>
   </head>
   <body>
-    <h1>Chấm công — quản trị</h1>
-    <p class="muted">Khai ca làm, địa điểm được chấm công (toạ độ và bán kính), xếp ca cho người hoặc cả đơn vị, xem tổng hợp tháng.</p>
-    <p id="status" aria-live="polite"></p>
+    <header class="gd-hero">
+      <div>
+        <h1>Ca làm và địa điểm</h1>
+        <p>Theo dõi ai đã vào ca, ai đi muộn; khai ca, địa điểm chấm công và xếp ca cho đơn vị.</p>
+      </div>
+      <span id="stepper"></span>
+    </header>
 
-    <h2>Ca làm</h2>
-    <table><thead><tr><th>Tên</th><th>Bắt đầu</th><th>Kết thúc</th><th class="num">Cho phép muộn (phút)</th><th></th></tr></thead><tbody id="shifts"></tbody></table>
-    <form id="shift-form" class="grid">
-      <label>Tên ca <input name="name" required maxlength="60" placeholder="Hành chính" /></label>
-      <label>Bắt đầu <input name="start" type="time" required value="08:00" /></label>
-      <label>Kết thúc <input name="end" type="time" required value="17:00" /></label>
-      <label>Cho phép muộn (phút) <input name="grace_minutes" type="number" min="0" max="120" value="5" /></label>
-      <label>&nbsp;<button type="submit">Thêm ca</button></label>
-    </form>
+    <p id="note" class="gd-note" role="status" aria-live="polite"></p>
 
-    <h2>Địa điểm chấm công</h2>
-    <table><thead><tr><th>Tên</th><th>Vĩ độ</th><th>Kinh độ</th><th class="num">Bán kính (m)</th><th></th></tr></thead><tbody id="places"></tbody></table>
-    <form id="place-form" class="grid">
-      <label>Tên <input name="name" maxlength="80" placeholder="Trụ sở chính" /></label>
-      <label>Vĩ độ <input name="lat" required inputmode="decimal" placeholder="21.0285" /></label>
-      <label>Kinh độ <input name="lng" required inputmode="decimal" placeholder="105.8542" /></label>
-      <label>Bán kính (m) <input name="radius_m" type="number" min="20" max="5000" value="150" /></label>
-      <label>&nbsp;<button type="submit">Thêm địa điểm</button></label>
-    </form>
+    <nav class="qt-tabs" aria-label="Các phần">
+      <div class="gd-seg" id="tabs"></div>
+    </nav>
 
-    <h2>Xếp ca cho cả đơn vị</h2>
-    <form id="assign-form" class="grid">
-      <label>Đơn vị <select name="department_id" id="departments"></select></label>
-      <label>Ca <select name="shift_id" id="shift-pick"></select></label>
-      <label>&nbsp;<button type="submit">Xếp ca</button></label>
-    </form>
+    <main id="view" aria-live="polite"></main>
 
-    <h2>Tổng hợp tháng <input id="month" type="month" /> <button id="export" type="button" class="secondary">Xuất CSV</button></h2>
-    <table>
-      <thead><tr><th>Họ tên</th><th class="num">Ngày có mặt</th><th class="num">Lần đi muộn</th><th class="num">Phút muộn</th><th class="num">Về sớm</th><th class="num">Giờ làm</th></tr></thead>
-      <tbody id="summary"></tbody>
-    </table>
-    <div id="export-box"></div>
     <script type="module">
-      import { $, desktiny, h, server, show, thisMonth } from './mo-rong.js'
+      import { $, desktiny, h, server } from './mo-rong.js'
+      import { avatar, chip, empty, icon, localDay, monthName, monthStepper, s, skeleton, stat } from './bieu-do.js'
 
-      $('#month').value = thisMonth()
-      const remove = (path) => h('button', { type: 'button', class: 'secondary', onclick: async () => {
-        if (!(await desktiny.confirm('Xoá mục này?'))) return
-        await server(path, { method: 'DELETE' }).catch((error) => show($('#status'), error.message, 'bad'))
+      const TABS = [
+        ['tong-quan', 'Tổng quan', 'trend'],
+        ['ca', 'Ca làm', 'clock'],
+        ['dia-diem', 'Địa điểm', 'pin'],
+        ['xep-ca', 'Xếp ca', 'users'],
+      ]
+      const STATE_TONE = { ok: 'ok', late: 'warn', late_early: 'warn', early: 'info', open: 'accent' }
+      const STATE_TEXT = { ok: 'đúng giờ', late: 'đi muộn', late_early: 'đi muộn, về sớm', early: 'về sớm', open: 'không chấm ra' }
+      const state = { month: localDay().slice(0, 7), data: null, tab: 'tong-quan', sort: 'late', editing: null, csv: null, departments: null }
+
+      const time = (value) => (value ? value.slice(11, 16) : '—')
+      const minutesOf = (clock) => {
+        const [hours, mins] = String(clock || '0:0').split(':').map(Number)
+        return (hours || 0) * 60 + (mins || 0)
+      }
+      const number = (value, digits = 0) => Number(value || 0).toLocaleString('vi-VN', { maximumFractionDigits: digits })
+      const dayNumber = (key) => Number(key.slice(8, 10))
+      const weekend = (key) => {
+        const [y, m, d] = key.split('-').map(Number)
+        return [0, 6].includes(new Date(y, m - 1, d).getDay())
+      }
+      function monthKeys(month) {
+        const [y, m] = month.split('-').map(Number)
+        return Array.from({ length: new Date(y, m, 0).getDate() }, (_, i) => `${month}-${String(i + 1).padStart(2, '0')}`)
+      }
+      function note(tone, text, iconName = tone === 'bad' ? 'alert' : 'check') {
+        const box = $('#note')
+        box.className = `gd-note tone-${tone}`
+        box.replaceChildren(icon(iconName, 16), h('span', {}, text))
+      }
+      const clearNote = () => $('#note').replaceChildren()
+      const panel = (title, iconName, body, extra) =>
+        h('section', { class: 'gd-panel' }, h('div', { class: 'gd-panel-head' }, h('h2', {}, icon(iconName, 17), title), extra || null), h('div', { class: 'gd-panel-body' }, body))
+      const fallbackShift = () => state.data.shifts.reduce((first, shift) => (!first || shift.id < first.id ? shift : first), null)
+
+      // ---- Tabs -------------------------------------------------------------------------------
+
+      function renderTabs() {
+        const d = state.data
+        const counts = { ca: d?.shifts.length, 'dia-diem': d?.places.length, 'xep-ca': d?.assignments.length }
+        $('#tabs').replaceChildren(
+          ...TABS.map(([key, label, iconName]) =>
+            h(
+              'button',
+              { type: 'button', 'aria-pressed': state.tab === key ? 'true' : 'false', onclick: () => go(key) },
+              icon(iconName, 14),
+              label,
+              counts[key] !== undefined ? h('span', { class: 'qt-count' }, counts[key]) : null,
+            ),
+          ),
+        )
+        $('#stepper').replaceChildren(state.tab === 'tong-quan' ? monthStepper(state.month, changeMonth, { max: (d?.today || localDay()).slice(0, 7) }) : '')
+      }
+      function go(tab) {
+        state.tab = tab
+        clearNote()
+        render()
+        $('#tabs [aria-pressed="true"]')?.focus()
+      }
+      function changeMonth(month) {
+        state.month = month
+        state.csv = null
         load()
-      } }, 'Xoá')
+      }
+      function render() {
+        renderTabs()
+        if (!state.data) return
+        const views = { 'tong-quan': overview, ca: shifts, 'dia-diem': places, 'xep-ca': assignments }
+        $('#view').replaceChildren(...views[state.tab]().filter(Boolean))
+      }
+
+      // ---- Overview ---------------------------------------------------------------------------
+
+      function setupSteps() {
+        const d = state.data
+        const steps = [
+          [d.shifts.length > 0, 'Khai ít nhất một ca làm', 'ca'],
+          [d.places.length > 0, 'Khai địa điểm chấm công (toạ độ và bán kính)', 'dia-diem'],
+          [d.assignments.length > 0, 'Xếp ca cho các đơn vị', 'xep-ca'],
+        ]
+        if (steps.every(([done]) => done)) return null
+        return panel(
+          'Bắt đầu',
+          'settings',
+          h(
+            'ol',
+            { class: 'qt-steps' },
+            steps.map(([done, text, tab], i) =>
+              h(
+                'li',
+                { class: done ? 'tone-ok' : 'tone-accent' },
+                h('span', { class: 'qt-step-mark', 'aria-hidden': 'true' }, done ? icon('check', 15) : i + 1),
+                h('span', { class: 'gd-grow' }, text, done ? h('span', { class: 'sr-only' }, ' (đã xong)') : null),
+                done ? chip('Đã xong', 'ok') : h('button', { type: 'button', class: 'qt-small', onclick: () => go(tab) }, 'Làm ngay'),
+              ),
+            ),
+          ),
+        )
+      }
+
+      function overview() {
+        const d = state.data
+        const threshold = Number(d.settings?.nguong_di_muon) || 3
+        const today = d.today_punches
+        const lateToday = today.filter((p) => p.late_minutes > 0).length
+        const stillIn = today.filter((p) => p.in && !p.out).length
+        const lateTotal = d.summary.reduce((sum, p) => sum + (p.late_count || 0), 0)
+        const overLimit = d.summary.filter((p) => p.late_count >= threshold).length
+        const hours = d.summary.reduce((sum, p) => sum + (p.hours || 0), 0)
+        const [ty, tm, td] = d.today.split('-').map(Number)
+        return [
+          setupSteps(),
+          h(
+            'div',
+            { class: 'gd-stats' },
+            stat({ label: 'Có mặt hôm nay', value: number(today.length), hint: d.assignments.length ? `trên ${d.assignments.length} người đã xếp ca` : `ngày ${td}/${tm}/${ty}`, tone: 'accent', icon: 'users' }),
+            stat({ label: 'Đi muộn hôm nay', value: number(lateToday), hint: stillIn ? `${stillIn} người đang trong ca` : 'Không ai đang trong ca', tone: lateToday ? 'warn' : 'ok', icon: 'alert' }),
+            stat({ label: `Lượt đi muộn ${monthName(d.month).toLocaleLowerCase('vi')}`, value: number(lateTotal), hint: overLimit ? `${overLimit} người từ ${threshold} lần trở lên` : `Chưa ai tới ${threshold} lần`, tone: overLimit ? 'bad' : lateTotal ? 'warn' : 'ok', icon: 'trend' }),
+            stat({ label: 'Tổng giờ làm trong tháng', value: number(hours, 1), hint: `${d.summary.length} người có chấm công`, tone: 'accent', icon: 'clock' }),
+          ),
+          h('div', { class: 'gd-cols' }, panel(`Hôm nay, ${td}/${tm}`, 'login', todayList()), panel(`Từng ngày ${monthName(d.month)}`, 'calendar', dailyColumns())),
+          panel(
+            `Bảng công ${monthName(d.month).toLocaleLowerCase('vi')}`,
+            'users',
+            monthTable(threshold),
+            h(
+              'div',
+              { class: 'row' },
+              h(
+                'div',
+                { class: 'gd-seg', role: 'group', 'aria-label': 'Sắp xếp' },
+                [['late', 'Đi muộn nhiều'], ['hours', 'Giờ làm'], ['name', 'Tên']].map(([key, label]) =>
+                  h('button', { type: 'button', 'aria-pressed': state.sort === key ? 'true' : 'false', onclick: () => ((state.sort = key), render()) }, label),
+                ),
+              ),
+              h('button', { type: 'button', class: 'gd-ghost qt-small', onclick: exportCsv }, icon('download', 14), ' Xuất CSV'),
+            ),
+          ),
+        ]
+      }
+
+      function todayList() {
+        const list = state.data.today_punches
+        if (!list.length) return empty('Chưa ai chấm công hôm nay', 'Lượt vào ca sẽ hiện ở đây ngay khi có.', 'clock')
+        return h(
+          'ul',
+          { class: 'gd-list' },
+          list.map((p) =>
+            h(
+              'li',
+              {},
+              avatar(p.display_name),
+              h('div', { class: 'gd-grow' }, h('div', { class: 'gd-title' }, p.display_name), h('div', { class: 'gd-sub num' }, `Vào ${time(p.in)} · Ra ${time(p.out)}`)),
+              p.late_minutes > 0
+                ? chip(`Muộn ${p.late_minutes}′`, 'warn', 'alert')
+                : p.early_minutes > 0
+                  ? chip(`Sớm ${p.early_minutes}′`, 'info', 'logout')
+                  : p.out
+                    ? chip('Đã ra', 'ok', 'check')
+                    : chip('Trong ca', 'accent', 'clock'),
+            ),
+          ),
+        )
+      }
+
+      function dailyColumns() {
+        const d = state.data
+        const keys = monthKeys(d.month)
+        const byDay = Object.fromEntries(d.daily.map((row) => [row.day, row]))
+        const top = Math.max(1, ...d.daily.map((row) => row.present))
+        if (!d.daily.length) return empty('Tháng này chưa có công', 'Cột theo ngày hiện khi có lượt chấm công.', 'calendar')
+        const busiest = d.daily.reduce((a, b) => (b.present > a.present ? b : a))
+        const lateDays = d.daily.filter((row) => row.late).length
+        return h(
+          'div',
+          {},
+          h(
+            'div',
+            { class: 'qt-cols', role: 'img', 'aria-label': `Số người có mặt theo ngày. Đông nhất ngày ${dayNumber(busiest.day)}: ${busiest.present} người. ${lateDays} ngày có người đi muộn.` },
+            keys.map((key) => {
+              const row = byDay[key] || { present: 0, late: 0 }
+              const title = row.present ? `Ngày ${dayNumber(key)}: ${row.present} người có mặt, ${row.late} đi muộn` : `Ngày ${dayNumber(key)}: không có công`
+              return h(
+                'span',
+                { class: `qt-col${weekend(key) ? ' off' : ''}${key === d.today ? ' today' : ''}`, title },
+                h('i', { class: 'on', style: `height:${((row.present - row.late) / top) * 100}%` }),
+                h('i', { class: 'late', style: `height:${(row.late / top) * 100}%` }),
+              )
+            }),
+          ),
+          h('div', { class: 'qt-col-axis', 'aria-hidden': 'true' }, keys.map((key, i) => h('span', {}, i === 0 || (i + 1) % 5 === 0 ? dayNumber(key) : ''))),
+          h(
+            'div',
+            { class: 'gd-legend', 'aria-hidden': 'true' },
+            h('span', { class: 'tone-accent' }, h('i', { class: 'gd-dot', style: 'background:var(--gd-accent)' }), 'Đúng giờ'),
+            h('span', { class: 'tone-warn' }, h('i', { class: 'gd-dot' }), 'Đi muộn'),
+            h('span', {}, `Cao nhất: ${top} người`),
+          ),
+        )
+      }
+
+      function strip(person) {
+        const keys = monthKeys(state.data.month)
+        const counts = {}
+        for (const word of Object.values(person.states || {})) counts[word] = (counts[word] || 0) + 1
+        const label = Object.entries(counts).map(([word, n]) => `${n} ngày ${STATE_TEXT[word] || word}`).join(', ') || 'Không có ngày công'
+        return h(
+          'span',
+          { class: 'qt-strip', role: 'img', 'aria-label': label },
+          keys.map((key) => {
+            const word = person.states?.[key]
+            return h('i', { class: word ? `tone-${STATE_TONE[word] || 'accent'}` : weekend(key) ? 'off' : '', title: `${dayNumber(key)}: ${word ? STATE_TEXT[word] : 'không có công'}` })
+          }),
+        )
+      }
+
+      function monthTable(threshold) {
+        const d = state.data
+        if (!d.summary.length) return empty(`${monthName(d.month)} chưa có ai chấm công`, 'Khi nhân viên vào ca, bảng công tháng hiện ở đây.', 'users')
+        const order = {
+          late: (a, b) => b.late_count - a.late_count || b.late_minutes - a.late_minutes || a.display_name.localeCompare(b.display_name, 'vi'),
+          hours: (a, b) => b.hours - a.hours,
+          name: (a, b) => a.display_name.localeCompare(b.display_name, 'vi'),
+        }[state.sort]
+        const people = [...d.summary].sort(order)
+        return h(
+          'div',
+          {},
+          h(
+            'div',
+            { class: 'gd-scroll' },
+            h(
+              'table',
+              { class: 'gd-table qt-table' },
+              h(
+                'thead',
+                {},
+                h('tr', {}, h('th', {}, 'Nhân viên'), h('th', { class: 'num' }, 'Ngày công'), h('th', { class: 'num' }, 'Đi muộn'), h('th', { class: 'num' }, 'Phút muộn'), h('th', { class: 'num' }, 'Về sớm'), h('th', { class: 'num' }, 'Giờ làm'), h('th', {}, 'Các ngày trong tháng')),
+              ),
+              h(
+                'tbody',
+                {},
+                people.map((p) =>
+                  h(
+                    'tr',
+                    {},
+                    h('td', {}, h('span', { class: 'qt-who' }, avatar(p.display_name), h('span', { class: 'gd-title' }, p.display_name))),
+                    h('td', { class: 'num' }, p.worked_days),
+                    h('td', { class: 'num' }, p.late_count >= threshold ? chip(`${p.late_count} lần`, 'bad', 'alert') : p.late_count ? chip(`${p.late_count} lần`, 'warn') : '0'),
+                    h('td', { class: 'num' }, p.late_minutes),
+                    h('td', { class: 'num' }, p.early_count),
+                    h('td', { class: 'num' }, number(p.hours, 2)),
+                    h('td', {}, strip(p)),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          h(
+            'div',
+            { class: 'gd-legend', 'aria-hidden': 'true' },
+            ['ok', 'late', 'early', 'open'].map((word) => h('span', { class: `tone-${STATE_TONE[word]}` }, h('i', { class: 'gd-dot' }), STATE_TEXT[word][0].toLocaleUpperCase('vi') + STATE_TEXT[word].slice(1))),
+            h('span', { class: 'tone-bad' }, h('i', { class: 'gd-dot' }), `Từ ${threshold} lần đi muộn: vượt ngưỡng báo`),
+          ),
+          state.csv,
+        )
+      }
+
+      /** Desktiny's frame cannot download files, so the CSV is shown to copy into a spreadsheet. */
+      async function exportCsv() {
+        try {
+          const session = await desktiny.token()
+          // Same address rule as server() in mo-rong.js, but the answer is text, not JSON.
+          const url = new URL(`/api/xuat?thang=${state.month}`, document.baseURI).href.replace('/ui/', '/')
+          const response = await fetch(url, { headers: { 'X-Desktiny-Session': session.token } })
+          if (!response.ok) throw new Error((await response.json().catch(() => ({}))).message || `Lỗi ${response.status}`)
+          const box = h('textarea', { class: 'qt-csv', rows: 8, readonly: true, 'aria-label': `Bảng công ${monthName(state.month)} dạng CSV` })
+          box.value = (await response.text()).replace(/^﻿/, '')
+          const copy = async () => {
+            box.select()
+            let done = false
+            try {
+              await navigator.clipboard.writeText(box.value)
+              done = true
+            } catch {
+              try {
+                done = document.execCommand('copy')
+              } catch {
+                done = false
+              }
+            }
+            note(done ? 'ok' : 'info', done ? 'Đã sao chép. Dán vào bảng tính (Ctrl+V).' : 'Đã chọn hết nội dung: bấm Ctrl+C để sao chép.', done ? 'check' : 'file')
+          }
+          state.csv = h(
+            'div',
+            { style: 'margin-top:14px' },
+            h('p', { class: 'gd-sub' }, 'Khung plugin không tải tệp về được. Sao chép nội dung dưới đây rồi dán vào bảng tính.'),
+            box,
+            h('div', { class: 'qt-form-actions' }, h('button', { type: 'button', onclick: copy }, 'Sao chép'), h('button', { type: 'button', class: 'gd-ghost', onclick: () => ((state.csv = null), render()) }, 'Đóng')),
+          )
+          render()
+          box.focus()
+          box.select()
+        } catch (error) {
+          note('bad', error.message)
+        }
+      }
+
+      // ---- Shifts -----------------------------------------------------------------------------
+
+      const pct = (m) => `${((m / 1440) * 100).toFixed(2)}%`
+      function band(shift) {
+        const start = minutesOf(shift.start)
+        const end = minutesOf(shift.end)
+        const grace = Math.min(Number(shift.grace_minutes) || 0, 120)
+        const parts = end > start ? [[start, end]] : [[start, 1440], [0, end]]
+        return h(
+          'div',
+          { class: 'qt-band', role: 'img', 'aria-label': `Từ ${shift.start} đến ${shift.end}${end <= start ? ' hôm sau' : ''}${grace ? `, cho phép muộn ${grace} phút` : ''}` },
+          parts.map(([a, b]) => h('span', { style: `left:${pct(a)};width:${pct(b - a)}` })),
+          grace ? h('span', { class: 'grace', style: `left:${pct(start)};width:${pct(Math.min(grace, 1440 - start))}` }) : null,
+        )
+      }
+      const axis = () =>
+        h('div', { class: 'qt-shift qt-axis-row', 'aria-hidden': 'true' }, h('span'), h('div', { class: 'qt-axis' }, [0, 3, 6, 9, 12, 15, 18, 21, 24].map((hour) => h('span', { style: `left:${pct(hour * 60)}` }, `${hour}h`))), h('span'))
+
+      function shifts() {
+        const d = state.data
+        const people = {}
+        for (const a of d.assignments) people[a.shift_id] = (people[a.shift_id] || 0) + 1
+        const fallback = fallbackShift()
+        const list = d.shifts.length
+          ? h(
+              'div',
+              { class: 'qt-shifts' },
+              axis(),
+              d.shifts.map((shift) =>
+                h(
+                  'div',
+                  { class: 'qt-shift' },
+                  h(
+                    'div',
+                    {},
+                    h('div', { class: 'gd-title' }, shift.name, fallback?.id === shift.id ? h('span', { class: 'gd-sub' }, ' · mặc định') : null),
+                    h('div', { class: 'gd-sub num' }, `${shift.start}–${shift.end} · ${number(shift.standard_hours, 1)} giờ · ${people[shift.id] || 0} người`),
+                  ),
+                  band(shift),
+                  h(
+                    'div',
+                    { class: 'qt-actions' },
+                    h('button', { type: 'button', class: 'gd-ghost', 'aria-label': `Sửa ca ${shift.name}`, onclick: () => ((state.editing = shift), render(), $('#shift-form input[name=name]')?.focus()) }, 'Sửa'),
+                    removeButton(`/api/ca/${shift.id}`, `Xoá ca “${shift.name}”? ${people[shift.id] ? `${people[shift.id]} người đang xếp ca này sẽ dùng ca mặc định.` : ''}`, `Xoá ca ${shift.name}`),
+                  ),
+                ),
+              ),
+              h('div', { class: 'gd-legend', 'aria-hidden': 'true' }, h('span', {}, h('i', { class: 'gd-dot', style: 'background:var(--gd-accent)' }), 'Giờ làm'), h('span', { class: 'tone-warn' }, h('i', { class: 'gd-dot' }), 'Thời gian cho phép muộn')),
+            )
+          : empty('Chưa có ca làm', 'Thêm ca đầu tiên ở khung bên dưới, ví dụ “Hành chính 08:00–17:00”.', 'clock')
+        return [
+          panel('Các ca trong ngày', 'clock', [list, fallback ? h('p', { class: 'gd-sub' }, `Người chưa được xếp ca dùng ca “${fallback.name}” (ca khai đầu tiên).`) : null]),
+          shiftForm(),
+        ]
+      }
+
+      function shiftForm() {
+        const editing = state.editing
+        const preview = h('div', {})
+        const form = h(
+          'form',
+          { id: 'shift-form' },
+          h(
+            'div',
+            { class: 'qt-form' },
+            h('label', {}, 'Tên ca', h('input', { name: 'name', required: true, maxlength: 60, placeholder: 'Hành chính', value: editing?.name || '' })),
+            h('label', {}, 'Bắt đầu', h('input', { name: 'start', type: 'time', required: true, value: editing?.start || '08:00' })),
+            h('label', {}, 'Kết thúc', h('input', { name: 'end', type: 'time', required: true, value: editing?.end || '17:00' })),
+            h('label', {}, 'Cho phép muộn (phút)', h('input', { name: 'grace_minutes', type: 'number', min: 0, max: 120, value: editing?.grace_minutes ?? 5 })),
+            h('label', {}, 'Giờ chuẩn mỗi ngày', h('input', { name: 'standard_hours', type: 'number', min: 1, max: 24, step: 0.5, value: editing?.standard_hours ?? 8 })),
+          ),
+          h('p', { class: 'gd-sub', style: 'margin:12px 0 0' }, 'Xem trước:'),
+          preview,
+          h(
+            'div',
+            { class: 'qt-form-actions' },
+            h('button', { type: 'submit' }, editing ? 'Lưu thay đổi' : 'Thêm ca'),
+            editing ? h('button', { type: 'button', class: 'gd-ghost', onclick: () => ((state.editing = null), render()) }, 'Huỷ sửa') : null,
+          ),
+        )
+        const draw = () => {
+          const values = Object.fromEntries(new FormData(form))
+          preview.replaceChildren(h('div', { class: 'qt-shifts' }, h('div', { class: 'qt-shift' }, h('div', { class: 'gd-title' }, values.name || 'Ca mới'), band(values), h('span'))))
+        }
+        form.addEventListener('input', draw)
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault()
+          const values = Object.fromEntries(new FormData(form))
+          try {
+            await server('/api/ca', { method: 'POST', body: { ...values, ...(editing ? { id: editing.id } : {}) } })
+            note('ok', editing ? `Đã lưu ca “${values.name}”.` : `Đã thêm ca “${values.name}”.`)
+            state.editing = null
+            await load()
+          } catch (error) {
+            note('bad', error.message)
+          }
+        })
+        draw()
+        return panel(editing ? `Sửa ca “${editing.name}”` : 'Thêm ca', editing ? 'settings' : 'plus', form)
+      }
+
+      function removeButton(path, question, label) {
+        return h(
+          'button',
+          {
+            type: 'button',
+            class: 'gd-ghost',
+            'aria-label': label,
+            onclick: async () => {
+              if (!(await desktiny.confirm(question))) return
+              try {
+                await server(path, { method: 'DELETE' })
+                note('ok', 'Đã xoá.')
+                await load()
+              } catch (error) {
+                note('bad', error.message)
+              }
+            },
+          },
+          'Xoá',
+        )
+      }
+
+      // ---- Places -----------------------------------------------------------------------------
+
+      function zone(radius) {
+        const r = 10 + 18 * Math.min(1, Math.log(Math.max(20, radius) / 20) / Math.log(250))
+        return s('svg', { width: 64, height: 64, viewBox: '0 0 64 64', 'aria-hidden': 'true' }, s('circle', { class: 'zone', cx: 32, cy: 32, r }), s('circle', { class: 'dot', cx: 32, cy: 32, r: 4 }))
+      }
+
+      function places() {
+        const d = state.data
+        const cards = d.places.length
+          ? h(
+              'div',
+              { class: 'qt-places' },
+              d.places.map((place) =>
+                h(
+                  'article',
+                  { class: 'qt-place' },
+                  zone(place.radius_m),
+                  h(
+                    'div',
+                    { style: 'min-width:0' },
+                    h('div', { class: 'gd-title' }, place.name),
+                    chip(`Bán kính ${number(place.radius_m)} m`, 'accent', 'pin'),
+                    h('div', { class: 'gd-sub coords' }, `${Number(place.lat).toFixed(5)}, ${Number(place.lng).toFixed(5)}`),
+                  ),
+                  h('div', { class: 'qt-actions' }, removeButton(`/api/dia-diem/${place.id}`, `Xoá địa điểm “${place.name}”? Nhân viên sẽ không chấm công ở đây được nữa.`, `Xoá địa điểm ${place.name}`)),
+                ),
+              ),
+            )
+          : empty('Chưa có địa điểm', 'Nhân viên chỉ chấm công được khi đứng trong bán kính của một địa điểm.', 'pin')
+        return [panel('Địa điểm chấm công', 'pin', cards), placeForm()]
+      }
+
+      function placeForm() {
+        const range = h('input', { type: 'range', min: 20, max: 1000, step: 10, value: 150, 'aria-label': 'Bán kính (kéo)' })
+        const radius = h('input', { name: 'radius_m', type: 'number', min: 20, max: 5000, value: 150, 'aria-label': 'Bán kính (m)' })
+        range.addEventListener('input', () => (radius.value = range.value))
+        radius.addEventListener('input', () => (range.value = Math.min(1000, Number(radius.value) || 20)))
+        const lat = h('input', { name: 'lat', required: true, inputmode: 'decimal', placeholder: '21.0285' })
+        const lng = h('input', { name: 'lng', required: true, inputmode: 'decimal', placeholder: '105.8542' })
+        const here = h(
+          'button',
+          {
+            type: 'button',
+            class: 'gd-ghost',
+            onclick: () => {
+              if (!navigator.geolocation) return note('bad', 'Trình duyệt này không cho dùng vị trí.')
+              note('info', 'Đang lấy vị trí hiện tại…', 'pin')
+              navigator.geolocation.getCurrentPosition(
+                (where) => {
+                  lat.value = where.coords.latitude.toFixed(6)
+                  lng.value = where.coords.longitude.toFixed(6)
+                  note('ok', `Đã điền vị trí hiện tại (sai số ±${Math.round(where.coords.accuracy)} m). Nên đặt bán kính lớn hơn sai số này.`, 'pin')
+                },
+                () => note('bad', 'Chưa lấy được vị trí. Cho phép dùng vị trí hoặc nhập toạ độ tay.'),
+                { enableHighAccuracy: true, timeout: 15000 },
+              )
+            },
+          },
+          icon('pin', 14),
+          ' Dùng vị trí hiện tại',
+        )
+        const form = h(
+          'form',
+          {},
+          h(
+            'div',
+            { class: 'qt-form' },
+            h('label', {}, 'Tên', h('input', { name: 'name', maxlength: 80, placeholder: 'Trụ sở chính' })),
+            h('label', {}, 'Vĩ độ', lat),
+            h('label', {}, 'Kinh độ', lng),
+          ),
+          h('label', { style: 'margin-top:10px' }, 'Bán kính được chấm công (m)', h('span', { class: 'qt-radius' }, range, radius)),
+          h('p', { class: 'gd-sub', style: 'margin:6px 0 0' }, 'Mẹo: mở bản đồ, nhấn giữ vào toà nhà để xem toạ độ rồi dán vào đây; hoặc đứng tại chỗ và bấm “Dùng vị trí hiện tại”.'),
+          h('div', { class: 'qt-form-actions' }, h('button', { type: 'submit' }, 'Thêm địa điểm'), here),
+        )
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault()
+          const values = Object.fromEntries(new FormData(form))
+          const toNumber = (text) => Number(String(text).trim().replace(',', '.'))
+          try {
+            await server('/api/dia-diem', { method: 'POST', body: { ...values, lat: toNumber(values.lat), lng: toNumber(values.lng), radius_m: Number(values.radius_m) } })
+            note('ok', `Đã thêm địa điểm “${values.name || 'Trụ sở'}”.`)
+            await load()
+          } catch (error) {
+            note('bad', error.message)
+          }
+        })
+        return panel('Thêm địa điểm', 'plus', form)
+      }
+
+      // ---- Assignments ------------------------------------------------------------------------
+
+      function assignments() {
+        const d = state.data
+        const shiftName = Object.fromEntries(d.shifts.map((shift) => [shift.id, shift]))
+        const departments = state.departments
+        const deptSelect = h(
+          'select',
+          { name: 'department_id', required: true },
+          departments === null
+            ? h('option', { value: '' }, 'Đang tải…')
+            : departments.length
+              ? departments.map((dept) => h('option', { value: dept.id }, dept.name))
+              : h('option', { value: '' }, 'Không đọc được danh sách đơn vị'),
+        )
+        const shiftSelect = h('select', { name: 'shift_id' }, d.shifts.map((shift) => h('option', { value: shift.id }, `${shift.name} (${shift.start}–${shift.end})`)), h('option', { value: '' }, 'Bỏ xếp ca (dùng ca mặc định)'))
+        const form = h(
+          'form',
+          {},
+          h('div', { class: 'qt-form' }, h('label', {}, 'Đơn vị', deptSelect), h('label', {}, 'Ca', shiftSelect)),
+          h('div', { class: 'qt-form-actions' }, h('button', { type: 'submit', disabled: !departments?.length }, icon('users', 14), ' Xếp ca cho cả đơn vị')),
+        )
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault()
+          const values = Object.fromEntries(new FormData(form))
+          const dept = deptSelect.selectedOptions[0]?.textContent || 'đơn vị này'
+          const shift = shiftName[values.shift_id]
+          const question = shift ? `Xếp ca “${shift.name}” cho mọi người trong ${dept}? Ca cũ của họ sẽ được thay.` : `Bỏ xếp ca của mọi người trong ${dept}?`
+          if (!(await desktiny.confirm(question))) return
+          try {
+            const result = await server('/api/phan-ca', { method: 'POST', body: values })
+            note('ok', `Đã xếp ca cho ${result.assigned} người.`)
+            await load()
+          } catch (error) {
+            note('bad', error.message)
+          }
+        })
+
+        const filter = h('input', { type: 'search', placeholder: 'Tìm người…', 'aria-label': 'Tìm người theo tên' })
+        const groupsBox = h('div', {})
+        const drawGroups = () => {
+          const needle = filter.value.trim().toLocaleLowerCase('vi')
+          const groups = new Map()
+          for (const a of d.assignments) {
+            if (needle && !a.display_name.toLocaleLowerCase('vi').includes(needle)) continue
+            const key = shiftName[a.shift_id] ? a.shift_id : 'none'
+            if (!groups.has(key)) groups.set(key, [])
+            groups.get(key).push(a)
+          }
+          if (!d.assignments.length) return groupsBox.replaceChildren(empty('Chưa xếp ca cho ai', 'Chọn đơn vị và ca ở trên để xếp.', 'users'))
+          if (!groups.size) return groupsBox.replaceChildren(empty('Không thấy ai', 'Thử tên khác.', 'users'))
+          const fallback = fallbackShift()
+          groupsBox.replaceChildren(
+            h(
+              'div',
+              { class: 'qt-groups' },
+              [...groups.entries()].map(([key, members]) => {
+                const shift = shiftName[key]
+                return h(
+                  'div',
+                  { class: 'qt-group' },
+                  h('h3', {}, h('span', {}, shift ? `${shift.name}, ${shift.start}–${shift.end}` : `Chưa xếp ca${fallback ? ` (dùng “${fallback.name}”)` : ''}`), chip(`${members.length} người`, shift ? 'accent' : 'muted')),
+                  h('ul', { class: 'qt-people' }, members.map((member) => h('li', {}, avatar(member.display_name), member.display_name))),
+                )
+              }),
+            ),
+          )
+        }
+        filter.addEventListener('input', drawGroups)
+        drawGroups()
+        return [
+          panel('Xếp ca cho cả đơn vị', 'users', [d.shifts.length ? null : h('p', { class: 'gd-note tone-warn' }, 'Chưa có ca nào. Khai ca ở phần “Ca làm” trước.'), form]),
+          panel('Ai đang ở ca nào', 'calendar', groupsBox, filter),
+        ]
+      }
+
+      // ---- Loading ----------------------------------------------------------------------------
 
       async function load() {
+        const month = state.month
+        $('#view').setAttribute('aria-busy', 'true')
         try {
-          const data = await server(`/api/quan-tri?thang=${$('#month').value}`)
-          $('#shifts').replaceChildren(...data.shifts.map((s) => h('tr', {}, h('td', {}, s.name), h('td', {}, s.start), h('td', {}, s.end), h('td', { class: 'num' }, s.grace_minutes), h('td', {}, remove(`/api/ca/${s.id}`)))))
-          $('#places').replaceChildren(...data.places.map((p) => h('tr', {}, h('td', {}, p.name), h('td', {}, p.lat), h('td', {}, p.lng), h('td', { class: 'num' }, p.radius_m), h('td', {}, remove(`/api/dia-diem/${p.id}`)))))
-          $('#shift-pick').replaceChildren(h('option', { value: '' }, 'Không xếp ca'), ...data.shifts.map((s) => h('option', { value: s.id }, s.name)))
-          $('#summary').replaceChildren(...data.summary.map((p) => h('tr', {}, h('td', {}, p.display_name), h('td', { class: 'num' }, p.worked_days), h('td', { class: 'num' }, p.late_count), h('td', { class: 'num' }, p.late_minutes), h('td', { class: 'num' }, p.early_count), h('td', { class: 'num' }, p.hours))))
+          const data = await server(`/api/quan-tri?thang=${month}`)
+          if (month !== state.month) return
+          state.data = data
+          if (state.editing) state.editing = data.shifts.find((shift) => shift.id === state.editing.id) || null
+          render()
         } catch (error) {
-          show($('#status'), error.message, 'bad')
+          note('bad', error.message)
+        } finally {
+          $('#view').setAttribute('aria-busy', 'false')
         }
       }
       async function departments() {
         const list = await desktiny.api('/departments').catch(() => ({ items: [] }))
-        $('#departments').replaceChildren(...list.items.map((d) => h('option', { value: d.id }, d.name)))
+        state.departments = list.items || []
+        if (state.tab === 'xep-ca' && state.data) render()
       }
-      function submitter(form, path, transform = (v) => v) {
-        $(form).addEventListener('submit', async (event) => {
-          event.preventDefault()
-          const values = transform(Object.fromEntries(new FormData(event.target)))
-          try {
-            await server(path, { method: 'POST', body: values })
-            desktiny.toast('Đã lưu.')
-            event.target.reset()
-            load()
-          } catch (error) {
-            show($('#status'), error.message, 'bad')
-          }
-        })
-      }
-      submitter('#shift-form', '/api/ca')
-      submitter('#place-form', '/api/dia-diem', (v) => ({ ...v, lat: Number(v.lat.replace(',', '.')), lng: Number(v.lng.replace(',', '.')) }))
-      submitter('#assign-form', '/api/phan-ca')
-      $('#month').addEventListener('change', load)
-      // The frame may not download files (sandbox): the CSV is shown to copy into a spreadsheet.
-      $('#export').addEventListener('click', async () => {
-        const session = await desktiny.token()
-        const response = await fetch(`/api/xuat?thang=${$('#month').value}`, { headers: { 'X-Desktiny-Session': session.token } })
-        const box = h('textarea', { rows: 8, readonly: true, style: 'width: 100%' })
-        box.value = (await response.text()).replace(/^\ufeff/, '')
-        $('#export-box').replaceChildren(h('p', { class: 'muted' }, 'Chọn hết (Ctrl+A), sao chép rồi dán vào bảng tính.'), box)
-        box.select()
-      })
+
+      renderTabs()
+      $('#view').replaceChildren(skeleton(4, 18))
       load()
       departments()
     </script>

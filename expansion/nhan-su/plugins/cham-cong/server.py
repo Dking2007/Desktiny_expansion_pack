@@ -181,16 +181,53 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
 
     # ---- Administration (admin.page) -------------------------------------------------------------
 
+    def day_states(rows: list[dict]) -> dict[str, dict[str, str]]:
+        """Per person and day, one word for the admin's month grid: ok, late, early, late_early or open (no
+        check-out yet)."""
+        punches: dict[str, dict[str, dict]] = {}
+        for row in rows:
+            punches.setdefault(row["user_id"], {}).setdefault(row["day"], {})[row["kind"]] = row
+        states: dict[str, dict[str, str]] = {}
+        for user_id, days in punches.items():
+            for day, kinds in days.items():
+                late = "in" in kinds and kinds["in"]["late_minutes"] > 0
+                early = "out" in kinds and kinds["out"]["late_minutes"] < 0
+                word = "late_early" if late and early else "late" if late else "early" if early else "ok"
+                states.setdefault(user_id, {})[day] = "open" if "out" not in kinds and not late else word
+        return states
+
     @app.route("GET", "/api/quan-tri", admin=True)
     def overview(request):
         month = month_of(request.query.get("thang"))
+        today = now().date().isoformat()
+        states = day_states(month_rows(month))
+        daily: dict[str, dict] = {}
+        for person_days in states.values():
+            for day, word in person_days.items():
+                counts = daily.setdefault(day, {"day": day, "present": 0, "late": 0})
+                counts["present"] += 1
+                counts["late"] += word in {"late", "late_early"}
+        today_rows: dict[str, dict] = {}
+        for row in db.all("SELECT * FROM punches WHERE day = ? ORDER BY at", today):
+            person = today_rows.setdefault(row["user_id"], {
+                "user_id": row["user_id"], "display_name": row["display_name"], "in": None, "out": None,
+                "late_minutes": 0, "early_minutes": 0})  # fmt: skip
+            person[row["kind"]] = row["at"]
+            if row["kind"] == "in":
+                person["late_minutes"] = max(0, row["late_minutes"])
+            else:
+                person["early_minutes"] = max(0, -row["late_minutes"])
         return {
             "shifts": db.all("SELECT * FROM shifts ORDER BY start"),
             "places": db.all("SELECT * FROM places ORDER BY name"),
             "assignments": db.all("SELECT * FROM assignments ORDER BY display_name"),
             "month": month,
-            "summary": [{k: v for k, v in p.items() if k != "days"} for p in summary(month)],
+            "summary": [{k: v for k, v in p.items() if k != "days"} | {"states": states.get(p["user_id"], {})}
+                        for p in summary(month)],  # fmt: skip
             "settings": config(),
+            "today": today,
+            "today_punches": sorted(today_rows.values(), key=lambda p: p["display_name"]),
+            "daily": [daily[day] for day in sorted(daily)],
         }
 
     @app.route("POST", "/api/ca", admin=True)

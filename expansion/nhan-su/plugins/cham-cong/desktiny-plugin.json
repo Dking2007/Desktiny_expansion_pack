@@ -2,7 +2,7 @@
   "schema": "desktiny-plugin/1",
   "id": "vn.mo-rong.cham-cong",
   "name": "Chấm công GPS",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "Apache-2.0",
   "authors": ["Desktiny Expansion Pack contributors"],
   "description": "Chấm công vào/ra ca bằng vị trí GPS tại trụ sở, ca làm và giờ cho phép đi muộn, tổng hợp công theo tháng, xuất CSV. Báo sự kiện khi một người đi muộn quá số lần cho phép trong tháng; trợ lý AI trả lời được “tháng này tôi đi muộn mấy lần”.",
@@ -43,8 +43,8 @@
     "required": []
   },
   "ui": [
-    { "slot": "page", "title": "Chấm công", "url": "/ui/cham-cong.html", "height": 620 },
-    { "slot": "home.widget", "title": "Chấm công hôm nay", "url": "/ui/widget.html", "height": 150 },
-    { "slot": "admin.page", "title": "Ca làm và địa điểm", "url": "/ui/quan-tri.html", "height": 900 }
+    { "slot": "page", "title": "Chấm công", "url": "/ui/cham-cong.html", "height": 980 },
+    { "slot": "home.widget", "title": "Chấm công hôm nay", "url": "/ui/widget.html", "height": 240 },
+    { "slot": "admin.page", "title": "Ca làm và địa điểm", "url": "/ui/quan-tri.html", "height": 1000 }
   ]
 }

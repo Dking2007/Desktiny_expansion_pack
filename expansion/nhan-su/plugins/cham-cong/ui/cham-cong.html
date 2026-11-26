@@ -7,94 +7,714 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Chấm công</title>
     <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <style>
+      .cc-clock {
+        display: grid;
+        justify-items: end;
+        line-height: 1;
+      }
+      .cc-clock strong {
+        font-size: 40px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        font-variant-numeric: tabular-nums;
+      }
+      .cc-clock strong small {
+        margin-left: 2px;
+        color: var(--gd-muted);
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .cc-clock > span {
+        margin-top: 6px;
+        color: var(--gd-muted);
+        font-size: 12.5px;
+      }
+      .cc-today {
+        display: grid;
+        grid-template-columns: minmax(220px, 290px) minmax(0, 1fr);
+        gap: 18px;
+        align-items: center;
+      }
+      .cc-action {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        width: 100%;
+        padding: 16px 18px;
+        border-radius: 16px;
+        background: var(--gd-accent);
+        color: #fff;
+        text-align: left;
+        box-shadow: var(--gd-shadow-hover);
+      }
+      .cc-action:hover:not(:disabled) {
+        background: var(--gd-accent-strong);
+      }
+      :root[data-theme='dark'] .cc-action:not(.is-done) {
+        color: var(--gd-surface);
+      }
+      :root[data-theme='dark'] .cc-spin {
+        border-color: color-mix(in srgb, var(--gd-surface) 35%, transparent);
+        border-top-color: var(--gd-surface);
+      }
+      .cc-action.is-out {
+        background: var(--gd-accent-strong);
+      }
+      .cc-action.is-done {
+        background: var(--gd-ok-soft);
+        color: var(--gd-ok);
+        box-shadow: none;
+        opacity: 1;
+      }
+      .cc-action-icon {
+        position: relative;
+        display: grid;
+        flex: none;
+        place-items: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: rgb(255 255 255 / 0.18);
+      }
+      .cc-action.is-done .cc-action-icon {
+        background: var(--gd-surface);
+      }
+      .cc-action.is-ready .cc-action-icon::after {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border: 2px solid rgb(255 255 255 / 0.55);
+        border-radius: 50%;
+        animation: cc-pulse 1.8s ease-out infinite;
+      }
+      @keyframes cc-pulse {
+        from {
+          transform: scale(0.9);
+          opacity: 1;
+        }
+        to {
+          transform: scale(1.25);
+          opacity: 0;
+        }
+      }
+      .cc-action strong {
+        display: block;
+        font-size: 19px;
+        line-height: 1.25;
+      }
+      .cc-action small {
+        display: block;
+        font-size: 12.5px;
+        font-weight: 500;
+        opacity: 0.88;
+      }
+      .cc-spin {
+        width: 22px;
+        height: 22px;
+        border: 3px solid rgb(255 255 255 / 0.35);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: cc-turn 0.8s linear infinite;
+      }
+      @keyframes cc-turn {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .cc-facts {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .cc-fact {
+        display: grid;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: var(--gd-surface-2);
+      }
+      .cc-fact span {
+        color: var(--gd-muted);
+        font-size: 12px;
+      }
+      .cc-fact strong {
+        font-size: 18px;
+        font-variant-numeric: tabular-nums;
+      }
+      .cc-month {
+        display: grid;
+        grid-template-columns: minmax(0, 1.65fr) minmax(250px, 1fr);
+        gap: 16px;
+        align-items: start;
+      }
+      .cc-month > * {
+        margin-bottom: 0;
+      }
+      .cc-side {
+        display: grid;
+        gap: 16px;
+      }
+      .cc-side > * {
+        margin-bottom: 0;
+      }
+      .cc-rate {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 14px;
+      }
+      .cc-rate ul {
+        display: grid;
+        flex: 1;
+        gap: 4px;
+        min-width: 120px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        font-size: 13px;
+      }
+      .cc-rate li {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .cc-rate li b {
+        margin-left: auto;
+        font-variant-numeric: tabular-nums;
+      }
+      .cc-dl {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 6px 14px;
+        margin: 10px 0 0;
+        font-size: 13.5px;
+      }
+      .cc-dl dt {
+        color: var(--gd-muted);
+      }
+      .cc-dl dd {
+        margin: 0;
+        font-weight: 650;
+        font-variant-numeric: tabular-nums;
+      }
+      .cc-day-title {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        margin: 0;
+        font-size: 14px;
+      }
+      .cc-legend-off .gd-dot {
+        box-shadow: inset 0 0 0 1px var(--gd-border);
+        background: repeating-linear-gradient(135deg, var(--gd-border) 0 2px, var(--gd-surface-2) 2px 4px);
+      }
+      [aria-busy='true'] {
+        opacity: 0.6;
+        transition: opacity 0.2s;
+      }
+      details.gd-panel > summary {
+        padding: 12px 16px;
+        font-weight: 650;
+        cursor: pointer;
+      }
+      @media (max-width: 760px) {
+        .cc-month {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      @media (max-width: 520px) {
+        /* The kit hides the day labels here; a coloured line keeps the state readable. */
+        .gd-cal-day[class*='tone-']::after {
+          content: '';
+          position: absolute;
+          right: 5px;
+          bottom: 4px;
+          left: 5px;
+          height: 3px;
+          border-radius: 2px;
+          background: var(--tone);
+        }
+      }
+      @media (max-width: 600px) {
+        .cc-today {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .cc-clock {
+          justify-items: start;
+        }
+        .cc-clock strong {
+          font-size: 32px;
+        }
+        .cc-fact strong {
+          font-size: 15.5px;
+        }
+      }
+      /* The heading: today's tear-off sheet, the greeting, the clock. */
+      .cc-hero {
+        align-items: center;
+        gap: 22px;
+        padding-top: 10px;
+      }
+      .cc-hero-text {
+        flex: 1;
+        min-width: 200px;
+      }
+      .cc-hero h1 {
+        font-size: 28px;
+      }
+      .cc-sheet:empty {
+        display: none;
+      }
+    </style>
   </head>
   <body>
-    <h1>Chấm công</h1>
-    <p class="muted" id="intro">Đang tải…</p>
-    <div class="card">
-      <div class="row">
-        <div>
-          <div class="muted">Hôm nay</div>
-          <div class="big" id="today">—</div>
-        </div>
-        <div style="margin-left: auto" class="row">
-          <button id="in" type="button">Vào ca</button>
-          <button id="out" type="button" class="secondary">Ra ca</button>
-        </div>
+    <header class="gd-hero cc-hero">
+      <div id="sheet" class="cc-sheet"></div>
+      <div class="cc-hero-text">
+        <h1 id="greet">Xin chào</h1>
+        <p id="shift-line">Đang tải…</p>
       </div>
-      <p id="status" aria-live="polite"></p>
+      <div class="cc-clock" aria-hidden="true">
+        <strong><span id="clock">--:--</span><small id="seconds">:--</small></strong>
+        <span>Giờ trên máy của bạn</span>
+      </div>
+    </header>
+
+    <section class="gd-panel" aria-labelledby="today-title">
+      <div class="gd-panel-head">
+        <h2 id="today-title">Hôm nay</h2>
+        <span id="today-chip"></span>
+      </div>
+      <div class="gd-panel-body">
+        <div class="cc-today">
+          <div>
+            <button id="action" type="button" class="cc-action" disabled>
+              <span class="cc-action-icon" id="action-icon"></span>
+              <span><strong id="action-label">Đang tải…</strong><small id="action-sub"></small></span>
+            </button>
+          </div>
+          <div>
+            <div class="cc-facts" id="facts"></div>
+            <div id="today-line"></div>
+          </div>
+        </div>
+        <p id="note" class="gd-note" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <div class="gd-stats" id="stats"></div>
+
+    <div class="cc-month">
+      <section class="gd-panel" aria-labelledby="month-title">
+        <div class="gd-panel-head">
+          <h2 id="month-title">Lịch công</h2>
+          <span id="stepper"></span>
+        </div>
+        <div class="gd-panel-body">
+          <div id="calendar"></div>
+          <div class="gd-legend" aria-hidden="true">
+            <span><i class="gd-mark tone-ok">✓</i>Đúng giờ</span>
+            <span><i class="gd-mark tone-warn">M</i>Đi muộn</span>
+            <span><i class="gd-mark tone-info">S</i>Về sớm</span>
+            <span><i class="gd-mark tone-accent">•</i>Đang làm, chưa ra ca</span>
+            <span><i class="gd-mark tone-bad" style="--tone: var(--gd-son)">V</i>Vắng (thứ hai đến thứ sáu)</span>
+            <span class="cc-legend-off"><i class="gd-dot"></i>Cuối tuần</span>
+          </div>
+        </div>
+      </section>
+      <div class="cc-side">
+        <section class="gd-panel" aria-labelledby="rate-title">
+          <div class="gd-panel-head"><h2 id="rate-title">Tỉ lệ đúng giờ</h2></div>
+          <div class="gd-panel-body cc-rate" id="rate"></div>
+        </section>
+        <section class="gd-panel" aria-labelledby="detail-title">
+          <div class="gd-panel-head"><h2 id="detail-title">Chi tiết ngày</h2></div>
+          <div class="gd-panel-body" id="detail" aria-live="polite"></div>
+        </section>
+      </div>
     </div>
-    <h2>Tháng <input id="month" type="month" /></h2>
-    <div class="grid" id="summary"></div>
-    <table>
-      <thead><tr><th>Ngày</th><th>Vào</th><th>Ra</th><th class="num">Đi muộn (phút)</th></tr></thead>
-      <tbody id="history"></tbody>
-    </table>
+
+    <details class="gd-panel" style="margin-top: 16px">
+      <summary>Xem dạng bảng</summary>
+      <div class="gd-panel-body gd-scroll">
+        <table class="gd-table">
+          <thead>
+            <tr><th>Ngày</th><th>Vào</th><th>Ra</th><th class="num">Đi muộn (phút)</th><th class="num">Về sớm (phút)</th><th>Địa điểm</th></tr>
+          </thead>
+          <tbody id="history"></tbody>
+        </table>
+      </div>
+    </details>
+
     <script type="module">
-      import { $, h, server, show, thisMonth } from './mo-rong.js'
+      import { $, desktiny, h, server } from './mo-rong.js'
+      import { calendar, chip, day as dayLine, empty, icon, localDay, monthName, monthStepper, ring, skeleton, stat, tear } from './bieu-do.js'
+
+      const WEEKDAYS = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy']
+      const HIDDEN_NOW = '25:00' // outside any day: day() then draws no "now" marker
+      const state = { month: localDay().slice(0, 7), data: null, days: {}, selected: null, busy: false, loadedOn: localDay() }
 
       const time = (value) => (value ? value.slice(11, 16) : '—')
-      $('#month').value = thisMonth()
+      const minutesOf = (clock) => {
+        const [hours, mins] = String(clock).split(':').map(Number)
+        return (hours || 0) * 60 + (mins || 0)
+      }
+      const nowClock = () => new Date().toTimeString().slice(0, 5)
+      function duration(total) {
+        const m = Math.max(0, Math.round(total))
+        const hours = Math.floor(m / 60)
+        const rest = m % 60
+        if (!hours) return `${rest} phút`
+        return rest ? `${hours} giờ ${rest} phút` : `${hours} giờ`
+      }
+      const spanOf = (from, to) => (new Date(to) - new Date(from)) / 60000
+      function dateOf(key) {
+        const [y, m, d] = key.split('-').map(Number)
+        return new Date(y, m - 1, d)
+      }
+      function longDate(key) {
+        const date = dateOf(key)
+        return `${WEEKDAYS[date.getDay()]}, ${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`
+      }
+      const number = (value, digits = 0) => Number(value || 0).toLocaleString('vi-VN', { maximumFractionDigits: digits })
 
-      async function load() {
-        try {
-          const data = await server(`/api/toi?thang=${$('#month').value}`)
-          const shift = data.shift ? `Ca ${data.shift.name}: ${data.shift.start}–${data.shift.end}` : 'Chưa được xếp ca'
-          $('#intro').textContent = `${data.user.display_name} · ${shift}`
-          const punches = data.punches
-          $('#today').textContent = `${time(punches.in?.at)} → ${time(punches.out?.at)}`
-          $('#in').disabled = !!punches.in
-          $('#out').disabled = !punches.in || !!punches.out
-          const s = data.summary
-          $('#summary').replaceChildren(
-            ...[
-              ['Ngày có mặt', s.worked_days],
-              ['Lần đi muộn', s.late_count],
-              ['Phút đi muộn', s.late_minutes ?? 0],
-              ['Số giờ làm', s.hours],
-            ].map(([label, value]) => h('div', { class: 'card' }, h('div', { class: 'muted' }, label), h('div', { class: 'big' }, value ?? 0))),
-          )
-          const days = {}
-          for (const row of data.history) (days[row.day] ??= {})[row.kind] = row
-          $('#history').replaceChildren(
-            ...Object.entries(days).map(([day, row]) =>
-              h('tr', {}, h('td', {}, day), h('td', {}, time(row.in?.at)), h('td', {}, time(row.out?.at)),
-                h('td', { class: 'num' + (row.in?.late_minutes > 0 ? ' bad' : '') }, row.in?.late_minutes || 0)),
-            ),
-          )
-        } catch (error) {
-          show($('#status'), error.message, 'bad')
+      /** How one day went, for the calendar, the detail box and the counts. */
+      function judge(key, record, today, monthHasData) {
+        const weekday = dateOf(key).getDay()
+        if (record?.in) {
+          const late = Math.max(0, record.in.late_minutes || 0)
+          const early = record.out ? Math.max(0, -(record.out.late_minutes || 0)) : 0
+          const lateText = late ? `muộn ${late} phút` : 'đúng giờ'
+          if (!record.out) {
+            const working = key === today
+            return {
+              word: working ? 'working' : 'open',
+              tone: late ? 'warn' : 'accent',
+              label: late ? `Muộn ${late}′` : working ? 'Đang làm' : 'Chưa ra',
+              mark: late ? 'M' : '•',
+              title: `Vào ${time(record.in.at)} (${lateText})${working ? ', đang trong ca' : ', không chấm ra ca'}`,
+              chip: working ? chip('Đang trong ca', 'accent', 'clock') : chip('Không chấm ra ca', late ? 'warn' : 'accent', 'alert'),
+            }
+          }
+          const title = `Vào ${time(record.in.at)} (${lateText}), ra ${time(record.out.at)}${early ? ` (sớm ${early} phút)` : ''}`
+          if (late) return { word: 'late', tone: 'warn', mark: 'M', label: `Muộn ${late}′`, title, chip: chip(early ? 'Đi muộn, về sớm' : 'Đi muộn', 'warn', 'alert') }
+          if (early) return { word: 'early', tone: 'info', mark: 'S', label: `Sớm ${early}′`, title, chip: chip('Về sớm', 'info', 'logout') }
+          return { word: 'ok', tone: 'ok', mark: '✓', label: time(record.in.at), title, chip: chip('Đúng giờ', 'ok', 'check') }
         }
+        if (key > today) return { word: 'future', chip: chip('Chưa tới', 'muted', 'calendar') }
+        if (weekday === 0 || weekday === 6) return { word: 'off', chip: chip('Cuối tuần', 'muted', 'calendar') }
+        if (key === today) return { word: 'pending', chip: chip('Chưa vào ca', 'muted', 'clock') }
+        if (!monthHasData) return { word: 'none', chip: chip('Không có dữ liệu', 'muted', 'file') }
+        return { word: 'absent', tone: 'bad', mark: 'V', label: 'Vắng', title: 'Không có lượt chấm công', chip: chip('Vắng', 'bad', 'alert') }
+      }
+
+      function monthKeys(month) {
+        const [y, m] = month.split('-').map(Number)
+        const count = new Date(y, m, 0).getDate()
+        return Array.from({ length: count }, (_, i) => `${month}-${String(i + 1).padStart(2, '0')}`)
+      }
+
+      /** The shift on a line; null when the shift runs past midnight (day() draws one day only). */
+      function shiftLine(shift, record, { today = false } = {}) {
+        if (!shift || minutesOf(shift.end) <= minutesOf(shift.start)) return null
+        const from = Math.max(0, minutesOf(shift.start) - 90)
+        const to = Math.min(24 * 60, minutesOf(shift.end) + 90)
+        const fit = (clock) => {
+          const m = Math.max(from, Math.min(to, minutesOf(clock)))
+          return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
+        }
+        const marks = []
+        let worked
+        if (record?.in) {
+          const late = record.in.late_minutes > 0
+          marks.push({ at: fit(time(record.in.at)), label: `Vào ${time(record.in.at)}`, tone: late ? 'warn' : 'ok' })
+          if (record.out) {
+            marks.push({ at: fit(time(record.out.at)), label: `Ra ${time(record.out.at)}`, tone: record.out.late_minutes < 0 ? 'info' : 'ok' })
+            worked = [fit(time(record.in.at)), fit(time(record.out.at))]
+          } else if (today && nowClock() > time(record.in.at)) {
+            worked = [fit(time(record.in.at)), fit(nowClock())]
+          }
+        }
+        return dayLine({ start: shift.start, end: shift.end, marks, worked, now: today ? nowClock() : HIDDEN_NOW })
+      }
+
+      // ---- Hero and live clock ----------------------------------------------------------------
+
+      function greeting() {
+        const hour = new Date().getHours()
+        return hour < 11 ? 'Chào buổi sáng' : hour < 14 ? 'Chào buổi trưa' : hour < 18 ? 'Chào buổi chiều' : 'Chào buổi tối'
+      }
+      let lastMinute = ''
+      function tick() {
+        const now = new Date()
+        const clock = nowClock()
+        $('#clock').textContent = clock
+        $('#seconds').textContent = `:${String(now.getSeconds()).padStart(2, '0')}`
+        if (clock === lastMinute) return
+        lastMinute = clock
+        // The tear-off sheet changes once a day; the clock line under it says the shift.
+        if ($('#sheet').dataset.day !== localDay()) {
+          $('#sheet').dataset.day = localDay()
+          $('#sheet').replaceChildren(tear(new Date()))
+        }
+        if (!state.data) return
+        if (localDay() !== state.loadedOn) return load() // a new day: start fresh
+        renderGreeting()
+        renderToday()
+      }
+      function renderGreeting() {
+        const d = state.data
+        const first = String(d.user.display_name || '').trim().split(/\s+/).pop()
+        $('#greet').textContent = first ? `${greeting()}, ${first}` : greeting()
+        const s = d.shift
+        $('#shift-line').textContent = s
+          ? `Ca ${s.name.toLocaleLowerCase('vi')} từ ${s.start} đến ${s.end}${s.grace_minutes ? `, được đến muộn ${s.grace_minutes} phút` : ''}`
+          : 'Bạn chưa được xếp ca. Vẫn chấm công được, nhưng không tính đi muộn.'
+      }
+
+      // ---- Today: the action, the facts, the shift line ------------------------------------------
+
+      function renderToday() {
+        const d = state.data
+        const p = d.punches
+        const late = p.in ? Math.max(0, p.in.late_minutes || 0) : 0
+        $('#today-chip').replaceChildren(
+          !p.in ? chip('Chưa vào ca', 'muted', 'clock') : !p.out ? chip(late ? `Trong ca · muộn ${late} phút` : 'Đang trong ca', late ? 'warn' : 'accent', 'clock') : chip('Đã xong hôm nay', 'ok', 'check'),
+        )
+        renderAction()
+        const workedNow = p.in ? spanOf(p.in.at, p.out ? p.out.at : new Date().toISOString()) : 0
+        $('#facts').replaceChildren(
+          h('div', { class: 'cc-fact' }, h('span', {}, 'Vào ca'), h('strong', {}, time(p.in?.at))),
+          h('div', { class: 'cc-fact' }, h('span', {}, 'Ra ca'), h('strong', {}, time(p.out?.at))),
+          h('div', { class: 'cc-fact' }, h('span', {}, p.out ? 'Đã làm' : 'Đang làm'), h('strong', {}, p.in ? duration(workedNow) : '—')),
+        )
+        const line = shiftLine(d.shift, p, { today: true })
+        $('#today-line').replaceChildren(
+          line || h('p', { class: 'gd-sub' }, d.shift ? `Ca ${d.shift.start}–${d.shift.end} qua nửa đêm.` : 'Chưa có ca để vẽ dòng thời gian.'),
+        )
+      }
+
+      function renderAction() {
+        const d = state.data
+        const p = d.punches
+        const button = $('#action')
+        const kind = !p.in ? 'in' : !p.out ? 'out' : null
+        const noPlace = !d.places.length
+        button.className = `cc-action ${kind === 'in' ? 'is-in' : kind === 'out' ? 'is-out' : 'is-done'}${kind && !noPlace && !state.busy ? ' is-ready' : ''}`
+        button.disabled = !kind || noPlace || state.busy
+        button.setAttribute('aria-busy', state.busy ? 'true' : 'false')
+        $('#action-icon').replaceChildren(state.busy ? h('span', { class: 'cc-spin' }) : icon(kind === 'in' ? 'login' : kind === 'out' ? 'logout' : 'check', 24))
+        const places = d.places.map((place) => place.name).join(', ')
+        $('#action-label').textContent = state.busy ? 'Đang chấm…' : kind === 'in' ? 'Vào ca' : kind === 'out' ? 'Ra ca' : 'Đã xong hôm nay'
+        $('#action-sub').textContent = noPlace
+          ? 'Quản trị chưa khai địa điểm chấm công.'
+          : kind
+            ? `Lấy vị trí GPS, chấm tại ${places}`
+            : `Vào lúc ${time(p.in.at)}, ra lúc ${time(p.out.at)}`
+      }
+
+      function note(tone, text, iconName = 'pin') {
+        const box = $('#note')
+        box.className = `gd-note tone-${tone}`
+        box.replaceChildren(icon(iconName, 16), h('span', {}, text))
       }
 
       function position() {
         return new Promise((resolve, reject) => {
-          if (!navigator.geolocation) return reject(new Error('Trình duyệt không cho dùng vị trí.'))
-          navigator.geolocation.getCurrentPosition(resolve, () => reject(new Error('Chưa lấy được vị trí. Cho phép dùng vị trí rồi thử lại.')), {
-            enableHighAccuracy: true,
-            timeout: 15000,
-          })
+          if (!navigator.geolocation) return reject(new Error('Trình duyệt này không cho dùng vị trí.'))
+          navigator.geolocation.getCurrentPosition(
+            resolve,
+            (error) =>
+              reject(
+                new Error(
+                  error.code === 1
+                    ? 'Chưa được phép dùng vị trí. Cho phép trong trình duyệt rồi bấm lại.'
+                    : error.code === 3
+                      ? 'Lấy vị trí quá lâu. Ra chỗ thoáng rồi bấm lại.'
+                      : 'Chưa xác định được vị trí. Bật định vị (GPS) rồi bấm lại.',
+                ),
+              ),
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+          )
         })
       }
 
-      async function punch(kind) {
-        show($('#status'), 'Đang lấy vị trí…')
+      async function punch() {
+        const d = state.data
+        const kind = !d.punches.in ? 'in' : !d.punches.out ? 'out' : null
+        if (!kind || state.busy) return
+        const s = d.shift
+        if (kind === 'out' && s && minutesOf(s.end) > minutesOf(s.start) && minutesOf(nowClock()) < minutesOf(s.end)) {
+          const left = minutesOf(s.end) - minutesOf(nowClock())
+          if (!(await desktiny.confirm(`Ca kết thúc lúc ${s.end}, còn ${duration(left)}. Ra ca bây giờ sẽ tính về sớm. Vẫn ra ca?`))) return
+        }
+        state.busy = true
+        renderAction()
+        note('info', 'Đang lấy vị trí GPS…', 'pin')
         try {
           const where = await position()
+          note('info', `Đã có vị trí (sai số ±${Math.round(where.coords.accuracy)} m). Đang kiểm tra phạm vi và ghi công…`, 'pin')
           const result = await server('/api/cham', {
             method: 'POST',
             body: { kind, lat: where.coords.latitude, lng: where.coords.longitude, accuracy: where.coords.accuracy },
           })
-          const late = result.late_minutes > 0 ? ` · muộn ${result.late_minutes} phút` : result.late_minutes < 0 ? ` · sớm ${-result.late_minutes} phút` : ''
-          show($('#status'), `Đã chấm ${kind === 'in' ? 'vào' : 'ra'} lúc ${time(result.at)} tại ${result.place}${late}.`, result.late_minutes ? 'bad' : 'ok')
+          const late = result.late_minutes
+          const extra = late > 0 ? `, muộn ${late} phút` : late < 0 ? `, sớm ${-late} phút so với giờ hết ca` : kind === 'in' ? ', đúng giờ' : ''
+          const text = `Đã ${kind === 'in' ? 'vào ca' : 'ra ca'} lúc ${time(result.at)} tại ${result.place}${extra}.`
+          note(late > 0 ? 'warn' : late < 0 ? 'info' : 'ok', text, late ? 'alert' : 'check')
+          desktiny.toast(text)
+          state.busy = false
           await load()
         } catch (error) {
-          show($('#status'), error.message, 'bad')
+          state.busy = false
+          note('bad', error.message, 'alert')
+          renderAction()
         }
       }
-      $('#in').addEventListener('click', () => punch('in'))
-      $('#out').addEventListener('click', () => punch('out'))
-      $('#month').addEventListener('change', load)
+      $('#action').addEventListener('click', punch)
+
+      // ---- The month: stats, ring, calendar, day detail, table ---------------------------------
+
+      function renderMonth() {
+        const d = state.data
+        const today = d.today
+        const keys = monthKeys(d.month)
+        const hasData = d.history.length > 0
+        const verdicts = Object.fromEntries(keys.map((key) => [key, judge(key, state.days[key], today, hasData)]))
+        const count = (words) => keys.filter((key) => words.includes(verdicts[key].word)).length
+        const absent = count(['absent'])
+        const s = d.summary
+        const worked = s.worked_days || 0
+        const closedDays = keys.filter((key) => state.days[key]?.in && state.days[key]?.out).length
+        $('#stats').replaceChildren(
+          stat({ label: 'Ngày có mặt', value: number(worked), hint: absent ? `${absent} ngày vắng (T2–T6)` : worked ? 'Không vắng ngày nào' : 'Chưa có ngày công', tone: 'accent', icon: 'calendar' }),
+          stat({ label: 'Lần đi muộn', value: number(s.late_count), hint: s.late_minutes ? `Tổng ${duration(s.late_minutes)}` : 'Chưa muộn lần nào', tone: s.late_count ? 'warn' : 'ok', icon: 'alert' }),
+          stat({ label: 'Lần về sớm', value: number(s.early_count), hint: 'Ra ca trước giờ hết ca', tone: s.early_count ? 'info' : 'ok', icon: 'logout' }),
+          stat({ label: 'Giờ làm', value: number(s.hours, 1), hint: closedDays ? `Trung bình ${number(s.hours / closedDays, 1)} giờ/ngày` : 'Tính ngày có cả vào và ra', tone: 'accent', icon: 'clock' }),
+        )
+
+        const onTime = Math.max(0, worked - (s.late_count || 0))
+        const rate = worked ? Math.round((onTime / worked) * 100) : 0
+        $('#rate').replaceChildren(
+          worked
+            ? ring({ value: rate, max: 100, label: `${rate}%`, sub: 'đúng giờ', tone: rate >= 90 ? 'ok' : rate >= 70 ? 'warn' : 'bad', size: 112 })
+            : ring({ value: 0, label: '—', sub: 'chưa có công', tone: 'muted', size: 112 }),
+          h(
+            'ul',
+            {},
+            [
+              ['Đúng giờ', onTime, 'ok'],
+              ['Đi muộn', s.late_count || 0, 'warn'],
+              ['Về sớm', s.early_count || 0, 'info'],
+              ['Vắng', absent, 'bad'],
+            ].map(([label, value, tone]) => h('li', { class: `tone-${tone}` }, h('i', { class: 'gd-dot' }), label, h('b', {}, value))),
+          ),
+        )
+
+        const marked = {}
+        for (const key of keys) if (verdicts[key].tone) marked[key] = verdicts[key]
+        $('#stepper').replaceChildren(monthStepper(d.month, changeMonth, { max: today.slice(0, 7) }))
+        $('#calendar').replaceChildren(
+          calendar(d.month, marked, {
+            today,
+            selected: state.selected,
+            onPick: (key) => {
+              state.selected = key
+              renderMonth()
+              $(`#calendar [aria-pressed="true"]`)?.focus()
+            },
+          }),
+        )
+        renderDetail(state.selected && state.selected.startsWith(d.month) ? state.selected : null, verdicts)
+        renderTable(keys)
+      }
+
+      function renderDetail(key, verdicts) {
+        const d = state.data
+        if (!key) {
+          $('#detail').replaceChildren(empty('Chọn một ngày', 'Bấm vào một ô trên lịch để xem giờ vào, ra và địa điểm.', 'calendar'))
+          return
+        }
+        const record = state.days[key]
+        const verdict = verdicts[key]
+        const places = Object.fromEntries(d.places.map((place) => [place.id, place.name]))
+        const placeOf = (row) => (row ? places[row.place_id] || 'Địa điểm đã xoá' : '—')
+        const rows = [['Vào ca', time(record?.in?.at)], ['Ra ca', time(record?.out?.at)]]
+        if (record?.in) {
+          rows.push(['Đi muộn', record.in.late_minutes > 0 ? duration(record.in.late_minutes) : 'Không'])
+          if (record.out) rows.push(['Về sớm', record.out.late_minutes < 0 ? duration(-record.out.late_minutes) : 'Không'], ['Thời gian làm', duration(spanOf(record.in.at, record.out.at))])
+          rows.push(['Địa điểm', placeOf(record.in) === placeOf(record.out) || !record.out ? placeOf(record.in) : `${placeOf(record.in)} → ${placeOf(record.out)}`])
+        }
+        const line = record?.in ? shiftLine(d.shift, record, { today: key === d.today }) : null
+        // replaceChildren() would print a missing line as the text "null".
+        $('#detail').replaceChildren(
+          ...[
+            h('h3', { class: 'cc-day-title' }, longDate(key), verdict.chip),
+            h('dl', { class: 'cc-dl' }, rows.flatMap(([label, value]) => [h('dt', {}, label), h('dd', {}, value)])),
+            line,
+          ].filter(Boolean),
+        )
+      }
+
+      function renderTable(keys) {
+        const d = state.data
+        const places = Object.fromEntries(d.places.map((place) => [place.id, place.name]))
+        const rows = keys.filter((key) => state.days[key]).map((key) => {
+          const record = state.days[key]
+          const late = record.in?.late_minutes > 0 ? record.in.late_minutes : 0
+          const early = record.out?.late_minutes < 0 ? -record.out.late_minutes : 0
+          const place = record.in || record.out
+          return h(
+            'tr',
+            {},
+            h('td', {}, longDate(key)),
+            h('td', { class: 'num' }, time(record.in?.at)),
+            h('td', { class: 'num' }, time(record.out?.at)),
+            h('td', { class: 'num' + (late ? ' bad' : '') }, late),
+            h('td', { class: 'num' }, early),
+            h('td', {}, place ? places[place.place_id] || 'Địa điểm đã xoá' : '—'),
+          )
+        })
+        $('#history').replaceChildren(...(rows.length ? rows : [h('tr', {}, h('td', { colspan: 6, class: 'gd-sub' }, `${monthName(d.month)} chưa có lượt chấm công.`))]))
+      }
+
+      function changeMonth(month) {
+        state.month = month
+        state.selected = null
+        load()
+      }
+
+      // ---- Loading ----------------------------------------------------------------------------
+
+      async function load() {
+        const month = state.month
+        document.body.querySelector('.cc-month').setAttribute('aria-busy', 'true')
+        try {
+          const data = await server(`/api/toi?thang=${month}`)
+          if (month !== state.month) return // a newer month was asked for meanwhile
+          state.data = data
+          state.loadedOn = localDay()
+          state.days = {}
+          for (const row of data.history) (state.days[row.day] ??= {})[row.kind] = row
+          if (!state.selected && data.today.startsWith(data.month)) state.selected = data.today
+          renderGreeting()
+          renderToday()
+          renderMonth()
+        } catch (error) {
+          note('bad', error.message, 'alert')
+        } finally {
+          document.body.querySelector('.cc-month').setAttribute('aria-busy', 'false')
+        }
+      }
+
+      $('#stats').replaceChildren(skeleton(2, 30))
+      $('#calendar').replaceChildren(skeleton(5, 34))
+      tick()
+      setInterval(tick, 1000)
       load()
     </script>
   </body>

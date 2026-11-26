@@ -13,3 +13,9 @@ path = ["lib/desktiny_plugin/**", "sdk/desktiny-plugin-sdk.js"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Desktiny contributors"
 SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ["sdk/phong-chu/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = ["2021 The Be Vietnam Pro Project Authors (https://github.com/bettergui/BeVietnamPro)", "2023 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'"]
+SPDX-License-Identifier = "OFL-1.1"

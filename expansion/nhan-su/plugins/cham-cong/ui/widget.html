@@ -7,24 +7,179 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Chấm công hôm nay</title>
     <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <style>
+      body {
+        padding: 12px 14px;
+      }
+      .w-top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+      }
+      .w-times {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        margin: 8px 0 6px;
+        font-size: 26px;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.1;
+      }
+      .w-times span {
+        color: var(--gd-muted);
+        font-size: 16px;
+        font-weight: 600;
+      }
+      .w-progress {
+        display: grid;
+        gap: 4px;
+        font-size: 12px;
+        color: var(--gd-muted);
+      }
+      .w-progress .gd-bar-track {
+        position: relative;
+      }
+      .w-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .w-mini {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+        margin-top: 4px;
+      }
+      .w-mini div {
+        display: grid;
+        padding: 6px 8px;
+        border-radius: 9px;
+        background: var(--tone-soft, var(--gd-surface-2));
+      }
+      .w-mini strong {
+        color: var(--tone, var(--gd-ink));
+        font-size: 17px;
+        font-variant-numeric: tabular-nums;
+      }
+      .w-mini span {
+        overflow: hidden;
+        color: var(--gd-muted);
+        font-size: 11.5px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .w-open {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 10px;
+        padding: 6px 10px;
+        font-size: 13px;
+      }
+    </style>
   </head>
   <body>
-    <div class="row">
-      <div>
-        <div class="muted">Hôm nay</div>
-        <div class="big" id="today">—</div>
-        <div class="muted" id="month"></div>
-      </div>
+    <div class="w-top">
+      <strong>Hôm nay</strong>
+      <span id="chip"></span>
     </div>
+    <div id="body" aria-live="polite"></div>
     <script type="module">
-      import { $, server } from './mo-rong.js'
+      import { $, desktiny, h, server } from './mo-rong.js'
+      import { chip, icon, skeleton } from './bieu-do.js'
+
       const time = (value) => (value ? value.slice(11, 16) : '—')
-      server('/api/toi')
-        .then((data) => {
-          $('#today').textContent = `${time(data.punches.in?.at)} → ${time(data.punches.out?.at)}`
-          $('#month').textContent = `Tháng này: ${data.summary.worked_days} ngày có mặt, ${data.summary.late_count} lần đi muộn. Chấm công ở mục Ứng dụng › Chấm công.`
-        })
-        .catch((error) => ($('#month').textContent = error.message))
+      const minutesOf = (clock) => {
+        const [hours, mins] = String(clock).split(':').map(Number)
+        return (hours || 0) * 60 + (mins || 0)
+      }
+      function duration(total) {
+        const m = Math.max(0, Math.round(total))
+        const hours = Math.floor(m / 60)
+        return hours ? `${hours} giờ${m % 60 ? ` ${m % 60} phút` : ''}` : `${m} phút`
+      }
+
+      /** How far into the shift we are (0–100), and words for it. */
+      function progress(shift, punches) {
+        if (!shift || minutesOf(shift.end) <= minutesOf(shift.start)) return null
+        const start = minutesOf(shift.start)
+        const end = minutesOf(shift.end)
+        const now = new Date().getHours() * 60 + new Date().getMinutes()
+        const share = Math.round((Math.max(0, Math.min(end - start, now - start)) / (end - start)) * 100)
+        const text = punches.out
+          ? 'Đã ra ca'
+          : now < start
+            ? `Ca bắt đầu sau ${duration(start - now)}`
+            : now >= end
+              ? 'Đã hết giờ ca'
+              : `Còn ${duration(end - now)} hết ca`
+        return { share, text }
+      }
+
+      async function openPage() {
+        const context = await desktiny.context
+        desktiny.navigate(`/apps/${encodeURIComponent(context.plugin_id)}/0`)
+      }
+
+      function render(data) {
+        const p = data.punches
+        const late = p.in?.late_minutes > 0 ? p.in.late_minutes : 0
+        $('#chip').replaceChildren(
+          !p.in
+            ? chip('Chưa vào ca', 'muted', 'clock')
+            : !p.out
+              ? chip(late ? `Muộn ${late} phút` : 'Đang trong ca', late ? 'warn' : 'accent', 'clock')
+              : chip('Đã xong', 'ok', 'check'),
+        )
+        const step = progress(data.shift, p)
+        const s = data.summary
+        $('#body').replaceChildren(
+          h('div', { class: 'w-times', 'aria-label': `Vào ${time(p.in?.at)}, ra ${time(p.out?.at)}` }, time(p.in?.at), h('span', { 'aria-hidden': 'true' }, '→'), time(p.out?.at)),
+          step
+            ? h(
+                'div',
+                { class: 'w-progress' },
+                h('div', { class: 'w-row' }, h('span', {}, `Ca ${data.shift.start}–${data.shift.end}`), h('span', {}, step.text)),
+                h(
+                  'span',
+                  { class: 'gd-bar-track', role: 'progressbar', 'aria-label': 'Thời gian đã qua của ca', 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-valuenow': step.share },
+                  h('span', { class: 'gd-bar-fill', style: `display:block;width:${step.share}%` }),
+                ),
+              )
+            : h('div', { class: 'gd-sub' }, data.shift ? `Ca ${data.shift.start}–${data.shift.end}` : 'Chưa được xếp ca'),
+          h('div', { class: 'gd-sub', id: 'w-month', style: 'margin-top:10px' }, 'Tháng này'),
+          h(
+            'div',
+            { class: 'w-mini', role: 'group', 'aria-labelledby': 'w-month' },
+            h('div', { class: 'tone-accent' }, h('strong', {}, s.worked_days || 0), h('span', {}, 'ngày công')),
+            h('div', { class: s.late_count ? 'tone-warn' : 'tone-ok' }, h('strong', {}, s.late_count || 0), h('span', {}, 'lần muộn')),
+            h('div', { class: 'tone-muted' }, h('strong', {}, Number(s.hours || 0).toLocaleString('vi-VN', { maximumFractionDigits: 1 })), h('span', {}, 'giờ làm')),
+          ),
+          h(
+            'button',
+            { type: 'button', class: 'gd-ghost w-open', onclick: openPage },
+            p.in && p.out ? 'Xem lịch công' : p.in ? 'Mở trang để ra ca' : 'Mở trang để vào ca',
+            icon('chevronRight', 14),
+          ),
+        )
+      }
+
+      $('#body').replaceChildren(skeleton(3, 14))
+      let last = null
+      async function load() {
+        try {
+          last = await server('/api/toi')
+          render(last)
+        } catch (error) {
+          $('#body').replaceChildren(h('p', { class: 'gd-note tone-bad' }, error.message))
+        }
+      }
+      load()
+      setInterval(() => last && render(last), 60000)
     </script>
   </body>
 </html>

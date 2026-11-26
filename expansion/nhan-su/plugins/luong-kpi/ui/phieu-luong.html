@@ -7,41 +7,417 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Phiếu lương</title>
     <link rel="stylesheet" href="chung.css" />
-  </head>
-  <body>
-    <h1>Phiếu lương <input id="month" type="month" /></h1>
-    <p class="muted" id="who"></p>
-    <div id="slip"></div>
-    <script type="module">
-      import { $, h, money, server, thisMonth } from './mo-rong.js'
-      $('#month').value = thisMonth()
-      async function load() {
-        try {
-          const data = await server(`/api/phieu-luong?thang=${$('#month').value}`)
-          $('#who').textContent = data.user.display_name
-          const s = data.payslip
-          if (!s) return $('#slip').replaceChildren(h('p', { class: 'muted' }, 'Chưa có phiếu lương đã chốt cho tháng này.'))
-          const rows = [
-            ['Bậc lương', `${s.grade} (hệ số ${s.coefficient})`],
-            ['Lương theo hệ số', money(s.base_salary * s.coefficient)],
-            ['Phụ cấp', money(s.allowance)],
-            ['Ngày công', s.days === null ? 'Đủ công' : `${s.days}/${s.standard_days}`],
-            ['Tổng thu nhập', money(s.gross)],
-            ['Bảo hiểm (người lao động đóng)', `− ${money(s.insurance)}`],
-            ['Giảm trừ gia cảnh', money(s.deductions)],
-            ['Thu nhập tính thuế', money(s.taxable)],
-            ['Thuế thu nhập cá nhân', `− ${money(s.tax)}`],
-          ]
-          $('#slip').replaceChildren(
-            h('table', {}, h('tbody', {}, rows.map(([k, v]) => h('tr', {}, h('td', {}, k), h('td', { class: 'num' }, v))))),
-            h('p', { class: 'big' }, `Thực lĩnh: ${money(s.net)}`),
-          )
-        } catch (error) {
-          $('#slip').replaceChildren(h('p', { class: 'bad' }, error.message))
+    <link rel="stylesheet" href="giao-dien.css" />
+    <style>
+      input,
+      select,
+      textarea,
+      button {
+        box-sizing: border-box;
+        max-width: 100%;
+      }
+      /* bars() of bieu-do.js draws its fill as an inline span: give it a box. */
+      .gd-bar-track,
+      .gd-bar-fill {
+        display: block;
+      }
+      .gd-note > svg {
+        flex: none;
+        margin-top: 2px;
+      }
+      .pl-hero-main {
+        display: grid;
+        gap: 4px;
+        min-width: 0;
+      }
+      .pl-net {
+        margin: 6px 0 8px;
+      }
+      .pl-slip-head {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 4px 12px;
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--gd-border);
+        color: var(--gd-muted);
+        font-size: 13px;
+      }
+      .pl-slip-head span:first-child {
+        color: var(--gd-ink);
+        font-family: var(--gd-display);
+        font-weight: 600;
+      }
+      .pl-side {
+        display: grid;
+        justify-items: end;
+        gap: 10px;
+      }
+      .pl-delta {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--gd-muted);
+        font-size: 13px;
+      }
+      .pl-lines {
+        display: grid;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .pl-lines li {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 2px 12px;
+        padding: 9px 0;
+        border-top: 1px solid var(--gd-border);
+      }
+      .pl-lines li:first-child {
+        border-top: 0;
+      }
+      .pl-lines .gd-sub {
+        grid-column: 1 / -1;
+        font-weight: 400;
+      }
+      .pl-lines .num {
+        font-weight: 650;
+        text-align: right;
+      }
+      .pl-lines li.pl-total {
+        border-top: 2px solid var(--gd-border);
+        font-weight: 800;
+      }
+      .pl-lines li.pl-total .num {
+        font-size: 16px;
+        font-weight: 800;
+      }
+      .pl-minus {
+        color: var(--gd-bad);
+      }
+      .pl-days {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 16px;
+      }
+      .pl-days dl {
+        display: grid;
+        grid-template-columns: auto auto;
+        gap: 4px 14px;
+        margin: 0;
+        font-size: 13px;
+      }
+      .pl-days dt {
+        color: var(--gd-muted);
+      }
+      .pl-days dd {
+        margin: 0;
+        font-weight: 700;
+        text-align: right;
+      }
+      .pl-tax {
+        display: grid;
+        gap: 6px;
+      }
+      .pl-tax-row {
+        display: grid;
+        grid-template-columns: minmax(96px, 38%) 46px 1fr minmax(76px, auto);
+        align-items: center;
+        gap: 10px;
+        padding: 5px 8px;
+        border-radius: 9px;
+        font-size: 12.5px;
+      }
+      .pl-tax-row.reached {
+        background: var(--gd-surface-2);
+      }
+      .pl-tax-row.top {
+        box-shadow: inset 3px 0 0 var(--gd-warn);
+        background: var(--gd-warn-soft);
+      }
+      .pl-tax-row .rate {
+        font-weight: 800;
+        text-align: center;
+      }
+      .pl-tax-row .num {
+        text-align: right;
+      }
+      .pl-tax-row.off {
+        color: var(--gd-muted);
+      }
+      .pl-months {
+        display: grid;
+        gap: 4px;
+      }
+      .pl-month {
+        display: grid;
+        grid-template-columns: 96px 1fr auto;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 7px 8px;
+        border: 1px solid transparent;
+        border-radius: 9px;
+        background: transparent;
+        color: var(--gd-ink);
+        font-weight: 500;
+        text-align: left;
+      }
+      .pl-month:hover {
+        background: var(--gd-surface-2);
+      }
+      .pl-month[aria-current='true'] {
+        border-color: var(--gd-accent);
+        background: var(--gd-accent-soft);
+      }
+      .pl-month .gd-bar-track {
+        display: block;
+      }
+      .pl-month .gd-bar-fill {
+        display: block;
+      }
+      @media (max-width: 520px) {
+        .pl-side {
+          justify-items: start;
+        }
+        .pl-tax-row {
+          grid-template-columns: 1fr 40px minmax(70px, auto);
+        }
+        .pl-tax-row .gd-bar-track {
+          grid-column: 1 / -1;
+          grid-row: 2;
+        }
+        .pl-month {
+          grid-template-columns: 1fr auto;
+        }
+        .pl-month .gd-bar-track {
+          display: none;
         }
       }
-      $('#month').addEventListener('change', load)
-      load()
+    </style>
+  </head>
+  <body>
+    <header class="gd-hero" id="hero">
+      <div class="pl-hero-main">
+        <h1 id="who">Đang tải…</h1>
+        <p id="sub"></p>
+      </div>
+      <div class="pl-side">
+        <div id="stepper"></div>
+        <div id="state"></div>
+      </div>
+    </header>
+    <main id="main" aria-live="polite" aria-busy="true"></main>
+
+    <script type="module">
+      import { $, h, money, server } from './mo-rong.js'
+      import { chip, empty, icon, localDay, monthName, monthStepper, ring, skeleton, spark, stack } from './bieu-do.js'
+
+      const today = localDay().slice(0, 7)
+      let month = today
+      let loaded = null
+      const percent = (value) => `${(Number(value) || 0).toLocaleString('vi-VN', { maximumFractionDigits: 1 })}%`
+      const short = (value) => {
+        const n = Number(value) || 0
+        if (n === 0) return '0'
+        if (Math.abs(n) >= 1e6) return `${(n / 1e6).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} tr`
+        return money(n)
+      }
+
+      function panel(title, iconName, ...body) {
+        return h('section', { class: 'gd-panel' },
+          h('div', { class: 'gd-panel-head' }, h('h2', {}, icon(iconName, 17), title)),
+          h('div', { class: 'gd-panel-body' }, body.flat(Infinity)))
+      }
+      function line(label, value, note, cls = '') {
+        return h('li', { class: cls }, h('span', {}, label), h('span', { class: 'num' }, value), note ? h('span', { class: 'gd-sub' }, note) : null)
+      }
+
+      function renderHeader(data) {
+        $('#who').textContent = data.user.display_name
+        $('#stepper').replaceChildren(monthStepper(month, (next) => go(next), { max: today }))
+        const slip = data.payslip
+        $('#sub').textContent = monthName(month)
+        const state = slip
+          ? chip('Đã chốt', 'ok', 'lock')
+          : data.period_state === 'computed'
+            ? chip('Đang chờ chốt', 'warn', 'clock')
+            : chip('Chưa có phiếu', 'muted')
+        $('#state').replaceChildren(state)
+      }
+
+      function hero(slip, history) {
+        const before = history.filter((item) => item.month < month).at(-1)
+        const delta = before ? slip.net - before.net : null
+        const trend = history.filter((item) => item.month <= month)
+        // The pay slip itself: the one paper object on the page.
+        const amount = Math.round(Number(slip.net) || 0).toLocaleString('vi-VN')
+        return h('section', { class: 'gd-slip', 'aria-label': `Thực lĩnh ${monthName(month).toLowerCase()}: ${money(slip.net)}` },
+          h('div', { class: 'pl-slip-head' },
+            h('span', {}, `Phiếu lương ${monthName(month).toLowerCase()}`),
+            h('span', {}, slip.grade ? `${slip.grade}, hệ số ${slip.coefficient}` : '')),
+          h('div', { style: 'display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-end;justify-content:space-between' },
+            h('div', {},
+              h('span', { class: 'gd-sub' }, 'Thực lĩnh'),
+              h('p', { class: 'gd-amount pl-net' }, amount, h('small', {}, 'đồng')),
+              h('span', { class: 'pl-delta' },
+                delta === null
+                  ? 'Tháng đầu tiên có phiếu lương đã chốt.'
+                  : delta === 0
+                    ? `Bằng ${monthName(before.month).toLowerCase()}.`
+                    : [chip(`${delta > 0 ? '+' : '−'}${money(Math.abs(delta))}`, delta > 0 ? 'ok' : 'bad'), `so với ${monthName(before.month).toLowerCase()}`])),
+            trend.length >= 2
+              ? h('div', { style: 'display:grid;gap:4px;justify-items:end' },
+                  spark(trend.map((item) => item.net), { width: 180, height: 48, tone: 'accent', label: `Thực lĩnh ${trend.length} tháng gần đây: ${trend.map((i) => `${monthName(i.month)} ${money(i.net)}`).join(', ')}` }),
+                  h('span', { class: 'gd-sub' }, `${trend.length} tháng gần đây`))
+              : null),
+          h('div', { class: 'gd-slip-tear', 'aria-hidden': 'true' }),
+          h('div', {},
+            h('div', { class: 'gd-sub', style: 'margin-bottom:6px' }, `Tổng thu nhập ${money(slip.gross)} chia ra:`),
+            stack([
+              { label: 'Thực lĩnh', value: slip.net, tone: 'ok' },
+              { label: 'Bảo hiểm', value: slip.insurance, tone: 'info' },
+              { label: 'Thuế TNCN', value: slip.tax, tone: 'warn' },
+            ], { format: (v) => `${money(v)} (${percent((v / (slip.gross || 1)) * 100)})` })))
+      }
+
+      function income(slip) {
+        const byGrade = slip.base_salary * slip.coefficient
+        const full = byGrade + slip.allowance
+        const partial = slip.days !== null && slip.days < slip.standard_days
+        return panel('Thu nhập', 'trend',
+          h('ul', { class: 'pl-lines' },
+            line('Lương theo hệ số', money(byGrade), `Lương cơ sở ${money(slip.base_salary)} × hệ số ${slip.coefficient}`),
+            line('Phụ cấp', money(slip.allowance), 'Phụ cấp của bậc cộng phụ cấp riêng'),
+            partial ? line('Lương đủ công', money(full), `Trả theo tỉ lệ ngày công ${slip.days}/${slip.standard_days}`) : null,
+            line('Tổng thu nhập', money(slip.gross), null, 'pl-total')))
+      }
+
+      function deductions(slip, rate) {
+        return panel('Khấu trừ', 'file',
+          h('ul', { class: 'pl-lines' },
+            line('Bảo hiểm bắt buộc', h('span', { class: 'pl-minus' }, `− ${money(slip.insurance)}`), `Phần người lao động đóng, ${percent(rate)} lương đóng bảo hiểm`),
+            line('Thuế thu nhập cá nhân', h('span', { class: 'pl-minus' }, `− ${money(slip.tax)}`), 'Tính lũy tiến trên thu nhập tính thuế (xem bên dưới)'),
+            line('Tổng khấu trừ', h('span', { class: 'pl-minus' }, `− ${money(slip.insurance + slip.tax)}`), null, 'pl-total'),
+            line('Thực lĩnh', money(slip.net), 'Tổng thu nhập trừ bảo hiểm và thuế', 'pl-total')))
+      }
+
+      function workdays(slip) {
+        const full = slip.days === null
+        const value = full ? slip.standard_days : slip.days
+        const share = slip.standard_days ? Math.min(1, value / slip.standard_days) : 1
+        return panel('Ngày công', 'calendar',
+          h('div', { class: 'pl-days' },
+            ring({ value, max: slip.standard_days, label: full ? 'Đủ' : String(value), sub: full ? 'công' : `/ ${slip.standard_days} ngày`, tone: share >= 1 ? 'ok' : share >= 0.8 ? 'accent' : 'warn', size: 112 }),
+            h('dl', {},
+              h('dt', {}, 'Ngày có mặt'), h('dd', {}, full ? 'Đủ công' : `${value} ngày`),
+              h('dt', {}, 'Công chuẩn'), h('dd', {}, `${slip.standard_days} ngày`),
+              h('dt', {}, 'Tỉ lệ hưởng'), h('dd', {}, percent(share * 100)))),
+          h('p', { class: 'gd-note' }, full
+            ? 'Kỳ này chưa lấy công từ Chấm công nên tính đủ công.'
+            : 'Ngày có mặt lấy từ Chấm công; lương trả theo tỉ lệ ngày có mặt trên công chuẩn.'))
+      }
+
+      function taxes(slip, table) {
+        const taxable = Number(slip.taxable) || 0
+        let lower = 0
+        let top = -1
+        const rows = table.map((bracket, index) => {
+          const upper = bracket.upper ?? Infinity
+          const inside = Math.max(0, Math.min(taxable, upper) - lower)
+          const span = upper === Infinity ? Math.max(inside, 1) : upper - lower
+          const row = { from: lower, upper, rate: bracket.rate, inside, share: inside / span, tax: Math.round((inside * bracket.rate) / 100) }
+          if (inside > 0) top = index
+          lower = upper
+          return row
+        })
+        // The server rounds the whole tax once: give the rounding difference to the highest bracket reached.
+        if (top >= 0) rows[top].tax = Math.max(0, slip.tax - rows.reduce((sum, r, i) => sum + (i === top ? 0 : r.tax), 0))
+        const range = (r) => (r.upper === Infinity ? `Trên ${short(r.from)}` : `${short(r.from)} – ${short(r.upper)}`)
+        return panel('Thuế thu nhập cá nhân', 'star',
+          h('ul', { class: 'pl-lines', style: 'margin-bottom:10px' },
+            line('Tổng thu nhập', money(slip.gross)),
+            line('Trừ bảo hiểm', `− ${money(slip.insurance)}`),
+            line('Trừ giảm trừ gia cảnh', `− ${money(slip.deductions)}`, 'Bản thân và người phụ thuộc đã đăng ký'),
+            line('Thu nhập tính thuế', money(taxable), null, 'pl-total')),
+          taxable <= 0
+            ? h('p', { class: 'gd-note tone-ok' }, icon('check', 15), 'Sau giảm trừ, bạn không phải nộp thuế tháng này.')
+            : [
+                h('p', { class: 'gd-sub', style: 'margin:0 0 6px' }, `Thuế chia theo từng bậc; bạn tới bậc ${top + 1} (${percent(rows[top].rate)}). Mỗi bậc chỉ đánh trên phần thu nhập nằm trong bậc đó.`),
+                h('div', { class: 'pl-tax', role: 'list', 'aria-label': 'Biểu thuế lũy tiến tháng' },
+                  rows.slice(0, top + 2).map((r, index) => bracketRow(r, index))),
+                rows.length > top + 2
+                  ? h('details', { style: 'margin-top:6px' }, h('summary', { class: 'gd-sub', style: 'cursor:pointer' }, `Xem các bậc cao hơn (${rows.length - top - 2} bậc)`),
+                      h('div', { class: 'pl-tax', role: 'list', 'aria-label': 'Các bậc thuế cao hơn', style: 'margin-top:6px' }, rows.slice(top + 2).map((r, i) => bracketRow(r, top + 2 + i))))
+                  : null,
+                h('p', { class: 'gd-note' }, `Tổng thuế tháng này: ${money(slip.tax)}.`),
+              ])
+        function bracketRow(r, index) {
+          return h('div', { class: `pl-tax-row${r.inside > 0 ? ' reached' : ' off'}${index === top ? ' top' : ''}`, role: 'listitem',
+            'aria-label': `Bậc ${index + 1}, ${range(r)}, thuế suất ${percent(r.rate)}${r.inside > 0 ? `: chịu thuế ${money(r.inside)}, thuế ${money(r.tax)}` : ': chưa tới'}` },
+            h('span', {}, `Bậc ${index + 1} · ${range(r)}`),
+            h('span', { class: 'rate' }, percent(r.rate)),
+            h('span', { class: `gd-bar-track tone-${index === top ? 'warn' : 'accent'}`, 'aria-hidden': 'true' }, h('span', { class: 'gd-bar-fill', style: `display:block;width:${Math.round(r.share * 100)}%` })),
+            h('span', { class: 'num' }, r.inside > 0 ? money(r.tax) : '—'))
+        }
+      }
+
+      function months(history) {
+        if (!history.length) return null
+        const top = Math.max(1, ...history.map((item) => item.net))
+        return panel('Các tháng đã chốt', 'clock',
+          h('div', { class: 'pl-months' },
+            [...history].reverse().map((item) =>
+              h('button', { type: 'button', class: 'pl-month', 'aria-current': item.month === month ? 'true' : 'false', onclick: () => go(item.month),
+                'aria-label': `${monthName(item.month)}: thực lĩnh ${money(item.net)}` },
+                h('span', {}, monthName(item.month)),
+                h('span', { class: 'gd-bar-track', 'aria-hidden': 'true' }, h('span', { class: 'gd-bar-fill', style: `width:${Math.round((item.net / top) * 100)}%` })),
+                h('span', { class: 'num', style: 'font-weight:700' }, money(item.net))))))
+      }
+
+      function render(data) {
+        renderHeader(data)
+        const slip = data.payslip
+        const history = data.history || []
+        if (!slip) {
+          const waiting = data.period_state === 'computed'
+          $('#main').replaceChildren(
+            h('section', { class: 'gd-panel' },
+              empty(waiting ? 'Bảng lương tháng này đang chờ chốt' : 'Chưa có phiếu lương tháng này',
+                waiting ? 'Bộ phận nhân sự đã tính lương; phiếu hiện ở đây ngay khi kỳ lương được chốt.' : 'Phiếu lương hiện ở đây sau khi bộ phận nhân sự tính và chốt kỳ lương.',
+                waiting ? 'clock' : 'file'),
+              history.length && history.at(-1).month !== month
+                ? h('div', { style: 'display:flex;justify-content:center;padding:0 0 18px' },
+                    h('button', { type: 'button', class: 'gd-ghost', onclick: () => go(history.at(-1).month) }, `Xem phiếu ${monthName(history.at(-1).month).toLowerCase()}`))
+                : null),
+            months(history) || '')
+          return
+        }
+        $('#main').replaceChildren(
+          hero(slip, history),
+          h('div', { class: 'gd-cols' }, income(slip), deductions(slip, data.insurance_rate)),
+          h('div', { class: 'gd-cols' }, workdays(slip), data.tax_brackets?.length ? taxes(slip, data.tax_brackets) : ''),
+          months(history) || '',
+          h('p', { class: 'gd-sub' }, 'Thắc mắc về phiếu lương, hãy hỏi trợ lý hoặc bộ phận nhân sự. Mức đóng và biểu thuế theo cấu hình hiện hành của đơn vị.'))
+      }
+
+      async function go(next) {
+        month = next
+        $('#main').setAttribute('aria-busy', 'true')
+        if (!loaded) $('#main').replaceChildren(h('section', { class: 'gd-panel' }, h('div', { class: 'gd-panel-body', style: 'padding-top:16px' }, skeleton(4, 16))))
+        try {
+          loaded = await server(`/api/phieu-luong?thang=${month}`)
+          render(loaded)
+        } catch (error) {
+          $('#stepper').replaceChildren(monthStepper(month, (m) => go(m), { max: today }))
+          $('#main').replaceChildren(h('p', { class: 'gd-note tone-bad', role: 'alert' }, icon('alert', 15), error.message))
+        } finally {
+          $('#main').setAttribute('aria-busy', 'false')
+        }
+      }
+      go(month)
     </script>
   </body>
 </html>

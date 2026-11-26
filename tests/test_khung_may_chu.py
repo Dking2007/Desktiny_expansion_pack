@@ -71,3 +71,16 @@ def test_a_forged_forwarded_header_is_ignored_unless_behind_a_trusted_proxy():
     forged = {"X-Forwarded-For": "1.2.3.4"}
     assert serve_once(kit()[0], forged) == "127.0.0.1"
     assert serve_once(kit(trust_proxy="1")[0], {"X-Forwarded-For": "9.9.9.9, 5.6.7.8"}) == "5.6.7.8"
+
+
+def test_pages_get_the_shared_kit_and_desktinys_fonts_but_nothing_else_from_sdk():
+    app, _ = kit()
+    font = app.static("/ui/phong-chu/be-vietnam-pro-vietnamese-700-normal.woff2")
+    assert font.status == 200 and font.content_type == "font/woff2"
+    assert font.body[:4] == b"wOF2"
+    assert app.static("/ui/giao-dien.css").status == 200
+    assert app.static("/ui/bieu-do.js").status == 200
+    # Only fonts by bare name: no licence texts, no other folders, no climbing out.
+    for path in ("/ui/phong-chu/OFL-BeVietnamPro.txt", "/ui/phong-chu/../mo-rong.js", "/ui/phong-chu/x/a.woff2",
+                 "/ui/phong-chu/khong-co.woff2"):
+        assert app.static(path) is None, path

@@ -40,3 +40,37 @@ def test_people_and_the_assistant_see_only_dossiers_they_may_open(make_app, desk
     desktiny.cases = {"a": dossier("a", "2026-11-10")}
     tool = signed(app, "/tools/sap-het-han", {"arguments": {"so_ngay": 30}, "token": "phien-an", "user": {"id": "u-an"}})
     assert tool.data["result"][0]["con_lai_ngay"] == 9
+
+
+def test_admin_overview_shows_bands_and_reminders_already_sent(make_app, desktiny):
+    today = {"value": date(2026, 11, 1)}
+    app = make_app("nhac-han", today=lambda: today["value"])
+    desktiny.cases = {"qua": dossier("qua", "2026-10-20"), "gan": dossier("gan", "2026-11-05"),
+                      "thang": dossier("thang", "2026-11-25"), "quy": dossier("quy", "2027-01-15"),
+                      "xa": dossier("xa", "2027-09-01")}  # fmt: skip
+    app.round()
+    today["value"] = date(2026, 11, 3)  # "gan": 2 days left, now the 7-day mark
+    app.round()
+    data = call(app, "GET", "/api/quan-tri", session="phien-qt").data
+    assert data["counts"] == {"overdue": 1, "d7": 1, "d30": 1, "d90": 1, "later": 1}
+    assert data["marks"] == [30, 7, 1, 0] and data["today"] == "2026-11-03" and data["truncated"] is False
+    by_id = {item["case_id"]: item for item in data["items"]}
+    assert set(by_id) == {"qua", "gan", "thang", "quy"}  # 90 days ahead by default
+    assert [m["mark"] for m in by_id["gan"]["reminded"]] == [7]  # the 30-day mark was sent on day one
+    assert by_id["quy"]["reminded"] == []
+    assert [m["mark"] for m in by_id["thang"]["reminded"]] == [30] and by_id["thang"]["reminded"][0]["at"] == "2026-11-01"
+    # A renewed date starts a fresh set of reminders.
+    desktiny.cases["gan"] = dossier("gan", "2026-12-01")
+    app.round()
+    gan = next(i for i in call(app, "GET", "/api/quan-tri", session="phien-qt").data["items"] if i["case_id"] == "gan")
+    assert gan["expires"] == "2026-12-01" and [m["mark"] for m in gan["reminded"]] == [30]
+
+
+def test_the_admin_overview_is_for_the_admin_page_only(make_app, desktiny):
+    app = make_app("nhac-han", today=lambda: date(2026, 11, 1))
+    desktiny.cases = {"a": dossier("a", "2026-11-10")}
+    app.round()
+    assert call(app, "GET", "/api/quan-tri", session="phien-an").status == 403
+    assert call(app, "POST", "/api/quan-tri/quet", body={}, session="phien-an").status == 403
+    mine = call(app, "GET", "/api/sap-het-han", session="phien-an").data
+    assert mine["marks"] == [30, 7, 1, 0] and "reminded" not in mine["items"][0] and "counts" not in mine

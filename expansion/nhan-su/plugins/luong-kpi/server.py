@@ -104,14 +104,25 @@ def payslip(profile: dict, grade: dict, config: dict, days: float | None) -> dic
     }  # fmt: skip
 
 
+# KPI grades: lowest total of each, highest first.
+GRADES = [(90, "Hoàn thành xuất sắc"), (75, "Hoàn thành tốt"), (50, "Hoàn thành"), (0, "Không hoàn thành")]
+
+
 def grade_of(total: float) -> str:
-    if total >= 90:
-        return "Hoàn thành xuất sắc"
-    if total >= 75:
-        return "Hoàn thành tốt"
-    if total >= 50:
-        return "Hoàn thành"
-    return "Không hoàn thành"
+    return next(name for lowest, name in GRADES if total >= lowest)
+
+
+def grade_scale() -> list[dict]:
+    return [{"min": lowest, "name": name} for lowest, name in GRADES]
+
+
+def tax_table(spec: str) -> list[dict]:
+    """The monthly brackets for a page: upper bound (None for the last) and rate in %."""
+    try:
+        return [{"upper": None if upper == float("inf") else upper, "rate": round(rate * 100, 2)}
+                for upper, rate in brackets(spec)]  # fmt: skip
+    except ValueError:
+        return []
 
 
 def build(settings: Settings | None = None, store: Store | None = None, fetch_attendance=None) -> App:
@@ -196,6 +207,16 @@ def build(settings: Settings | None = None, store: Store | None = None, fetch_at
                          db.all("SELECT * FROM payslips WHERE month = ? ORDER BY display_name", month)],
             "criteria": db.all("SELECT * FROM criteria ORDER BY id"),
             "month": month,
+            # For the charts: the last twelve periods up to this month, the base salary, how KPI were graded.
+            "history": db.all("SELECT month, state, total_net, total_gross, people FROM periods WHERE month <= ? "
+                              "ORDER BY month DESC LIMIT 12", month)[::-1],
+            "base_salary": float(config()["luong_co_so"]),
+            "grade_scale": grade_scale(),
+            "kpi": {
+                "count": (db.one("SELECT COUNT(*) AS n FROM kpi") or {"n": 0})["n"],
+                "average": (db.one("SELECT AVG(total) AS a FROM kpi") or {"a": None})["a"],
+                "grades": {row["grade"]: row["n"] for row in db.all("SELECT grade, COUNT(*) AS n FROM kpi GROUP BY grade")},
+            },
         }  # fmt: skip
 
     @app.route("POST", "/api/bac-luong", admin=True)
@@ -287,10 +308,30 @@ def build(settings: Settings | None = None, store: Store | None = None, fetch_at
                      "WHERE s.month = ? AND s.user_id = ?", month, user_id)  # fmt: skip
         return {**json.loads(row["data"]), "month": month} if row else None
 
+    def own_history(user_id: str, limit: int = 12) -> list[dict]:
+        """The person's own locked payslips, oldest first: only what they may already see one month at a time."""
+        rows = db.all("SELECT s.month, s.data FROM payslips s JOIN periods p ON p.month = s.month AND p.state = 'locked' "
+                      "WHERE s.user_id = ? ORDER BY s.month DESC LIMIT ?", user_id, limit)  # fmt: skip
+        history = []
+        for row in rows[::-1]:
+            data = json.loads(row["data"])
+            history.append({"month": row["month"], **{k: data.get(k) for k in ("gross", "net", "insurance", "tax", "days")}})
+        return history
+
     @app.route("GET", "/api/phieu-luong", viewer=True)
     def my_payslip(request):
         month = month_of(request.query.get("thang"))
-        return {"user": request.viewer["user"], "month": month, "payslip": own_slip(request.viewer["user"]["id"], month)}
+        user_id = request.viewer["user"]["id"]
+        period = db.one("SELECT state FROM periods WHERE month = ?", month)
+        settings = config()
+        return {
+            "user": request.viewer["user"], "month": month, "payslip": own_slip(user_id, month),
+            # The month's state only (never other people's figures): "computed" means the payroll waits to be locked.
+            "period_state": period["state"] if period else None,
+            "history": own_history(user_id),
+            "tax_brackets": tax_table(settings["bac_thue"]),
+            "insurance_rate": float(settings["ty_le_bao_hiem"]),
+        }  # fmt: skip
 
     @app.route("POST", "/tools/phieu-luong", signed=True)
     def tool_payslip(request):
@@ -313,6 +354,7 @@ def build(settings: Settings | None = None, store: Store | None = None, fetch_at
             "criteria": db.all("SELECT * FROM criteria ORDER BY id"),
             "saved": {**saved, "scores": json.loads(saved["scores"])} if saved else None,
             "can_score": (case.get("owner") or {}).get("id") != request.viewer["user"]["id"],
+            "grade_scale": grade_scale(),
         }
 
     @app.route("POST", "/api/kpi/{case_id}", viewer=True)

@@ -7,19 +7,204 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Hồ sơ sắp hết hạn</title>
     <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <style>
+      body {
+        padding: 12px 14px 14px;
+      }
+      .head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .head strong {
+        font-size: 13px;
+        color: var(--gd-muted);
+        font-weight: 650;
+      }
+      .head .total {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--gd-ink);
+        font-variant-numeric: tabular-nums;
+      }
+      .bands {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+      .band {
+        display: grid;
+        gap: 0;
+        padding: 6px 8px;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        background: var(--tone-soft);
+        color: var(--tone);
+        text-align: left;
+        font-weight: 600;
+        font-size: 11.5px;
+        line-height: 1.25;
+      }
+      .band b {
+        font-size: 18px;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+      }
+      .band:hover:not(:disabled) {
+        border-color: var(--tone);
+      }
+      .band[aria-pressed='true'] {
+        border-color: var(--tone);
+        box-shadow: inset 0 0 0 1px var(--tone);
+      }
+      .band:disabled {
+        opacity: 0.55;
+      }
+      .gd-stack {
+        height: 6px;
+        margin-bottom: 10px;
+      }
+      .gd-timeline {
+        gap: 0;
+      }
+      .gd-timeline > li {
+        padding: 0;
+      }
+      .gd-timeline {
+        padding-left: 0;
+      }
+      .gd-timeline::before,
+      .gd-timeline > li::before {
+        display: none;
+      }
+      .item .gd-leaf {
+        width: 38px;
+      }
+      .item .gd-leaf span {
+        font-size: 15px;
+      }
+      .item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        padding: 6px 6px;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--gd-ink);
+        font-weight: 400;
+        text-align: left;
+      }
+      .item:hover {
+        background: var(--gd-surface-2);
+      }
+      .item .gd-title {
+        font-size: 13px;
+      }
+      .item .gd-sub {
+        overflow: hidden;
+        font-size: 11.5px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .more {
+        margin: 6px 0 0;
+        color: var(--gd-muted);
+        font-size: 12px;
+        text-align: center;
+      }
+      .gd-empty {
+        padding: 14px 8px;
+      }
+      .gd-empty .gd-svg-icon {
+        color: var(--gd-ok);
+      }
+    </style>
   </head>
   <body>
-    <table><tbody id="rows"><tr><td class="muted">Đang tải…</td></tr></tbody></table>
+    <main id="app" aria-busy="true"></main>
     <script type="module">
       import { $, desktiny, h, server } from './mo-rong.js'
-      const label = (left) => (left < 0 ? `quá ${-left} ngày` : left === 0 ? 'hôm nay' : `còn ${left} ngày`)
+      import { chip, daysUntil, empty, icon, leaf, skeleton } from './bieu-do.js'
+
+      const SHOWN = 5
+      const BANDS = [
+        { key: 'overdue', label: 'Quá hạn', tone: 'bad', test: (d) => d < 0 },
+        { key: 'd7', label: 'Trong 7 ngày', tone: 'warn', test: (d) => d >= 0 && d <= 7 },
+        { key: 'd30', label: '8–30 ngày', tone: 'info', test: (d) => d > 7 && d <= 30 },
+      ]
+      let items = []
+      let capped = false
+      let picked = null
+
+      const daysLeft = (r) => (Number.isFinite(r.left) ? r.left : daysUntil(r.expires))
+      const toneOf = (d) => (d <= 0 ? 'bad' : d <= 7 ? 'warn' : 'info')
+      const countdown = (d) => (d < 0 ? `quá ${-d} ngày` : d === 0 ? 'hôm nay' : d === 1 ? 'ngày mai' : `còn ${d} ngày`)
+      const dateText = (iso) => {
+        const [y, m, d] = iso.split('-')
+        return `${d}/${m}/${y}`
+      }
+      const open = (r) => desktiny.navigate(`/cases/${r.case_id}`)
+
+      function render() {
+        const root = $('#app')
+        root.removeAttribute('aria-busy')
+        if (!items.length) {
+          root.replaceChildren(empty('Mọi hồ sơ đều còn hạn', 'Không có hồ sơ nào sắp hết hạn trong 30 ngày tới.', 'check'))
+          return
+        }
+        const tally = BANDS.map((band) => ({ ...band, n: items.filter((r) => band.test(daysLeft(r))).length }))
+        const head = h('div', { class: 'head' },
+          h('strong', {}, 'Cần gia hạn trong 30 ngày'),
+          h('span', { class: 'total', 'aria-label': `${items.length}${capped ? ' trở lên' : ''} hồ sơ` }, `${items.length}${capped ? '+' : ''}`))
+        const bands = h('div', { class: 'bands', role: 'group', 'aria-label': 'Lọc theo mức gấp' },
+          tally.map((band) => h('button', {
+            type: 'button',
+            class: `band tone-${band.tone}`,
+            'aria-pressed': picked === band.key ? 'true' : 'false',
+            'aria-label': `${band.label}: ${band.n} hồ sơ${picked === band.key ? ' (đang lọc, bấm để bỏ lọc)' : ''}`,
+            disabled: band.n ? null : true,
+            onclick: () => { picked = picked === band.key ? null : band.key; render() },
+          }, h('b', {}, band.n), band.label)))
+        const bar = h('div', { class: 'gd-stack', role: 'img', 'aria-label': tally.map((b) => `${b.label} ${b.n}`).join(', ') },
+          tally.filter((b) => b.n).map((b) => h('span', { class: `tone-${b.tone}`, style: `width:${(b.n / items.length) * 100}%` })))
+
+        const band = BANDS.find((b) => b.key === picked)
+        const list = band ? items.filter((r) => band.test(daysLeft(r))) : items
+        const timeline = h('ol', { class: 'gd-timeline', 'aria-label': 'Hồ sơ gần hết hạn nhất' },
+          list.slice(0, SHOWN).map((r) => {
+            const d = daysLeft(r)
+            const tone = toneOf(d)
+            return h('li', { class: `tone-${tone}` },
+              h('button', { type: 'button', class: 'item', title: 'Mở hồ sơ', onclick: () => open(r),
+                'aria-label': `${r.code} ${r.title}, hết hạn ${dateText(r.expires)}, ${countdown(d)}. Mở hồ sơ` },
+                leaf(r.expires, d <= 0 ? 'bad' : d <= 7 ? 'warn' : 'muted'),
+                h('span', { class: 'gd-grow' },
+                  h('div', { class: 'gd-title' }, r.title),
+                  h('div', { class: 'gd-sub' }, r.code ? `${r.code}, hết hạn ${dateText(r.expires)}` : `Hết hạn ${dateText(r.expires)}`)),
+                chip(countdown(d), tone, d <= 0 ? 'alert' : 'clock')))
+          }))
+        const rest = list.length - SHOWN
+        root.replaceChildren(head, bands, bar, timeline,
+          rest > 0 ? h('p', { class: 'more' }, `và ${rest}${capped && !band ? '+' : ''} hồ sơ khác`) : null)
+      }
+
+      $('#app').replaceChildren(skeleton(4, 16))
       server('/api/sap-het-han?ngay=30')
         .then((data) => {
-          $('#rows').replaceChildren(...(data.items.length ? data.items.slice(0, 8).map((r) =>
-            h('tr', {}, h('td', {}, h('a', { href: '#', onclick: (e) => { e.preventDefault(); desktiny.navigate(`/cases/${r.case_id}`) } }, `${r.code} ${r.title}`)),
-              h('td', { class: 'num ' + (r.left <= 7 ? 'bad' : '') }, label(r.left)))) : [h('tr', {}, h('td', { class: 'muted' }, 'Không có hồ sơ nào sắp hết hạn trong 30 ngày.'))]))
+          items = data.items || []
+          capped = items.length >= 50
+          render()
         })
-        .catch((error) => $('#rows').replaceChildren(h('tr', {}, h('td', { class: 'bad' }, error.message))))
+        .catch((error) => {
+          const root = $('#app')
+          root.removeAttribute('aria-busy')
+          root.replaceChildren(h('p', { class: 'gd-note tone-bad', role: 'alert' }, icon('alert', 15), error.message || 'Không tải được danh sách.'))
+        })
     </script>
   </body>
 </html>

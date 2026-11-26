@@ -2,7 +2,7 @@
   "schema": "desktiny-plugin/1",
   "id": "vn.mo-rong.nhac-han",
   "name": "Nhắc hạn hồ sơ",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "Apache-2.0",
   "authors": ["Desktiny Expansion Pack contributors"],
   "description": "Theo dõi trường ngày hết hạn (hợp đồng lao động, giấy phép, chứng chỉ…) trong hồ sơ của các quy trình được chọn khi duyệt; nhắc người tạo hồ sơ trước 30, 7, 1 ngày và đúng ngày, phát sự kiện “sắp hết hạn” để quy trình tự tạo việc gia hạn.",
@@ -37,7 +37,7 @@
     "required": []
   },
   "ui": [
-    { "slot": "home.widget", "title": "Hồ sơ sắp hết hạn", "url": "/ui/widget.html", "height": 220 },
-    { "slot": "admin.page", "title": "Nhắc hạn hồ sơ", "url": "/ui/quan-tri.html", "height": 640 }
+    { "slot": "home.widget", "title": "Hồ sơ sắp hết hạn", "url": "/ui/widget.html", "height": 330 },
+    { "slot": "admin.page", "title": "Nhắc hạn hồ sơ", "url": "/ui/quan-tri.html", "height": 1000 }
   ]
 }

@@ -52,3 +52,33 @@ def test_payroll_reads_attendance_only_with_the_shared_key(make_app, desktiny):
     assert shared.status == 200 and shared.data["items"] == []
     assign = call(app, "POST", "/api/phan-ca", {"department_id": "d1", "shift_id": None}, "phien-qt")
     assert assign.data["assigned"] == 3
+
+
+def test_admin_overview_shows_today_and_a_grid_of_the_month(make_app, desktiny):
+    clock = {"now": datetime(2026, 11, 2, 8, 20, tzinfo=VN)}
+    app = make_app("cham-cong", now=lambda: clock["now"])
+    call(app, "POST", "/api/ca", {"name": "Hành chính", "start": "08:00", "end": "17:00", "grace_minutes": 5}, "phien-qt")
+    call(app, "POST", "/api/dia-diem", OFFICE, "phien-qt")
+    here = {"lat": 21.0286, "lng": 105.8543, "accuracy": 10}
+    call(app, "POST", "/api/cham", {"kind": "in", **here}, "phien-an")  # 15 minutes late
+    clock["now"] = datetime(2026, 11, 2, 16, 30, tzinfo=VN)
+    call(app, "POST", "/api/cham", {"kind": "out", **here}, "phien-an")  # and 30 early
+    clock["now"] = datetime(2026, 11, 3, 7, 55, tzinfo=VN)
+    call(app, "POST", "/api/cham", {"kind": "in", **here}, "phien-an")
+    call(app, "POST", "/api/cham", {"kind": "in", **here}, "phien-binh")
+    clock["now"] = datetime(2026, 11, 3, 17, 5, tzinfo=VN)
+    call(app, "POST", "/api/cham", {"kind": "out", **here}, "phien-binh")
+    # Only the admin frame may read it.
+    assert call(app, "GET", "/api/quan-tri?thang=2026-11", session="phien-an").status == 403
+    data = call(app, "GET", "/api/quan-tri?thang=2026-11", session="phien-qt").data
+    assert data["today"] == "2026-11-03"
+    assert [(p["display_name"], p["in"][11:16], p["out"]) for p in data["today_punches"]] == [
+        ("Nguyễn Văn An", "07:55", None), ("Trần Thị Bình", "07:55", "2026-11-03T17:05:00+07:00")]  # fmt: skip
+    an = next(p for p in data["summary"] if p["user_id"] == "u-an")
+    assert an["states"] == {"2026-11-02": "late_early", "2026-11-03": "open"} and "days" not in an
+    assert data["daily"] == [{"day": "2026-11-02", "present": 1, "late": 1}, {"day": "2026-11-03", "present": 2, "late": 0}]
+    # The month list that payroll reads stays as it was.
+    desktiny.settings = {"khoa_chia_se": "bi-mat-chung"}
+    app.forget_settings()
+    shared = app.handle("GET", "/share/cong?thang=2026-11", {"X-Share-Key": "bi-mat-chung"}).data["items"]
+    assert {"states", "days"}.isdisjoint(shared[0]) and shared[0]["late_count"] == 1

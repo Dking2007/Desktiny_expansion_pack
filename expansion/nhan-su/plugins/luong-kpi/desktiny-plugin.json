@@ -2,7 +2,7 @@
   "schema": "desktiny-plugin/1",
   "id": "vn.mo-rong.luong-kpi",
   "name": "Tiền lương và KPI",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "Apache-2.0",
   "authors": ["Desktiny Expansion Pack contributors"],
   "description": "Bậc lương, hồ sơ lương, tính lương tháng (bảo hiểm, thuế thu nhập cá nhân lũy tiến, ngày công lấy từ plugin Chấm công), chốt kỳ lương bằng bước quy trình chạy lâu, phiếu lương cá nhân, chấm điểm KPI theo tiêu chí có trọng số ngay trong hồ sơ đánh giá.",

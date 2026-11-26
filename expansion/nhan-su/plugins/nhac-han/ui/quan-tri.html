@@ -7,36 +7,642 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Nhắc hạn hồ sơ</title>
     <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <style>
+      .tone-later {
+        --tone: var(--gd-accent);
+        --tone-soft: var(--gd-accent-soft);
+      }
+      .scan {
+        display: grid;
+        justify-items: end;
+        gap: 4px;
+      }
+      .scan button {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .scan button[aria-busy='true'] .gd-svg-icon {
+        animation: quay 0.9s linear infinite;
+      }
+      @keyframes quay {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .scan small {
+        color: var(--gd-muted);
+        font-size: 12px;
+      }
+      #note {
+        margin: -4px 0 16px;
+      }
+
+      /* 90-day horizon: an overdue column, then 13 weeks. */
+      .horizon {
+        display: grid;
+        grid-template-columns: minmax(44px, 9%) 1fr;
+        gap: 8px;
+        align-items: end;
+      }
+      .weeks {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(13, minmax(0, 1fr));
+        gap: 4px;
+        border-left: 2px solid var(--gd-accent);
+        padding-left: 4px;
+      }
+      .col {
+        display: grid;
+        grid-template-rows: 16px 110px;
+        align-items: end;
+        justify-items: stretch;
+        gap: 3px;
+        padding: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--gd-ink);
+        font-weight: 400;
+      }
+      .col .n {
+        font-size: 11px;
+        font-weight: 700;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+      }
+      .col .n.zero {
+        color: var(--gd-muted);
+        font-weight: 400;
+        opacity: 0.6;
+      }
+      .col .bar {
+        display: flex;
+        flex-direction: column-reverse;
+        height: 100%;
+        overflow: hidden;
+        border-radius: 5px;
+        background: var(--gd-surface-2);
+      }
+      .col .bar span {
+        flex: none;
+        background: var(--tone);
+      }
+      .col .bar span + span {
+        box-shadow: inset 0 -2px 0 var(--gd-surface);
+      }
+      .col:hover:not(:disabled) .bar {
+        outline: 1px solid var(--gd-border);
+      }
+      .col[aria-pressed='true'] .bar {
+        box-shadow: 0 0 0 2px var(--gd-accent);
+      }
+      .col:disabled {
+        cursor: default;
+      }
+      .col.overdue .bar {
+        background: var(--gd-bad-soft);
+      }
+      .milestone {
+        position: absolute;
+        top: 16px;
+        bottom: 0;
+        width: 0;
+        border-left: 1.5px dashed color-mix(in srgb, var(--gd-muted) 70%, transparent);
+        pointer-events: none;
+      }
+      .milestone span {
+        position: absolute;
+        top: -16px;
+        left: 3px;
+        color: var(--gd-muted);
+        font-size: 10.5px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .axis {
+        display: grid;
+        grid-template-columns: minmax(44px, 9%) 1fr;
+        gap: 8px;
+        margin-top: 4px;
+        color: var(--gd-muted);
+        font-size: 11px;
+      }
+      .axis-weeks {
+        position: relative;
+        height: 16px;
+      }
+      .axis-weeks span {
+        position: absolute;
+        white-space: nowrap;
+      }
+      .axis > span:first-child {
+        text-align: center;
+      }
+
+      /* List */
+      .tools {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 10px;
+        padding: 0 16px 10px;
+      }
+      .tools input[type='search'] {
+        flex: 1 1 180px;
+        min-width: 0;
+      }
+      .gd-seg {
+        flex-wrap: wrap;
+      }
+      .gd-seg button b {
+        margin-left: 4px;
+        font-variant-numeric: tabular-nums;
+      }
+      .group {
+        margin: 6px 0 2px;
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 750;
+      }
+      .group small {
+        color: var(--gd-muted);
+        font-weight: 500;
+      }
+      .gd-timeline {
+        margin-bottom: 10px;
+      }
+      .gd-timeline {
+        padding-left: 0;
+      }
+      .gd-timeline::before,
+      .gd-timeline > li::before {
+        display: none;
+      }
+      .entry {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: start;
+        gap: 4px 10px;
+        padding: 4px 6px;
+        border-radius: 10px;
+      }
+      .entry:hover {
+        background: var(--gd-surface-2);
+      }
+      .entry .gd-avatar {
+        margin-top: 2px;
+      }
+      a.title {
+        color: var(--gd-ink);
+        font-weight: 650;
+        text-decoration: none;
+        overflow-wrap: anywhere;
+      }
+      a.title:hover {
+        color: var(--gd-accent-ink);
+        text-decoration: underline;
+      }
+      a.title:focus-visible {
+        outline: 2px solid var(--gd-accent);
+        outline-offset: 2px;
+        border-radius: 4px;
+      }
+      .marks {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 4px;
+        padding: 0;
+        list-style: none;
+      }
+      .mark {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 0 7px;
+        border: 1px solid var(--gd-border);
+        border-radius: 999px;
+        color: var(--gd-muted);
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 18px;
+      }
+      .mark.sent {
+        border-color: transparent;
+        background: var(--gd-ok-soft);
+        color: var(--gd-ok);
+      }
+      .mark.due {
+        border-color: transparent;
+        background: var(--gd-warn-soft);
+        color: var(--gd-warn);
+      }
+      .mark.skipped {
+        text-decoration: line-through;
+        opacity: 0.7;
+      }
+      .entry .gd-chip {
+        margin-top: 2px;
+      }
+      .filtered {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0 16px 10px;
+        font-size: 12.5px;
+      }
+      .filtered button {
+        padding: 2px 8px;
+        font-size: 12px;
+      }
+
+      /* Settings */
+      .settings {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+        gap: 12px;
+        margin: 0;
+      }
+      .settings div {
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: var(--gd-surface-2);
+      }
+      .settings dt {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--gd-muted);
+        font-size: 12px;
+        font-weight: 650;
+      }
+      .settings dd {
+        margin: 3px 0 0;
+        font-weight: 600;
+      }
+      .settings dd small {
+        display: block;
+        color: var(--gd-muted);
+        font-weight: 400;
+        font-size: 12px;
+      }
+      code {
+        padding: 0 5px;
+        border-radius: 5px;
+        background: var(--gd-surface);
+        border: 1px solid var(--gd-border);
+        font-size: 12.5px;
+      }
+      .track {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px;
+      }
+      .track i {
+        color: var(--gd-muted);
+        font-style: normal;
+      }
+      @media (max-width: 520px) {
+        .scan {
+          justify-items: start;
+        }
+        .col {
+          grid-template-rows: 14px 80px;
+        }
+        .milestone span {
+          display: none;
+        }
+        .entry {
+          grid-template-columns: 1fr auto;
+        }
+        .entry .gd-avatar {
+          display: none;
+        }
+      }
+    </style>
   </head>
   <body>
-    <h1>Nhắc hạn hồ sơ</h1>
-    <p class="muted">Plugin đọc hồ sơ của các quy trình được chọn khi duyệt (Quản trị › Plugin › Quyền). Trường ngày, mốc nhắc và chu kỳ quét đặt ở Cấu hình.</p>
-    <p id="info" class="muted"></p>
-    <div class="row"><button id="scan" type="button">Quét ngay</button><span id="status" aria-live="polite"></span></div>
-    <h2>Hết hạn trong 90 ngày tới</h2>
-    <table>
-      <thead><tr><th>Hồ sơ</th><th>Người tạo</th><th>Hết hạn</th><th class="num">Còn lại</th></tr></thead>
-      <tbody id="rows"></tbody>
-    </table>
+    <header class="gd-hero">
+      <div>
+        <h1>Nhắc hạn hồ sơ</h1>
+        <p id="lead">Theo dõi ngày hết hạn của hợp đồng, giấy phép, chứng chỉ… và nhắc người tạo hồ sơ trước khi quá hạn.</p>
+      </div>
+      <div class="scan">
+        <button id="scan" type="button"><span id="scan-icon"></span><span id="scan-text">Quét ngay</span></button>
+        <small id="last" aria-live="polite">Đang tải…</small>
+      </div>
+    </header>
+    <p id="note" class="gd-note" role="status"></p>
+
+    <section id="stats" class="gd-stats" aria-label="Tổng quan"></section>
+
+    <section class="gd-panel" aria-labelledby="h-horizon">
+      <div class="gd-panel-head">
+        <h2 id="h-horizon"><span id="i-horizon"></span>Hết hạn trong 90 ngày tới</h2>
+        <span class="gd-sub">Mỗi cột là một tuần; bấm vào cột để xem hồ sơ của tuần đó.</span>
+      </div>
+      <div class="gd-panel-body" id="horizon"></div>
+    </section>
+
+    <section class="gd-panel" aria-labelledby="h-list">
+      <div class="gd-panel-head">
+        <h2 id="h-list"><span id="i-list"></span>Danh sách hồ sơ</h2>
+        <span class="gd-sub" id="list-count" aria-live="polite"></span>
+      </div>
+      <div class="tools">
+        <div class="gd-seg" id="seg" role="group" aria-label="Lọc theo mức gấp"></div>
+        <input id="q" type="search" placeholder="Tìm theo tên, mã hồ sơ, người tạo…" aria-label="Tìm hồ sơ" />
+      </div>
+      <div id="filtered"></div>
+      <div class="gd-panel-body" id="list"></div>
+    </section>
+
+    <section class="gd-panel" aria-labelledby="h-settings">
+      <div class="gd-panel-head">
+        <h2 id="h-settings"><span id="i-settings"></span>Cách nhắc đang áp dụng</h2>
+        <span class="gd-sub">Đổi ở Quản trị › Plugin › Cấu hình</span>
+      </div>
+      <div class="gd-panel-body"><dl class="settings" id="settings"></dl></div>
+    </section>
+
     <script type="module">
       import { $, desktiny, h, server, show } from './mo-rong.js'
-      async function load() {
-        const data = await server('/api/quan-tri?ngay=90')
-        $('#info').textContent = `Đang theo dõi ${data.watched} hồ sơ có trường “${data.settings.truong_ngay_het_han}”. Lần quét gần nhất: ${data.last_round ? new Date(data.last_round).toLocaleString('vi-VN') : 'chưa quét'}.`
-        $('#rows').replaceChildren(...data.items.map((r) => h('tr', {},
-          h('td', {}, h('a', { href: '#', onclick: (e) => { e.preventDefault(); desktiny.navigate(`/cases/${r.case_id}`) } }, `${r.code} ${r.title}`)),
-          h('td', {}, r.owner_name || '—'), h('td', {}, r.expires), h('td', { class: 'num ' + (r.left <= 7 ? 'bad' : '') }, r.left))))
+      import { chip, empty, icon, leaf, skeleton, stat } from './bieu-do.js'
+
+      const BANDS = [
+        { key: 'overdue', label: 'Quá hạn', tone: 'bad', test: (d) => d < 0 },
+        { key: 'd7', label: 'Trong 7 ngày', tone: 'warn', test: (d) => d >= 0 && d <= 7 },
+        { key: 'd30', label: '8–30 ngày', tone: 'info', test: (d) => d > 7 && d <= 30 },
+        { key: 'd90', label: '31–90 ngày', tone: 'later', test: (d) => d > 30 && d <= 90 },
+      ]
+      const WEEKS = 13
+      const state = { data: null, band: 'all', week: null, q: '' }
+
+      // ---- Small helpers ----
+      const toneOf = (d) => (d <= 0 ? 'bad' : d <= 7 ? 'warn' : d <= 30 ? 'info' : 'later')
+      const chipTone = (d) => (d <= 0 ? 'bad' : d <= 7 ? 'warn' : d <= 30 ? 'info' : 'accent')
+      const countdown = (d) => (d < 0 ? `quá ${-d} ngày` : d === 0 ? 'hôm nay' : d === 1 ? 'ngày mai' : `còn ${d} ngày`)
+      const fold = (text) => String(text || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase()
+      const parseDay = (iso) => {
+        const [y, m, d] = String(iso).slice(0, 10).split('-').map(Number)
+        return new Date(y, m - 1, d)
       }
+      const addDays = (date, n) => new Date(date.getFullYear(), date.getMonth(), date.getDate() + n)
+      const dmy = (date) => `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`
+      const dm = (date) => `${date.getDate()}/${date.getMonth() + 1}`
+      const markName = (m) => (m === 0 ? 'Đúng ngày' : m > 0 ? `${m} ngày` : `Sau ${-m} ngày`)
+      const markLong = (m) => (m === 0 ? 'đúng ngày hết hạn' : m > 0 ? `${m} ngày trước` : `${-m} ngày sau hạn`)
+      function ago(iso) {
+        const then = new Date(iso)
+        const minutes = Math.round((Date.now() - then.getTime()) / 60000)
+        const when = then.toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })
+        if (!Number.isFinite(minutes)) return 'chưa rõ'
+        if (minutes < 1) return `vừa xong (${when})`
+        if (minutes < 60) return `${minutes} phút trước (${when})`
+        if (minutes < 60 * 24) return `${Math.round(minutes / 60)} giờ trước (${when})`
+        return when
+      }
+      const open = (r) => desktiny.navigate(`/cases/${r.case_id}`)
+      const today = () => parseDay(state.data?.today || new Date().toISOString())
+
+      $('#i-horizon').replaceChildren(icon('calendar', 16))
+      $('#i-list').replaceChildren(icon('file', 16))
+      $('#i-settings').replaceChildren(icon('settings', 16))
+      $('#scan-icon').replaceChildren(icon('refresh', 16))
+
+      // ---- Stat tiles ----
+      function renderStats() {
+        const { counts = {}, watched = 0 } = state.data
+        $('#stats').replaceChildren(
+          stat({ label: 'Đang theo dõi', value: watched, hint: 'hồ sơ có ngày hết hạn', tone: 'muted', icon: 'users' }),
+          stat({ label: 'Quá hạn', value: counts.overdue ?? 0, hint: counts.overdue ? 'cần xử lý ngay' : 'không có', tone: 'bad', icon: 'alert' }),
+          stat({ label: 'Trong 7 ngày', value: counts.d7 ?? 0, hint: 'kể cả hôm nay', tone: 'warn', icon: 'clock' }),
+          stat({ label: '8–30 ngày', value: counts.d30 ?? 0, hint: 'nên chuẩn bị gia hạn', tone: 'info', icon: 'bell' }),
+          stat({ label: '31–90 ngày', value: counts.d90 ?? 0, hint: counts.later ? `và ${counts.later} hồ sơ xa hơn` : 'còn thời gian', tone: 'accent', icon: 'calendar' }),
+        )
+      }
+
+      // ---- 90-day horizon ----
+      function stackBar(rows) {
+        const max = state.peak || 1
+        const groups = ['bad', 'warn', 'info', 'later'].map((tone) => ({ tone, n: rows.filter((r) => toneOf(r.left) === tone).length })).filter((g) => g.n)
+        return h('span', { class: 'bar' }, groups.map((g) => h('span', { class: `tone-${g.tone}`, style: `height:${(g.n / max) * 100}%` })))
+      }
+      function renderHorizon() {
+        const items = state.data.items
+        const start = today()
+        const overdue = items.filter((r) => r.left < 0)
+        const weeks = Array.from({ length: WEEKS }, (_, i) => items.filter((r) => r.left >= i * 7 && r.left <= Math.min(i * 7 + 6, 90)))
+        state.peak = Math.max(1, overdue.length, ...weeks.map((w) => w.length))
+        const column = (rows, key, label, extra = '') =>
+          h('button', {
+            type: 'button',
+            class: `col ${extra}`,
+            'aria-pressed': state.week === key ? 'true' : 'false',
+            'aria-label': `${label}: ${rows.length} hồ sơ`,
+            title: `${label}: ${rows.length} hồ sơ`,
+            disabled: rows.length ? null : true,
+            onclick: () => pickWeek(key, label),
+          }, h('span', { class: `n${rows.length ? '' : ' zero'}` }, rows.length || '·'), stackBar(rows))
+        const lines = []
+        let lastShown = 999
+        for (const m of [...state.data.marks].sort((a, b) => b - a)) {
+          if (m <= 0 || m > 90) continue
+          const showLabel = lastShown - m >= 10
+          if (showLabel) lastShown = m
+          lines.push(h('span', { class: 'milestone', style: `left:${(m / 91) * 100}%`, title: `Mốc nhắc ${markLong(m)}` }, showLabel ? h('span', {}, `${m} ngày`) : null))
+        }
+        const ticks = [0, 4, 8, 12].map((i) => h('span', { style: `left:${(i / WEEKS) * 100}%` }, i === 0 ? 'Hôm nay' : dm(addDays(start, i * 7))))
+        const summary = [`Quá hạn: ${overdue.length}`, ...weeks.map((w, i) => `tuần từ ${dm(addDays(start, i * 7))}: ${w.length}`)].join(', ')
+        $('#horizon').replaceChildren(
+          h('div', { role: 'group', 'aria-label': `Số hồ sơ hết hạn theo tuần. ${summary}` },
+            h('div', { class: 'horizon' },
+              column(overdue, 'overdue', 'Đã quá hạn', 'overdue'),
+              h('div', { class: 'weeks' },
+                weeks.map((rows, i) => {
+                  const from = addDays(start, i * 7)
+                  const to = addDays(start, Math.min(i * 7 + 6, 90))
+                  return column(rows, i, `Tuần ${dm(from)}–${dm(to)}`)
+                }),
+                lines)),
+            h('div', { class: 'axis', 'aria-hidden': 'true' }, h('span', {}, 'Quá hạn'), h('div', { class: 'axis-weeks' }, ticks))),
+          h('div', { class: 'gd-legend' },
+            BANDS.map((b) => h('span', { class: `tone-${b.tone}` }, h('i', { class: 'gd-dot' }), b.label)),
+            state.data.marks.some((m) => m > 0 && m <= 90) ? h('span', {}, h('i', { class: 'milestone-key', 'aria-hidden': 'true', style: 'display:inline-block;width:0;height:12px;border-left:1.5px dashed var(--gd-muted)' }), 'Mốc nhắc') : null),
+        )
+      }
+      function pickWeek(key, label) {
+        if (state.week === key) {
+          state.week = null
+        } else {
+          state.week = key
+          state.weekLabel = label
+          state.band = 'all'
+        }
+        renderSeg()
+        renderHorizon()
+        renderList()
+      }
+
+      // ---- Segmented filter and list ----
+      function renderSeg() {
+        const items = state.data.items
+        const options = [{ key: 'all', label: 'Tất cả', n: items.length }, ...BANDS.map((b) => ({ ...b, n: items.filter((r) => b.test(r.left)).length }))]
+        $('#seg').replaceChildren(...options.map((o) =>
+          h('button', { type: 'button', 'aria-pressed': state.band === o.key ? 'true' : 'false',
+            onclick: () => { state.band = o.key; state.week = null; renderSeg(); renderHorizon(); renderList() } },
+            o.label, h('b', {}, o.n))))
+      }
+      function visible() {
+        let rows = state.data.items
+        if (state.week === 'overdue') rows = rows.filter((r) => r.left < 0)
+        else if (state.week !== null) rows = rows.filter((r) => r.left >= state.week * 7 && r.left <= Math.min(state.week * 7 + 6, 90))
+        const band = BANDS.find((b) => b.key === state.band)
+        if (band) rows = rows.filter((r) => band.test(r.left))
+        if (state.q) {
+          const q = fold(state.q)
+          rows = rows.filter((r) => fold(`${r.title} ${r.code} ${r.owner_name}`).includes(q))
+        }
+        return rows
+      }
+      function marksOf(r) {
+        const marks = state.data.marks
+        const sent = new Map((r.reminded || []).map((m) => [m.mark, m.at]))
+        const reached = marks.filter((m) => r.left <= m)
+        const nearest = reached.length ? Math.min(...reached) : null
+        const expires = parseDay(r.expires)
+        const parts = marks.map((m) => {
+          if (sent.has(m)) return { m, cls: 'sent', icon: 'check', title: `Đã nhắc mốc ${markLong(m)} ngày ${dmy(parseDay(sent.get(m)))}` }
+          if (m === nearest) return { m, cls: 'due', title: `Đến mốc ${markLong(m)}, sẽ nhắc ở lượt quét tới` }
+          if (r.left <= m) return { m, cls: 'skipped', title: `Bỏ qua mốc ${markLong(m)} (hồ sơ được theo dõi sau mốc này)` }
+          return { m, cls: 'next', title: `Sẽ nhắc ngày ${dmy(addDays(expires, -m))} (${markLong(m)})` }
+        })
+        return h('ul', { class: 'marks', 'aria-label': 'Các mốc nhắc' },
+          parts.map((p) => h('li', { class: `mark ${p.cls}`, title: p.title }, p.icon ? icon(p.icon, 11) : null, markName(p.m), h('span', { class: 'sr-only' }, `: ${p.title}`))))
+      }
+      function entry(r) {
+        const d = r.left
+        const expires = parseDay(r.expires)
+        return h('li', { class: `tone-${chipTone(d)}` },
+          h('div', { class: 'entry' },
+            leaf(r.expires, d <= 0 ? 'bad' : d <= 7 ? 'warn' : 'muted'),
+            h('div', { class: 'gd-grow' },
+              h('a', { href: `#${r.case_id}`, class: 'title', onclick: (e) => { e.preventDefault(); open(r) } }, r.title),
+              h('div', { class: 'gd-sub' }, `${r.code ? r.code + ', ' : ''}${r.owner_name || 'không rõ người tạo'}; hết hạn ${dmy(expires)}`),
+              marksOf(r)),
+            chip(countdown(d), chipTone(d), d <= 0 ? 'alert' : 'clock')))
+      }
+      function renderList() {
+        const rows = visible()
+        const all = state.data.items
+        $('#list-count').textContent = rows.length === all.length ? `${all.length} hồ sơ` : `${rows.length} / ${all.length} hồ sơ`
+        $('#filtered').replaceChildren(...(state.week !== null ? [h('div', { class: 'filtered' },
+          chip(state.weekLabel, 'accent', 'calendar'),
+          h('button', { type: 'button', class: 'gd-ghost', onclick: () => pickWeek(state.week) }, 'Bỏ lọc tuần'))] : []))
+        if (!all.length) {
+          $('#list').replaceChildren(empty('Chưa có hồ sơ nào sắp hết hạn', `Không hồ sơ nào hết hạn trong 90 ngày tới. Plugin đang theo dõi ${state.data.watched} hồ sơ.`, 'check'))
+          return
+        }
+        if (!rows.length) {
+          $('#list').replaceChildren(empty('Không có hồ sơ khớp bộ lọc', 'Thử chọn “Tất cả” hoặc xoá ô tìm kiếm.', 'file'))
+          return
+        }
+        const groups = []
+        for (const r of rows) {
+          const key = r.left < 0 ? 'overdue' : r.expires.slice(0, 7)
+          let group = groups.find((g) => g.key === key)
+          if (!group) groups.push((group = { key, rows: [] }))
+          group.rows.push(r)
+        }
+        const title = (key) => (key === 'overdue' ? 'Đã quá hạn' : `Tháng ${Number(key.slice(5))}/${key.slice(0, 4)}`)
+        $('#list').replaceChildren(
+          ...groups.flatMap((g) => [
+            h('h3', { class: 'group' }, title(g.key), h('small', {}, `${g.rows.length} hồ sơ`)),
+            h('ol', { class: 'gd-timeline', 'aria-label': title(g.key) }, g.rows.map(entry)),
+          ]),
+          state.data.truncated ? h('p', { class: 'gd-note tone-info' }, icon('alert', 15), `Chỉ hiện ${all.length} hồ sơ gần hạn nhất; số liệu ở trên tính trên toàn bộ.`) : null,
+        )
+      }
+
+      // ---- Settings ----
+      function renderSettings() {
+        const { settings = {}, marks = [], last_round: last } = state.data
+        const minutes = Number(settings.chu_ky_phut) || 60
+        const every = minutes % 60 === 0 ? `Mỗi ${minutes / 60} giờ` : `Mỗi ${minutes} phút`
+        const next = last ? new Date(new Date(last).getTime() + minutes * 60000) : null
+        const item = (iconName, label, ...value) => h('div', {}, h('dt', {}, icon(iconName, 14), label), h('dd', {}, ...value))
+        $('#settings').replaceChildren(
+          item('file', 'Trường ngày hết hạn', h('code', {}, settings.truong_ngay_het_han || 'ngay_het_han'),
+            h('small', {}, 'Trong biểu mẫu của các quy trình được chọn khi duyệt quyền plugin (Quản trị › Plugin › Quyền).')),
+          item('bell', 'Mốc nhắc',
+            h('span', { class: 'track' }, marks.flatMap((m, i) => [i ? h('i', { 'aria-hidden': 'true' }, '→') : null, chip(m === 0 ? 'Đúng ngày' : m > 0 ? `${m} ngày trước` : `${-m} ngày sau`, 'accent')])),
+            h('small', {}, 'Mỗi mốc nhắc một lần; mốc đã lỡ không gửi bù.')),
+          item('clock', 'Chu kỳ quét', every,
+            h('small', {}, next ? `Lượt tới dự kiến khoảng ${next.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}.` : 'Chưa có lượt quét nào.')),
+          item('users', 'Ai được nhắc', 'Người tạo hồ sơ',
+            h('small', {}, 'Kèm sự kiện “Hồ sơ sắp hết hạn” để luồng tự động tạo việc gia hạn.')),
+        )
+      }
+
+      function renderLast() {
+        const last = state.data?.last_round
+        $('#last').textContent = last ? `Lần quét gần nhất: ${ago(last)}` : 'Chưa quét lần nào'
+      }
+
+      async function load() {
+        state.data = await server('/api/quan-tri?ngay=90')
+        state.data.items = state.data.items || []
+        state.data.marks = state.data.marks || [30, 7, 1, 0]
+        if (state.week !== null && state.week !== 'overdue' && state.week >= WEEKS) state.week = null
+        renderLast()
+        renderStats()
+        renderHorizon()
+        renderSeg()
+        renderList()
+        renderSettings()
+      }
+
+      $('#q').addEventListener('input', (e) => {
+        state.q = e.target.value.trim()
+        if (state.data) renderList()
+      })
+
       $('#scan').addEventListener('click', async () => {
+        const button = $('#scan')
+        button.disabled = true
+        button.setAttribute('aria-busy', 'true')
+        $('#scan-text').textContent = 'Đang quét…'
+        show($('#note'), '', 'gd-note')
         try {
           const result = await server('/api/quan-tri/quet', { method: 'POST', body: {} })
-          show($('#status'), `Đã đọc ${result.read} hồ sơ, gửi ${result.reminded} nhắc nhở.`, 'ok')
-          load()
+          await load()
+          const sent = result.reminded ? `gửi ${result.reminded} nhắc nhở mới` : 'không có mốc nhắc mới'
+          $('#note').className = 'gd-note tone-ok'
+          $('#note').replaceChildren(icon('check', 15), `Đã quét xong: đọc ${result.read} hồ sơ thay đổi, ${sent}.`)
         } catch (error) {
-          show($('#status'), error.message, 'bad')
+          $('#note').className = 'gd-note tone-bad'
+          $('#note').replaceChildren(icon('alert', 15), error.message || 'Không quét được.')
+        } finally {
+          button.disabled = false
+          button.removeAttribute('aria-busy')
+          $('#scan-text').textContent = 'Quét ngay'
         }
       })
-      load().catch((error) => show($('#status'), error.message, 'bad'))
+
+      $('#stats').replaceChildren(skeleton(2, 40))
+      $('#list').replaceChildren(skeleton(4, 18))
+      load().catch((error) => {
+        $('#last').textContent = ''
+        $('#note').className = 'gd-note tone-bad'
+        $('#note').replaceChildren(icon('alert', 15), error.message || 'Không tải được dữ liệu.')
+        $('#list').replaceChildren(empty('Không tải được danh sách', 'Thử tải lại trang sau ít phút.', 'alert'))
+      })
+      setInterval(renderLast, 60000)
     </script>
   </body>
 </html>

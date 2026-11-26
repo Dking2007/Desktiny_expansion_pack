@@ -48,6 +48,22 @@ Biểu mẫu có sẵn các trường mà plugin dùng. Đổi mã trường th�
 | **Tiền lương và KPI** `luong-kpi` | Bậc lương, hồ sơ lương, tính lương tháng (ngày công lấy từ Chấm công, bảo hiểm, thuế TNCN luỹ tiến), chốt kỳ, phiếu lương; chấm KPI theo tiêu chí có trọng số | Bước quy trình chạy lâu **Chốt kỳ lương**; trang *Phiếu lương*; tab *Chấm điểm KPI* trong hồ sơ (ghi điểm và xếp loại vào hồ sơ); trợ lý đọc phiếu lương |
 | **Nhắc hạn hồ sơ** `nhac-han` | Theo dõi trường ngày hết hạn (hợp đồng, giấy phép…) trong hồ sơ của các quy trình được chọn; nhắc trước 30, 7, 1 ngày và đúng ngày | Sự kiện **sắp hết hạn**; khối trang chủ; trang quản trị; trợ lý liệt kê hồ sơ sắp hết hạn |
 
+### Giao diện các trang
+
+Các trang dựng trên bộ giao diện dùng chung `sdk/giao-dien.css` và `sdk/bieu-do.js` (biểu đồ vẽ bằng SVG, không tải gì
+từ bên ngoài), theo màu sáng/tối của Desktiny:
+
+| Trang | Thấy và làm được gì |
+|---|---|
+| *Chấm công* | Đồng hồ và lời chào; một nút lớn đổi theo trạng thái (Vào ca → Ra ca → Đã xong), báo từng bước lấy GPS; ca hôm nay vẽ trên trục giờ (ca, thời gian đã làm, lượt chấm, “bây giờ”); ô số liệu tháng, vòng tỉ lệ đúng giờ; lịch tháng tô màu đúng giờ, muộn, về sớm, vắng, bấm một ngày để xem chi tiết; hỏi lại trước khi ra ca sớm |
+| Khối *Chấm công hôm nay* | Trạng thái, giờ vào/ra, thanh tiến độ ca, số liệu tháng, nút mở trang |
+| Quản trị *Chấm công* | Danh sách cần làm khi chưa thiết lập; ai có mặt, ai muộn hôm nay; biểu đồ từng ngày trong tháng; bảng từng người kèm dải ô theo ngày, sắp xếp được; ca làm vẽ trên trục 24 giờ; địa điểm dạng thẻ có bán kính, lấy toạ độ từ vị trí hiện tại; xếp ca |
+| *Phiếu lương* | Thực lĩnh nổi bật, so với tháng trước, đường xu hướng 12 tháng; thanh “tổng thu nhập đi đâu” (thực lĩnh, bảo hiểm, thuế); giải thích từng dòng; vòng ngày công; bậc thuế đã chạm tới; danh sách các tháng đã chốt |
+| Tab *Chấm điểm KPI* | Thanh trượt cho từng tiêu chí kèm trọng số và phần đóng góp; vòng tổng điểm và xếp loại cập nhật ngay khi kéo; thang xếp loại; ghi điểm vào hồ sơ có hỏi lại |
+| Quản trị *Tiền lương và KPI* | Các bước tính → chốt → phiếu hiện; số liệu kỳ, xu hướng 12 kỳ, bảng từng người có thanh thực lĩnh; bậc lương dạng bậc thang; hồ sơ lương chọn nhiều người; tiêu chí KPI với thanh trọng số phải đủ 100% |
+| Khối *Hồ sơ sắp hết hạn* | Ba ô quá hạn / 7 ngày / 30 ngày (bấm để lọc), dòng thời gian các hồ sơ gần nhất với đếm ngược, bấm để mở hồ sơ |
+| Quản trị *Nhắc hạn* | Số liệu theo mức gấp; dải 90 ngày tới theo tuần (bấm để lọc) có vạch mốc nhắc; danh sách theo tháng, tìm không dấu, mỗi hồ sơ có các mốc đã nhắc/sắp nhắc; “Quét ngay” có trạng thái rõ ràng |
+
 ## Cài đặt
 
 Cài theo [hướng dẫn chung](../../README.md#cài-vào-desktiny), với các điểm riêng sau:

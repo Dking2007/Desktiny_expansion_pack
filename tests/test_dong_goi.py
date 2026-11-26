@@ -34,8 +34,8 @@ def test_each_expansion_gets_its_pack_and_plugins_as_zips_with_an_install_guide(
     assert not (out / "cu.txt").exists()  # the folder is emptied first
     assert dong_goi.expansions() == ["mot-cua-xa", "nhan-su", "van-thu"]
     assert {
-        "nhan-su/goi-nhan-su-1.1.0.zip", "nhan-su/plugin-cham-cong-1.0.0.zip", "nhan-su/plugin-luong-kpi-1.0.0.zip",
-        "nhan-su/plugin-nhac-han-1.0.0.zip", "mot-cua-xa/goi-mot-cua-xa-1.1.0.zip", "mot-cua-xa/plugin-so-van-ban-1.0.0.zip",
+        "nhan-su/goi-nhan-su-1.1.0.zip", "nhan-su/plugin-cham-cong-1.1.0.zip", "nhan-su/plugin-luong-kpi-1.1.0.zip",
+        "nhan-su/plugin-nhac-han-1.1.0.zip", "mot-cua-xa/goi-mot-cua-xa-1.1.0.zip", "mot-cua-xa/plugin-so-van-ban-1.0.0.zip",
         "mot-cua-xa/plugin-ky-so-1.0.0.zip", "mot-cua-xa/plugin-tiep-nhan-1.0.0.zip", "mot-cua-xa/plugin-tinh-han-1.0.0.zip",
         "mot-cua-xa/plugin-doc-giay-to-1.0.0.zip", "van-thu/goi-van-thu-1.0.0.zip", "van-thu/plugin-so-van-ban-den-1.0.0.zip",
         # Văn thư borrows these from Một cửa: the same zips are also in its own folder.
@@ -77,7 +77,7 @@ def test_host_points_connected_plugins_at_the_real_server(tmp_path):
 
 def test_only_the_chosen_packs_and_plugins_are_built(tmp_path):
     built = {path for path, _, _ in dong_goi.build(out=tmp_path, only=["tinh-han", "plugin-cham-cong, ky-so"])}
-    assert built == {"mot-cua-xa/plugin-tinh-han-1.0.0.zip", "nhan-su/plugin-cham-cong-1.0.0.zip",
+    assert built == {"mot-cua-xa/plugin-tinh-han-1.0.0.zip", "nhan-su/plugin-cham-cong-1.1.0.zip",
                      "mot-cua-xa/plugin-ky-so-1.0.0.zip", "may-chu-plugin/may-chu-plugin-1.1.0.zip"}  # fmt: skip
     # The server bundle holds only the chosen connected plugins, and the guide starts just those services.
     server = names(tmp_path / "may-chu-plugin/may-chu-plugin-1.1.0.zip")

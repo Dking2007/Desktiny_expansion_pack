@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS state (name TEXT PRIMARY KEY, value TEXT NOT NULL);
 DEFAULTS = {"truong_ngay_het_han": "ngay_het_han", "moc_nhac": "30,7,1,0", "chu_ky_phut": 60}
 CLOSED = {"cancelled", "rejected"}
 MAX_PER_ROUND = 2000
+ADMIN_CAP = 500  # rows on the admin page; the counts cover every watched dossier
 
 
 def thresholds(spec) -> list[int]:
@@ -108,7 +109,7 @@ def build(settings: Settings | None = None, store: Store | None = None, today=da
     if app.settings.token:
         app.every(lambda: float(config()["chu_ky_phut"]) * 60, round_)
 
-    def upcoming(days: int, client: Client | None = None) -> list[dict]:
+    def upcoming(days: int, client: Client | None = None, cap: int = 50) -> list[dict]:
         rows = db.all("SELECT * FROM watched ORDER BY expires")
         limit = today().toordinal() + days
         result = []
@@ -121,20 +122,41 @@ def build(settings: Settings | None = None, store: Store | None = None, today=da
                 except PluginError:
                     continue
             result.append({**row, "left": (date.fromisoformat(row["expires"]) - today()).days})
-            if len(result) >= 50:
+            if len(result) >= cap:
                 break
+        return result
+
+    def sent_marks(item: dict) -> list[dict]:
+        """The thresholds already reminded for this dossier's current date, nearest last."""
+        prefix = f"{item['case_id']}:{item['expires']}:"
+        rows = db.all("SELECT key, at FROM reminded WHERE substr(key, 1, ?) = ?", len(prefix), prefix)
+        marks = [{"mark": int(r["key"][len(prefix):]), "at": r["at"]} for r in rows if r["key"][len(prefix):].lstrip("-").isdigit()]
+        return sorted(marks, key=lambda m: -m["mark"])
+
+    def counts() -> dict:
+        """How many watched dossiers fall in each band, over all of them (the list itself is capped)."""
+        result = {"overdue": 0, "d7": 0, "d30": 0, "d90": 0, "later": 0}
+        now = today()
+        for row in db.all("SELECT expires FROM watched"):
+            left = (date.fromisoformat(row["expires"]) - now).days
+            band = "overdue" if left < 0 else "d7" if left <= 7 else "d30" if left <= 30 else "d90" if left <= 90 else "later"
+            result[band] += 1
         return result
 
     @app.route("GET", "/api/sap-het-han", viewer=True)
     def mine(request):
         days = max(1, min(365, int(request.query.get("ngay") or 30)))
-        return {"items": upcoming(days, app.as_viewer(request)), "field": config()["truong_ngay_het_han"]}
+        return {"items": upcoming(days, app.as_viewer(request)), "field": config()["truong_ngay_het_han"],
+                "marks": thresholds(config()["moc_nhac"]), "today": today().isoformat()}  # fmt: skip
 
     @app.route("GET", "/api/quan-tri", admin=True)
     def overview(request):
         last = db.one("SELECT value FROM state WHERE name = 'since'")
-        return {"items": upcoming(int(request.query.get("ngay") or 90)), "watched": db.one("SELECT COUNT(*) AS n FROM watched")["n"],
-                "last_round": last["value"] if last else None, "settings": config()}  # fmt: skip
+        days = max(1, min(3660, int(request.query.get("ngay") or 90)))
+        items = [{**item, "reminded": sent_marks(item)} for item in upcoming(days, cap=ADMIN_CAP)]
+        return {"items": items, "watched": db.one("SELECT COUNT(*) AS n FROM watched")["n"],
+                "last_round": last["value"] if last else None, "settings": config(), "marks": thresholds(config()["moc_nhac"]),
+                "counts": counts(), "truncated": len(items) >= ADMIN_CAP, "today": today().isoformat()}  # fmt: skip
 
     @app.route("POST", "/api/quan-tri/quet", admin=True)
     def scan_now(request):

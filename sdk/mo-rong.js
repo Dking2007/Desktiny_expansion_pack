@@ -45,6 +45,8 @@ export function show(element, message, tone = '') {
   element.className = tone
 }
 
+/** This month as 'YYYY-MM' on the viewer's clock (toISOString would give the UTC month around midnight). */
 export function thisMonth() {
-  return new Date().toISOString().slice(0, 7)
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 }

@@ -39,7 +39,8 @@ from .vn import InputError
 SDK = Path(__file__).resolve().parents[2] / "sdk" / "desktiny-plugin-sdk.js"
 MAX_BODY = 2_000_000
 # The frame SDK, the shared page helper and styles, served to every plugin's pages from sdk/.
-SHARED = {"desktiny-plugin-sdk.js", "mo-rong.js", "chung.css"}
+SHARED = {"desktiny-plugin-sdk.js", "mo-rong.js", "chung.css", "giao-dien.css", "bieu-do.js"}
+FONTS = SDK.parent / "phong-chu"
 MAX_VIEWERS = 2000
 logger = logging.getLogger("mo_rong")
 STATIC_TYPES = {".html", ".js", ".css", ".svg", ".png", ".json", ".ico", ".webp"}
@@ -230,6 +231,13 @@ class App:
             return json_response({"error": "server_error", "message": "Máy chủ plugin gặp lỗi; đã ghi nhật ký."}, 500)
 
     def static(self, path: str) -> Response | None:
+        # The fonts every page shares (Desktiny's own faces), served from sdk/phong-chu by bare file name.
+        if path.startswith("/ui/phong-chu/"):
+            name = path.rsplit("/", 1)[-1]
+            font = FONTS / name
+            if name.endswith(".woff2") and "/" not in path[len("/ui/phong-chu/"):] and font.is_file():
+                return Response(200, font.read_bytes(), "font/woff2")
+            return None
         shared = SDK.parent / path.rsplit("/", 1)[-1]
         if path.startswith("/ui/") and shared.name in SHARED and shared.is_file():
             kind = "text/css" if shared.suffix == ".css" else "text/javascript"

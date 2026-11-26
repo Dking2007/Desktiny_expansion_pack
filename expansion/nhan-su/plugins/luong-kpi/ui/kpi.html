@@ -7,61 +7,395 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Chấm điểm KPI</title>
     <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <style>
+      input,
+      select,
+      textarea,
+      button {
+        box-sizing: border-box;
+        max-width: 100%;
+      }
+      /* bars() of bieu-do.js draws its fill as an inline span: give it a box. */
+      .gd-bar-track,
+      .gd-bar-fill {
+        display: block;
+      }
+      .gd-note > svg {
+        flex: none;
+        margin-top: 2px;
+      }
+      .kp-who {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 8px;
+      }
+      .kp-score {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .kp-score-text {
+        display: grid;
+        justify-items: start;
+        gap: 6px;
+      }
+      .kp-rows {
+        display: grid;
+        gap: 4px;
+      }
+      .kp-row {
+        display: grid;
+        gap: 6px;
+        padding: 12px 2px;
+        border-top: 1px solid var(--gd-border);
+      }
+      .kp-row:first-child {
+        border-top: 0;
+      }
+      .kp-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px 10px;
+      }
+      .kp-head label {
+        display: block;
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .kp-weight {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--gd-muted);
+        font-size: 12px;
+      }
+      .kp-weight .gd-bar-track {
+        display: block;
+        width: 90px;
+        height: 6px;
+      }
+      .kp-weight .gd-bar-fill {
+        display: block;
+        background: var(--gd-info);
+      }
+      .kp-ctrl {
+        display: grid;
+        grid-template-columns: 1fr 78px;
+        align-items: center;
+        gap: 12px;
+      }
+      .kp-ctrl input[type='range'] {
+        width: 100%;
+        height: 28px;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        accent-color: var(--gd-accent);
+        cursor: pointer;
+      }
+      .kp-ctrl input[type='range']:disabled {
+        cursor: default;
+      }
+      .kp-row.unset input[type='range'] {
+        opacity: 0.45;
+      }
+      .kp-ctrl input[type='number'] {
+        width: 100%;
+        font-weight: 700;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .kp-foot {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 4px 12px;
+        color: var(--gd-muted);
+        font-size: 12.5px;
+      }
+      .kp-ladder {
+        position: relative;
+        padding-top: 30px;
+      }
+      .kp-ladder-bar {
+        display: flex;
+        height: 12px;
+        overflow: hidden;
+        border-radius: 999px;
+      }
+      .kp-ladder-bar span {
+        height: 100%;
+        background: color-mix(in srgb, var(--tone) 55%, var(--gd-surface));
+      }
+      .kp-ladder-bar span.on {
+        background: var(--tone);
+      }
+      .kp-ladder-bar span + span {
+        box-shadow: inset 2px 0 0 var(--gd-surface);
+      }
+      .kp-marker {
+        position: absolute;
+        top: 0;
+        display: grid;
+        justify-items: center;
+        transform: translateX(-50%);
+        font-size: 12px;
+        font-weight: 800;
+        transition: left 0.25s ease;
+      }
+      .kp-marker::after {
+        content: '';
+        width: 3px;
+        height: 22px;
+        margin-top: 2px;
+        border-radius: 2px;
+        background: var(--gd-ink);
+      }
+      .kp-ladder-labels {
+        display: flex;
+        margin-top: 6px;
+        font-size: 11.5px;
+      }
+      .kp-ladder-labels span {
+        overflow: hidden;
+        padding-right: 4px;
+        color: var(--tone);
+        font-weight: 700;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .kp-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+      }
+      @media (max-width: 520px) {
+        .kp-score {
+          width: 100%;
+        }
+        .kp-ctrl {
+          grid-template-columns: 1fr 66px;
+        }
+        .kp-ladder-labels {
+          font-size: 10.5px;
+        }
+      }
+    </style>
   </head>
   <body>
-    <h1>Chấm điểm KPI</h1>
-    <p class="muted" id="intro">Đang tải…</p>
-    <form id="form">
-      <table>
-        <thead><tr><th>Tiêu chí</th><th class="num">Trọng số</th><th class="num">Điểm (0–100)</th></tr></thead>
-        <tbody id="rows"></tbody>
-      </table>
-      <p class="big" id="total"></p>
-      <button id="save" type="submit">Ghi điểm vào hồ sơ</button>
-    </form>
-    <p id="status" aria-live="polite"></p>
+    <header class="gd-hero">
+      <div style="min-width: 0">
+        <span class="gd-eyebrow">Chấm điểm KPI</span>
+        <h1 id="title">Đang tải…</h1>
+        <div class="kp-who" id="who"></div>
+      </div>
+      <div class="kp-score" id="score"></div>
+    </header>
+    <main id="main" aria-busy="true"></main>
+
     <script type="module">
-      import { $, desktiny, h, server, show } from './mo-rong.js'
+      import { $, desktiny, h, server } from './mo-rong.js'
+      import { avatar, chip, empty, icon, ring, skeleton, stack } from './bieu-do.js'
+
+      const FALLBACK = [{ min: 90, name: 'Hoàn thành xuất sắc' }, { min: 75, name: 'Hoàn thành tốt' }, { min: 50, name: 'Hoàn thành' }, { min: 0, name: 'Không hoàn thành' }]
+      const TONES = ['ok', 'accent', 'warn', 'bad']
+      const SERIES = ['accent', 'info', 'ok', 'warn', 'bad']
+      const num = (value, digits = 1) => (Number(value) || 0).toLocaleString('vi-VN', { maximumFractionDigits: digits, minimumFractionDigits: digits })
       const context = await desktiny.context
-      const caseId = context.record.case_id
-      let criteria = []
-      const grade = (t) => (t >= 90 ? 'Hoàn thành xuất sắc' : t >= 75 ? 'Hoàn thành tốt' : t >= 50 ? 'Hoàn thành' : 'Không hoàn thành')
-      function total() {
-        const value = criteria.reduce((sum, c) => sum + (Number($(`#c${c.id}`).value) || 0) * c.weight / 100, 0)
-        $('#total').textContent = `Tổng: ${value.toFixed(1)} điểm · ${grade(value)}`
+      const caseId = context.record?.case_id
+      let data = null
+      let scale = FALLBACK
+      let scores = {}
+      let gauge = null
+
+      $('#main').replaceChildren(h('section', { class: 'gd-panel' }, h('div', { class: 'gd-panel-body', style: 'padding-top:16px' }, skeleton(5, 18))))
+
+      /** The grade of a total and its tone (the scale comes highest first). */
+      function gradeOf(total) {
+        const index = scale.findIndex((g) => total >= g.min)
+        const at = index < 0 ? scale.length - 1 : index
+        return { name: scale[at].name, tone: TONES[Math.min(at, TONES.length - 1)] }
       }
-      try {
-        const data = await server(`/api/kpi/${caseId}`)
-        criteria = data.criteria
-        $('#intro').textContent = `${data.case.title}${data.case.owner ? ' · người được đánh giá: ' + data.case.owner.display_name : ''}`
-        $('#rows').replaceChildren(
-          ...criteria.map((c) =>
-            h('tr', {}, h('td', {}, c.name), h('td', { class: 'num' }, `${c.weight}%`),
-              h('td', { class: 'num' }, h('input', { id: `c${c.id}`, type: 'number', min: 0, max: 100, required: true, value: data.saved?.scores?.[c.id] ?? '', disabled: !data.can_score, oninput: total }))),
-          ),
-        )
-        if (!data.can_score) {
-          $('#save').disabled = true
-          show($('#status'), 'Bạn là người được đánh giá nên không tự chấm điểm cuối cùng.', 'muted')
+      const scored = () => data.criteria.filter((c) => typeof scores[c.id] === 'number')
+      const totalOf = () => Math.round(data.criteria.reduce((sum, c) => sum + (scores[c.id] ?? 0) * c.weight / 100, 0) * 10) / 10
+      const changed = () => !data.saved || data.criteria.some((c) => data.saved.scores?.[c.id] !== scores[c.id])
+
+      /** Move the ring of bieu-do.js without drawing it again (so it glides instead of restarting). */
+      function setGauge(total, grade) {
+        const circle = gauge.querySelector('.gd-ring-value')
+        const length = Number(circle.getAttribute('stroke-dasharray'))
+        circle.setAttribute('stroke-dashoffset', String(length * (1 - Math.max(0, Math.min(1, total / 100)))))
+        gauge.className = `gd-ring tone-${grade.tone}`
+        gauge.setAttribute('aria-label', `Tổng ${num(total)} trên 100 điểm, ${grade.name}`)
+        gauge.querySelector('.gd-ring-text strong').textContent = num(total)
+      }
+
+      function ladder(total) {
+        const ascending = [...scale].reverse()
+        const parts = ascending.map((g, i) => ({ ...g, to: ascending[i + 1]?.min ?? 100, tone: TONES[scale.length - 1 - i] ?? 'muted' }))
+        const current = gradeOf(total).name
+        return h('div', { class: 'kp-ladder', role: 'img', 'aria-label': `Thang xếp loại: ${parts.map((p) => `${p.name} từ ${p.min}`).join(', ')}. Hiện tại ${num(total)} điểm, ${current}.` },
+          h('span', { class: 'kp-marker', style: `left:${Math.max(2, Math.min(98, total))}%`, 'aria-hidden': 'true' }, num(total)),
+          h('div', { class: 'kp-ladder-bar', 'aria-hidden': 'true' },
+            parts.map((p) => h('span', { class: `tone-${p.tone}${p.name === current ? ' on' : ''}`, style: `width:${p.to - p.min}%`, title: `${p.name}: ${p.min}–${p.to}` }))),
+          h('div', { class: 'kp-ladder-labels', 'aria-hidden': 'true' },
+            parts.map((p) => h('span', { class: `tone-${p.tone}`, style: `width:${p.to - p.min}%` }, String(p.min)))),
+          h('div', { class: 'gd-legend', 'aria-hidden': 'true' },
+            [...parts].reverse().map((p) => h('span', { class: `tone-${p.tone}`, style: p.name === current ? 'font-weight:800' : '' }, h('i', { class: 'gd-dot' }), `${p.name} (từ ${p.min})`))))
+      }
+
+      function update() {
+        const total = totalOf()
+        const grade = gradeOf(total)
+        const missing = data.criteria.length - scored().length
+        setGauge(total, grade)
+        $('#grade').replaceChildren(chip(grade.name, grade.tone, 'star'))
+        $('#progress').textContent = missing ? `Còn ${missing} tiêu chí chưa chấm` : changed() ? 'Đã chấm đủ, chưa ghi vào hồ sơ' : 'Khớp với điểm đã ghi'
+        for (const c of data.criteria) {
+          const value = scores[c.id]
+          const row = $(`#row-${c.id}`)
+          row.classList.toggle('unset', typeof value !== 'number')
+          $(`#contrib-${c.id}`).textContent = typeof value === 'number' ? `Đóng góp ${num((value * c.weight) / 100)} / ${num(c.weight)} điểm` : 'Chưa chấm'
         }
-        if (data.saved) show($('#status'), `Đã chấm bởi ${data.saved.scored_by}: ${data.saved.total} điểm (${data.saved.grade}).`, 'ok')
-        total()
-      } catch (error) {
-        show($('#status'), error.message, 'bad')
+        $('#ladder').replaceChildren(ladder(total))
+        $('#build').replaceChildren(
+          stack([
+            ...data.criteria.map((c, i) => ({ label: c.name, value: ((scores[c.id] ?? 0) * c.weight) / 100, tone: SERIES[i % SERIES.length] })),
+            { label: 'Chưa đạt', value: Math.max(0, 100 - total), tone: 'muted' },
+          ], { format: (v) => `${num(v)} điểm` }))
+        const save = $('#save')
+        if (save) {
+          save.disabled = missing > 0 || !changed()
+          $('#reset').hidden = !data.saved || !changed()
+        }
       }
-      $('#form').addEventListener('submit', async (event) => {
-        event.preventDefault()
-        if (!(await desktiny.confirm('Ghi điểm KPI vào hồ sơ này?'))) return
+
+      function setScore(c, raw, from) {
+        const value = raw === '' ? null : Math.max(0, Math.min(100, Math.round(Number(raw))))
+        if (raw !== '' && !Number.isFinite(Number(raw))) return
+        scores[c.id] = value
+        if (from !== 'range') $(`#s-${c.id}`).value = value ?? 0
+        if (from !== 'number') $(`#n-${c.id}`).value = value ?? ''
+        $('#status').replaceChildren()
+        update()
+      }
+
+      function criterionRow(c) {
+        const value = scores[c.id]
+        const locked = !data.can_score
+        const before = data.saved?.scores?.[c.id]
+        return h('div', { class: 'kp-row', id: `row-${c.id}` },
+          h('div', { class: 'kp-head' },
+            h('label', { for: `s-${c.id}` }, c.name),
+            h('span', { class: 'kp-weight', title: 'Trọng số: phần của tiêu chí này trong tổng 100 điểm' },
+              h('span', { class: 'gd-bar-track', 'aria-hidden': 'true' }, h('span', { class: 'gd-bar-fill', style: `width:${Math.min(100, c.weight)}%` })),
+              `Trọng số ${num(c.weight, 0)}%`)),
+          h('div', { class: 'kp-ctrl' },
+            h('input', { type: 'range', id: `s-${c.id}`, min: 0, max: 100, step: 1, list: 'moc', value: value ?? 0, disabled: locked,
+              'aria-describedby': `contrib-${c.id}`, 'aria-valuetext': value === undefined || value === null ? 'Chưa chấm' : `${value} điểm`,
+              oninput: (event) => { setScore(c, event.target.value, 'range'); event.target.setAttribute('aria-valuetext', `${event.target.value} điểm`) } }),
+            h('input', { type: 'number', id: `n-${c.id}`, min: 0, max: 100, step: 1, inputmode: 'numeric', value: value ?? '', disabled: locked, placeholder: '0–100',
+              'aria-label': `Điểm ${c.name}, từ 0 đến 100`, oninput: (event) => setScore(c, event.target.value, 'number') })),
+          h('div', { class: 'kp-foot' },
+            h('span', { id: `contrib-${c.id}` }),
+            typeof before === 'number' ? h('span', {}, `Lần ghi trước: ${before}`) : null))
+      }
+
+      async function save() {
+        const total = totalOf()
+        const grade = gradeOf(total)
+        const ok = await desktiny.confirm(`Ghi ${num(total)} điểm (${grade.name}) vào hồ sơ “${data.case.title}”?${data.saved ? ' Điểm đã ghi trước đó sẽ được thay.' : ''}`)
+        if (!ok) return
+        const button = $('#save')
+        button.disabled = true
+        button.textContent = 'Đang ghi…'
         try {
-          const scores = Object.fromEntries(criteria.map((c) => [c.id, Number($(`#c${c.id}`).value)]))
-          const result = await server(`/api/kpi/${caseId}`, { method: 'POST', body: { scores } })
-          show($('#status'), `Đã ghi ${result.total} điểm (${result.grade}).`, 'ok')
+          const result = await server(`/api/kpi/${caseId}`, { method: 'POST', body: { scores: Object.fromEntries(data.criteria.map((c) => [c.id, scores[c.id]])) } })
+          data.saved = { scores: { ...scores }, total: result.total, grade: result.grade, scored_by: context.viewer?.display_name || 'bạn', scored_at: new Date().toISOString() }
+          $('#status').replaceChildren(h('p', { class: 'gd-note tone-ok', role: 'status' }, icon('check', 15),
+            result.written.length
+              ? `Đã ghi ${num(result.total)} điểm, xếp loại ${result.grade.toLocaleLowerCase('vi')}, vào hồ sơ.`
+              : `Đã lưu ${num(result.total)} điểm, xếp loại ${result.grade.toLocaleLowerCase('vi')}. Biểu mẫu của hồ sơ không có trường điểm KPI, xếp loại nên chưa ghi vào hồ sơ.`))
           desktiny.toast('Đã ghi điểm KPI.')
           desktiny.refresh()
+          render()
         } catch (error) {
-          show($('#status'), error.message, 'bad')
+          $('#status').replaceChildren(h('p', { class: 'gd-note tone-bad', role: 'alert' }, icon('alert', 15), error.message))
+        } finally {
+          button.textContent = 'Ghi điểm vào hồ sơ'
+          update()
         }
-      })
+      }
+
+      function render() {
+        const status = $('#status')?.firstChild ?? null
+        $('#title').textContent = data.case.title
+        const owner = data.case.owner
+        $('#who').replaceChildren(...(owner ? [avatar(owner.display_name), h('div', {}, h('div', { class: 'gd-title' }, owner.display_name), h('div', { class: 'gd-sub' }, 'Người được đánh giá'))] : []))
+        // Drawn at the current total: the ring sets its arc on the next frame.
+        gauge = ring({ value: totalOf(), max: 100, label: num(totalOf()), sub: 'trên 100 điểm', size: 108 })
+        $('#score').replaceChildren(gauge, h('div', { class: 'kp-score-text' }, h('span', { id: 'grade' }), h('span', { class: 'gd-sub', id: 'progress', 'aria-live': 'polite' })))
+
+        const savedNote = data.saved
+          ? h('p', { class: 'gd-note tone-info' }, icon('file', 15), `Đã ghi ${num(data.saved.total)} điểm, xếp loại ${data.saved.grade.toLocaleLowerCase('vi')}, bởi ${data.saved.scored_by}${data.saved.scored_at ? ' lúc ' + new Date(data.saved.scored_at).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' }) : ''}.`)
+          : null
+        const readOnly = !data.can_score
+          ? h('p', { class: 'gd-note tone-warn' }, icon('lock', 15), 'Bạn là người được đánh giá nên chỉ xem; quản lý trực tiếp chấm điểm cuối cùng.')
+          : null
+        $('#main').replaceChildren(
+          h('section', { class: 'gd-panel' },
+            h('div', { class: 'gd-panel-head' }, h('h2', {}, icon('check', 17), 'Tiêu chí'), h('span', { class: 'gd-sub' }, 'Kéo thanh hoặc gõ điểm 0–100')),
+            h('div', { class: 'gd-panel-body' },
+              readOnly, savedNote,
+              h('datalist', { id: 'moc' }, scale.filter((g) => g.min > 0).map((g) => h('option', { value: g.min }))),
+              h('div', { class: 'kp-rows' }, data.criteria.map(criterionRow)))),
+          h('div', { class: 'gd-cols' },
+            h('section', { class: 'gd-panel' },
+              h('div', { class: 'gd-panel-head' }, h('h2', {}, icon('trend', 17), 'Điểm tổng được góp từ đâu')),
+              h('div', { class: 'gd-panel-body' }, h('p', { class: 'gd-sub', style: 'margin:0 0 8px' }, 'Mỗi tiêu chí góp điểm × trọng số; tổng tối đa 100.'), h('div', { id: 'build' }))),
+            h('section', { class: 'gd-panel' },
+              h('div', { class: 'gd-panel-head' }, h('h2', {}, icon('star', 17), 'Thang xếp loại')),
+              h('div', { class: 'gd-panel-body' }, h('div', { id: 'ladder' })))),
+          data.can_score
+            ? h('div', { class: 'kp-actions' },
+                h('button', { type: 'button', id: 'save', onclick: save }, 'Ghi điểm vào hồ sơ'),
+                h('button', { type: 'button', id: 'reset', class: 'gd-ghost', hidden: true, onclick: () => { scores = { ...data.saved.scores }; render() } }, 'Về điểm đã ghi'),
+                h('span', { class: 'gd-sub' }, 'Điểm và xếp loại được ghi vào hồ sơ dưới tên bạn.'))
+            : '',
+          h('div', { id: 'status', 'aria-live': 'polite' }, status))
+        update()
+      }
+
+      async function load() {
+        if (!caseId) {
+          $('#title').textContent = 'Chấm điểm KPI'
+          $('#main').replaceChildren(empty('Không thấy hồ sơ', 'Mở tab này bên trong một phiếu đánh giá KPI.', 'alert'))
+          return
+        }
+        try {
+          data = await server(`/api/kpi/${caseId}`)
+          scale = data.grade_scale?.length ? data.grade_scale : FALLBACK
+          scores = Object.fromEntries(data.criteria.map((c) => [c.id, typeof data.saved?.scores?.[c.id] === 'number' ? data.saved.scores[c.id] : null]))
+          if (!data.criteria.length) {
+            $('#title').textContent = data.case.title
+            $('#main').replaceChildren(empty('Chưa có tiêu chí KPI', 'Quản trị viên đặt tiêu chí ở trang Bảng lương và KPI.', 'settings'))
+            return
+          }
+          render()
+        } catch (error) {
+          $('#title').textContent = 'Chấm điểm KPI'
+          $('#main').replaceChildren(h('p', { class: 'gd-note tone-bad', role: 'alert' }, icon('alert', 15), error.message))
+        } finally {
+          $('#main').setAttribute('aria-busy', 'false')
+        }
+      }
+      load()
     </script>
   </body>
 </html>

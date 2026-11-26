@@ -7,107 +7,761 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Bảng lương và KPI</title>
     <link rel="stylesheet" href="chung.css" />
-  </head>
-  <body>
-    <h1>Tiền lương và KPI — quản trị</h1>
-    <p id="status" aria-live="polite"></p>
-
-    <h2>Bậc lương</h2>
-    <table><thead><tr><th>Mã</th><th>Tên</th><th class="num">Hệ số</th><th class="num">Phụ cấp</th></tr></thead><tbody id="grades"></tbody></table>
-    <form id="grade-form" class="grid">
-      <label>Mã <input name="code" required maxlength="20" placeholder="CV-1" /></label>
-      <label>Tên <input name="name" required maxlength="80" placeholder="Chuyên viên bậc 1" /></label>
-      <label>Hệ số <input name="coefficient" required inputmode="decimal" placeholder="2.34" /></label>
-      <label>Phụ cấp (đồng) <input name="allowance" type="number" min="0" value="0" /></label>
-      <label>&nbsp;<button type="submit">Lưu bậc</button></label>
-    </form>
-
-    <h2>Hồ sơ lương</h2>
-    <form id="profile-form" class="grid">
-      <label>Người <select name="person" id="people" multiple size="5"></select></label>
-      <label>Bậc <select name="grade_id" id="grade-pick" required></select></label>
-      <label>Phụ cấp riêng <input name="extra_allowance" type="number" min="0" value="0" /></label>
-      <label>Người phụ thuộc <input name="dependents" type="number" min="0" value="0" /></label>
-      <label>Công chuẩn/tháng <input name="standard_days" type="number" min="1" value="22" /></label>
-      <label>&nbsp;<button type="submit">Lưu cho người đã chọn</button></label>
-    </form>
-    <table><thead><tr><th>Họ tên</th><th>Bậc</th><th class="num">Phụ cấp riêng</th><th class="num">Phụ thuộc</th></tr></thead><tbody id="profiles"></tbody></table>
-
-    <h2>Kỳ lương <input id="month" type="month" /></h2>
-    <div class="row">
-      <button id="compute" type="button">Tính lương</button>
-      <button id="lock" type="button">Chốt kỳ lương</button>
-      <input id="reason" maxlength="300" placeholder="Lý do trả lại" />
-      <button id="return" type="button" class="secondary">Trả lại</button>
-      <span id="period" class="muted"></span>
-    </div>
-    <table>
-      <thead><tr><th>Họ tên</th><th class="num">Ngày công</th><th class="num">Tổng thu nhập</th><th class="num">Bảo hiểm</th><th class="num">Thuế TNCN</th><th class="num">Thực lĩnh</th></tr></thead>
-      <tbody id="payslips"></tbody>
-    </table>
-
-    <h2>Tiêu chí KPI</h2>
-    <p class="muted">Mỗi dòng: tên tiêu chí; trọng số %. Tổng trọng số bằng 100.</p>
-    <textarea id="criteria" rows="5" style="width: 100%"></textarea>
-    <p><button id="save-criteria" type="button" class="secondary">Lưu tiêu chí</button></p>
-    <script type="module">
-      import { $, desktiny, h, money, server, show, thisMonth } from './mo-rong.js'
-      $('#month').value = thisMonth()
-      let grades = []
-      const fail = (error) => show($('#status'), error.message, 'bad')
-
-      async function load() {
-        try {
-          const data = await server(`/api/quan-tri?thang=${$('#month').value}`)
-          grades = data.grades
-          $('#grades').replaceChildren(...grades.map((g) => h('tr', {}, h('td', {}, g.code), h('td', {}, g.name), h('td', { class: 'num' }, g.coefficient), h('td', { class: 'num' }, money(g.allowance)))))
-          $('#grade-pick').replaceChildren(...grades.map((g) => h('option', { value: g.id }, `${g.code} — ${g.name}`)))
-          const gradeName = (id) => grades.find((g) => g.id === id)?.name ?? '—'
-          $('#profiles').replaceChildren(...data.profiles.map((p) => h('tr', {}, h('td', {}, p.display_name), h('td', {}, gradeName(p.grade_id)), h('td', { class: 'num' }, money(p.extra_allowance)), h('td', { class: 'num' }, p.dependents))))
-          const p = data.period
-          const states = { draft: 'Chưa tính / bị trả lại', computed: 'Đã tính, chờ chốt', locked: 'Đã chốt' }
-          $('#period').textContent = p ? `${states[p.state]} · ${p.people} người · tổng thực lĩnh ${money(p.total_net)}${p.note ? ' · ' + p.note : ''}${p.call_id ? ' · có quy trình đang chờ' : ''}` : 'Chưa tính'
-          $('#payslips').replaceChildren(...data.payslips.map((s) => h('tr', {}, h('td', {}, s.display_name), h('td', { class: 'num' }, s.data.days ?? 'đủ'), h('td', { class: 'num' }, money(s.data.gross)), h('td', { class: 'num' }, money(s.data.insurance)), h('td', { class: 'num' }, money(s.data.tax)), h('td', { class: 'num' }, money(s.net)))))
-          $('#criteria').value = data.criteria.map((c) => `${c.name}; ${c.weight}`).join('\n')
-        } catch (error) {
-          fail(error)
+    <link rel="stylesheet" href="giao-dien.css" />
+    <style>
+      input,
+      select,
+      textarea,
+      button {
+        box-sizing: border-box;
+        max-width: 100%;
+      }
+      /* bars() of bieu-do.js draws its fill as an inline span: give it a box. */
+      .gd-bar-track,
+      .gd-bar-fill {
+        display: block;
+      }
+      .gd-note > svg {
+        flex: none;
+        margin-top: 2px;
+      }
+      .qt-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        max-width: 100%;
+        margin-bottom: 16px;
+        border-radius: 14px;
+      }
+      .qt-tabs button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .qt-side {
+        display: grid;
+        justify-items: end;
+        gap: 8px;
+      }
+      .qt-steps {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin: 0 0 14px;
+        padding: 0;
+        list-style: none;
+        counter-reset: step;
+      }
+      .qt-steps li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 10px;
+        border: 1px solid var(--gd-border);
+        border-radius: 10px;
+        background: var(--gd-surface-2);
+        color: var(--gd-muted);
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .qt-steps li::before {
+        counter-increment: step;
+        content: counter(step);
+        display: grid;
+        flex: none;
+        place-items: center;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--gd-border);
+        color: var(--gd-ink);
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .qt-steps li.done {
+        border-color: color-mix(in srgb, var(--gd-ok) 40%, var(--gd-border));
+        background: var(--gd-ok-soft);
+        color: var(--gd-ok);
+      }
+      .qt-steps li.done::before {
+        content: '✓';
+        background: var(--gd-ok);
+        color: var(--gd-surface);
+      }
+      .qt-steps li.now {
+        border-color: var(--gd-accent);
+        background: var(--gd-accent-soft);
+        color: var(--gd-accent-ink);
+      }
+      .qt-steps li.now::before {
+        background: var(--gd-accent);
+        color: var(--gd-surface);
+      }
+      .qt-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+      .qt-actions input {
+        flex: 1 1 200px;
+        min-width: 0;
+      }
+      button.qt-danger {
+        border: 1px solid color-mix(in srgb, var(--gd-bad) 45%, var(--gd-border));
+        background: var(--gd-surface);
+        color: var(--gd-bad);
+      }
+      .qt-person {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 160px;
+      }
+      .qt-mini {
+        display: grid;
+        justify-items: end;
+        gap: 4px;
+        min-width: 110px;
+      }
+      .qt-mini .gd-bar-track {
+        display: block;
+        width: 100%;
+        height: 5px;
+      }
+      .qt-mini .gd-bar-fill {
+        display: block;
+      }
+      .qt-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+      .qt-search {
+        flex: 1 1 180px;
+        min-width: 0;
+      }
+      .qt-ladder {
+        display: grid;
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .qt-rung {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 6px 14px;
+        padding: 11px 12px;
+        border: 1px solid var(--gd-border);
+        border-radius: 12px;
+        background: var(--gd-surface);
+      }
+      .qt-rung:hover {
+        box-shadow: var(--gd-shadow-hover);
+      }
+      .qt-coef {
+        display: grid;
+        place-items: center;
+        min-width: 52px;
+        padding: 6px 8px;
+        border-radius: 10px;
+        background: var(--gd-accent-soft);
+        color: var(--gd-accent-ink);
+        font-size: 16px;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+      }
+      .qt-rung .gd-bar-track {
+        display: block;
+        grid-column: 1 / -1;
+        height: 6px;
+      }
+      .qt-rung .gd-bar-fill {
+        display: block;
+      }
+      .qt-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+        gap: 10px;
+      }
+      .qt-form label {
+        min-width: 0;
+      }
+      .qt-form input,
+      .qt-form select {
+        width: 100%;
+        min-width: 0;
+      }
+      .qt-preview {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 4px 12px;
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: var(--gd-surface-2);
+      }
+      .qt-preview strong {
+        font-size: 18px;
+        font-variant-numeric: tabular-nums;
+      }
+      .qt-pick {
+        display: grid;
+        max-height: 330px;
+        overflow-y: auto;
+        margin: 10px 0 0;
+        padding: 0;
+        border: 1px solid var(--gd-border);
+        border-radius: 10px;
+        list-style: none;
+      }
+      .qt-pick li + li {
+        border-top: 1px solid var(--gd-border);
+      }
+      .qt-pick label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      .qt-pick label:hover {
+        background: var(--gd-surface-2);
+      }
+      .qt-pick input {
+        width: 18px;
+        height: 18px;
+        margin: 0;
+        accent-color: var(--gd-accent);
+      }
+      .qt-crit {
+        display: grid;
+        grid-template-columns: 1fr 92px auto;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0;
+      }
+      .qt-crit input[type='number'] {
+        text-align: right;
+      }
+      .qt-crit .gd-dot {
+        margin-right: 6px;
+      }
+      .qt-name {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+      }
+      .qt-name input {
+        flex: 1;
+        min-width: 0;
+      }
+      .qt-icon-btn {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        padding: 0;
+      }
+      @media (max-width: 520px) {
+        .qt-side {
+          justify-items: start;
+        }
+        .qt-steps {
+          grid-template-columns: 1fr;
+        }
+        .qt-rung {
+          grid-template-columns: auto 1fr;
+        }
+        .qt-rung > .num {
+          grid-column: 1 / -1;
+          text-align: left;
+        }
+        .qt-crit {
+          grid-template-columns: 1fr 72px auto;
         }
       }
-      async function people() {
-        const list = await server('/api/nguoi').catch(() => ({ items: [] }))
-        $('#people').replaceChildren(...list.items.map((u) => h('option', { value: JSON.stringify({ id: u.id, display_name: u.display_name }) }, u.display_name)))
+    </style>
+  </head>
+  <body>
+    <header class="gd-hero">
+      <div style="min-width: 0">
+        <h1>Bảng lương và KPI</h1>
+        <p>Tính, kiểm tra và chốt lương tháng; giữ bậc lương, hồ sơ lương và tiêu chí KPI.</p>
+      </div>
+      <div class="qt-side">
+        <div id="stepper"></div>
+        <div id="state"></div>
+      </div>
+    </header>
+    <nav class="gd-seg qt-tabs" id="tabs" aria-label="Mục quản trị"></nav>
+    <div id="status" aria-live="polite"></div>
+    <main id="main" aria-busy="true"></main>
+
+    <script type="module">
+      import { $, desktiny, h, money, server } from './mo-rong.js'
+      import { avatar, bars, chip, empty, icon, localDay, monthName, monthStepper, skeleton, spark, stack, stat } from './bieu-do.js'
+
+      const TABS = [
+        { id: 'luong', label: 'Bảng lương', icon: 'wallet' },
+        { id: 'bac', label: 'Bậc lương', icon: 'trend' },
+        { id: 'ho-so', label: 'Hồ sơ lương', icon: 'users' },
+        { id: 'kpi', label: 'Tiêu chí KPI', icon: 'star' },
+      ]
+      const STATES = {
+        computed: { text: 'Đã tính, chờ chốt', tone: 'warn', icon: 'clock' },
+        locked: { text: 'Đã chốt', tone: 'ok', icon: 'lock' },
+        draft: { text: 'Bị trả lại, cần tính lại', tone: 'bad', icon: 'alert' },
       }
-      $('#grade-form').addEventListener('submit', async (event) => {
-        event.preventDefault()
-        const body = Object.fromEntries(new FormData(event.target))
-        await server('/api/bac-luong', { method: 'POST', body: { ...body, coefficient: Number(String(body.coefficient).replace(',', '.')) } }).then(load, fail)
-      })
-      $('#profile-form').addEventListener('submit', async (event) => {
-        event.preventDefault()
-        const chosen = [...$('#people').selectedOptions].map((o) => JSON.parse(o.value))
-        if (!chosen.length) return show($('#status'), 'Chọn ít nhất một người.', 'bad')
-        const body = Object.fromEntries(new FormData(event.target))
-        delete body.person
-        await server('/api/ho-so-luong', { method: 'POST', body: { ...body, people: chosen } }).then(load, fail)
-      })
-      $('#compute').addEventListener('click', () => server('/api/tinh-luong', { method: 'POST', body: { thang: $('#month').value } }).then(load, fail))
-      $('#lock').addEventListener('click', async () => {
-        if (!(await desktiny.confirm(`Chốt kỳ lương ${$('#month').value}? Phiếu lương sẽ hiện cho từng người.`))) return
-        await server('/api/chot', { method: 'POST', body: { thang: $('#month').value } }).then(load, fail)
-      })
-      $('#return').addEventListener('click', async () => {
-        // The frame has no prompt() (sandbox without modals): the reason comes from the field beside the button.
-        const reason = $('#reason').value.trim()
-        if (!reason) return show($('#status'), 'Nhập lý do trả lại.', 'bad')
-        await server('/api/chot', { method: 'POST', body: { thang: $('#month').value, tra_lai: true, ly_do: reason } }).then(load, fail)
-      })
-      $('#save-criteria').addEventListener('click', async () => {
-        const items = $('#criteria').value.split('\n').map((line) => line.split(';')).filter((p) => p[0]?.trim()).map(([name, weight]) => ({ name: name.trim(), weight: Number(weight) }))
-        await server('/api/tieu-chi', { method: 'POST', body: { items } }).then(() => { desktiny.toast('Đã lưu tiêu chí.'); load() }, fail)
-      })
-      $('#month').addEventListener('change', load)
+      const SERIES = ['accent', 'info', 'ok', 'warn', 'bad']
+      const GRADE_TONES = ['ok', 'accent', 'warn', 'bad']
+      const lower = (text) => String(text || '').toLocaleLowerCase('vi').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd')
+      const when = (iso) => (iso ? new Date(iso).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' }) : '')
+      const num = (value, digits = 1) => (Number(value) || 0).toLocaleString('vi-VN', { maximumFractionDigits: digits })
+      const short = (value) => `${num((Number(value) || 0) / 1e6)} tr`
+
+      let month = localDay().slice(0, 7)
+      let tab = 'luong'
+      try { tab = TABS.some((t) => t.id === localStorage.getItem('luong-kpi.tab')) ? localStorage.getItem('luong-kpi.tab') : tab } catch { /* no storage in this frame */ }
+      let data = null
+      let people = null
+      let chosen = new Set()
+      let slipSearch = ''
+      let slipSort = 'name'
+      let personSearch = ''
+      let criteria = null
+      let criteriaDirty = false
+      let returning = false
+
+      // ---- Small pieces ----
+      function panel(title, iconName, extra, ...body) {
+        return h('section', { class: 'gd-panel' },
+          h('div', { class: 'gd-panel-head' }, h('h2', {}, icon(iconName, 17), title), extra || null),
+          h('div', { class: 'gd-panel-body' }, body.flat(Infinity)))
+      }
+      function say(text, tone = 'ok') {
+        $('#status').replaceChildren(text ? h('p', { class: `gd-note tone-${tone}`, role: tone === 'bad' ? 'alert' : 'status', style: 'margin:0 0 14px' }, icon(tone === 'bad' ? 'alert' : 'check', 15), text) : '')
+      }
+      /** Run an action with its button busy; errors show above the page. */
+      async function act(button, busyText, job) {
+        const label = button.textContent
+        button.disabled = true
+        button.textContent = busyText
+        try {
+          await job()
+        } catch (error) {
+          say(error.message, 'bad')
+        } finally {
+          button.disabled = false
+          button.textContent = label
+        }
+      }
+      const gradeById = (id) => data.grades.find((g) => g.id === id)
+      const fullPay = (grade, extra = 0) => (grade ? data.base_salary * grade.coefficient + grade.allowance + (Number(extra) || 0) : 0)
+
+      // ---- Header and tabs ----
+      function header() {
+        $('#stepper').replaceChildren(monthStepper(month, (next) => { month = next; returning = false; load() }))
+        const period = data?.period
+        const state = period ? STATES[period.state] : null
+        $('#state').replaceChildren(state ? chip(state.text, state.tone, state.icon) : chip('Chưa tính lương', 'muted'))
+        $('#tabs').replaceChildren(...TABS.map((t) =>
+          h('button', { type: 'button', 'aria-pressed': t.id === tab ? 'true' : 'false', 'aria-controls': 'main', onclick: () => {
+            tab = t.id
+            try { localStorage.setItem('luong-kpi.tab', tab) } catch { /* fine without it */ }
+            say('')
+            render()
+          } }, icon(t.icon, 14), t.label)))
+      }
+
+      // ---- Tab: payroll of the month ----
+      function payrollTab() {
+        const period = data.period
+        const slips = data.payslips
+        const totals = slips.reduce((sum, s) => ({ gross: sum.gross + s.data.gross, net: sum.net + s.data.net, insurance: sum.insurance + s.data.insurance, tax: sum.tax + s.data.tax }), { gross: 0, net: 0, insurance: 0, tax: 0 })
+        const state = period?.state
+        const stats = h('div', { class: 'gd-stats' },
+          stat({ label: 'Tổng quỹ lương', value: short(totals.gross), hint: money(totals.gross), icon: 'wallet', tone: 'accent' }),
+          stat({ label: 'Tổng thực lĩnh', value: short(totals.net), hint: slips.length ? `Bình quân ${money(totals.net / slips.length)}/người` : 'Chưa tính', icon: 'check', tone: 'ok' }),
+          stat({ label: 'Số người', value: String(slips.length), hint: `${data.profiles.length} hồ sơ lương`, icon: 'users', tone: 'info' }),
+          stat({ label: 'Bảo hiểm và thuế', value: short(totals.insurance + totals.tax), hint: `BH ${short(totals.insurance)} · thuế ${short(totals.tax)}`, icon: 'file', tone: 'warn' }))
+
+        // Steps of the month: compute → check and lock → payslips visible.
+        const steps = h('ol', { class: 'qt-steps', 'aria-label': 'Các bước của kỳ lương' },
+          h('li', { class: state === 'computed' || state === 'locked' ? 'done' : 'now' }, 'Tính lương'),
+          h('li', { class: state === 'locked' ? 'done' : state === 'computed' ? 'now' : '' }, 'Kiểm tra và chốt'),
+          h('li', { class: state === 'locked' ? 'done' : '' }, 'Phiếu lương hiện cho từng người'))
+        const actions = h('div', { class: 'qt-actions' })
+        if (state === 'locked') {
+          actions.append(h('p', { class: 'gd-note tone-ok', style: 'margin:0;flex:1' }, icon('lock', 15), `Đã chốt${period.locked_by ? ' bởi ' + period.locked_by : ''}${period.locked_at ? ' lúc ' + when(period.locked_at) : ''}. Mỗi người đã xem được phiếu lương; kỳ đã chốt không tính lại.`))
+        } else {
+          const compute = h('button', { type: 'button', class: state === 'computed' ? 'gd-ghost' : '', disabled: !data.profiles.length ? true : null }, icon('refresh', 15), state === 'computed' ? ' Tính lại' : ` Tính lương ${monthName(month).toLowerCase()}`)
+          compute.addEventListener('click', async () => {
+            if (state === 'computed' && !(await desktiny.confirm(`Tính lại lương ${monthName(month).toLowerCase()}? Số liệu đang có sẽ được thay bằng số tính mới.`))) return
+            await act(compute, 'Đang tính…', async () => {
+              const result = await server('/api/tinh-luong', { method: 'POST', body: { thang: month } })
+              await load()
+              say(`Đã tính lương ${result.people} người. Kiểm tra bảng bên dưới rồi chốt kỳ.`)
+            })
+          })
+          actions.append(compute)
+          if (state === 'computed') {
+            const lock = h('button', { type: 'button' }, icon('lock', 15), ' Chốt kỳ lương')
+            lock.addEventListener('click', async () => {
+              if (!(await desktiny.confirm(`Chốt kỳ lương ${monthName(month).toLowerCase()} (${slips.length} người, thực lĩnh ${money(totals.net)})? Phiếu lương sẽ hiện cho từng người và không tính lại được.`))) return
+              await act(lock, 'Đang chốt…', async () => {
+                await server('/api/chot', { method: 'POST', body: { thang: month } })
+                await load()
+                say('Đã chốt kỳ lương. Mỗi người xem được phiếu lương của mình.')
+                desktiny.toast('Đã chốt kỳ lương.')
+              })
+            })
+            actions.append(lock)
+            if (!returning) {
+              actions.append(h('button', { type: 'button', class: 'qt-danger', onclick: () => { returning = true; render(); $('#reason')?.focus() } }, 'Trả lại…'))
+            } else {
+              const reason = h('input', { id: 'reason', maxlength: 300, placeholder: 'Lý do trả lại (bắt buộc)', 'aria-label': 'Lý do trả lại bảng lương' })
+              const send = h('button', { type: 'button', class: 'qt-danger' }, 'Gửi trả lại')
+              send.addEventListener('click', async () => {
+                const why = reason.value.trim()
+                if (!why) { say('Nhập lý do trả lại.', 'bad'); reason.focus(); return }
+                await act(send, 'Đang gửi…', async () => {
+                  await server('/api/chot', { method: 'POST', body: { thang: month, tra_lai: true, ly_do: why } })
+                  returning = false
+                  await load()
+                  say('Đã trả lại bảng lương.', 'warn')
+                })
+              })
+              actions.append(reason, send, h('button', { type: 'button', class: 'gd-ghost', onclick: () => { returning = false; render() } }, 'Thôi'))
+            }
+          }
+        }
+        const notes = [
+          !data.profiles.length ? h('p', { class: 'gd-note tone-warn' }, icon('alert', 15), 'Chưa có hồ sơ lương nào: thêm ở mục Hồ sơ lương trước khi tính.') : null,
+          period?.note ? h('p', { class: `gd-note tone-${state === 'draft' ? 'bad' : 'info'}` }, icon('alert', 15), period.note) : null,
+          period?.call_id && state === 'computed' ? h('p', { class: 'gd-note tone-info' }, icon('bell', 15), 'Một quy trình đang chờ kỳ lương này: chốt hoặc trả lại sẽ cho quy trình đi tiếp.') : null,
+          period?.computed_at && state !== 'locked' ? h('p', { class: 'gd-sub', style: 'margin:8px 0 0' }, `Tính lần cuối lúc ${when(period.computed_at)}.`) : null,
+        ]
+        const flow = panel(`Kỳ lương ${monthName(month).toLowerCase()}`, 'calendar', null, steps, actions, notes)
+
+        const split = slips.length
+          ? panel('Quỹ lương đi đâu', 'wallet', null,
+              h('p', { class: 'gd-sub', style: 'margin:0 0 8px' }, `Tổng thu nhập ${money(totals.gross)} chia thành:`),
+              stack([
+                { label: 'Thực lĩnh', value: totals.net, tone: 'ok' },
+                { label: 'Bảo hiểm', value: totals.insurance, tone: 'info' },
+                { label: 'Thuế TNCN', value: totals.tax, tone: 'warn' },
+              ], { format: money }))
+          : null
+        const history = data.history.filter((p) => p.total_net !== null)
+        const trend = history.length
+          ? panel('12 kỳ gần nhất', 'trend', null,
+              history.length >= 2 ? h('div', { style: 'margin-bottom:10px' }, spark(history.map((p) => p.total_net), { width: 300, height: 52, label: `Tổng thực lĩnh các kỳ: ${history.map((p) => `${monthName(p.month)} ${money(p.total_net)}`).join(', ')}` })) : null,
+              bars(history.slice(-6).reverse().map((p) => ({ label: `${monthName(p.month)}${p.state === 'locked' ? '' : ' · tạm'}`, value: p.total_net, tone: p.state === 'locked' ? 'accent' : 'warn', text: short(p.total_net) }))))
+          : null
+
+        return [stats, flow, split || trend ? h('div', { class: 'gd-cols' }, split, trend) : null, slipTable(slips)]
+      }
+
+      function slipTable(slips) {
+        if (!slips.length) {
+          return h('section', { class: 'gd-panel' }, empty('Chưa có bảng lương tháng này', data.profiles.length ? 'Bấm “Tính lương” ở trên để tính cho mọi người có hồ sơ lương.' : 'Thêm hồ sơ lương rồi tính lương.', 'wallet'))
+        }
+        const top = Math.max(1, ...slips.map((s) => s.net))
+        const body = h('tbody')
+        const count = h('span', { class: 'gd-sub' })
+        const fill = () => {
+          const shown = slips.filter((s) => lower(s.display_name).includes(lower(slipSearch)))
+            .sort((a, b) => (slipSort === 'net' ? b.net - a.net : a.display_name.localeCompare(b.display_name, 'vi')))
+          count.textContent = `${shown.length}/${slips.length} người`
+          body.replaceChildren(...shown.map((s) => {
+            const d = s.data
+            const share = d.days === null ? 1 : d.days / (d.standard_days || 22)
+            return h('tr', {},
+              h('td', {}, h('div', { class: 'qt-person' }, avatar(s.display_name), h('div', { style: 'min-width:0' }, h('div', { class: 'gd-title' }, s.display_name), h('div', { class: 'gd-sub' }, `${d.grade} · hệ số ${d.coefficient}`)))),
+              h('td', { class: 'num' }, h('div', { class: 'qt-mini', title: d.days === null ? 'Chưa lấy công: tính đủ công' : `${d.days}/${d.standard_days} ngày` },
+                h('span', {}, d.days === null ? 'Đủ công' : `${num(d.days)}/${num(d.standard_days)}`),
+                h('span', { class: `gd-bar-track tone-${share >= 1 ? 'ok' : share >= 0.8 ? 'accent' : 'warn'}`, 'aria-hidden': 'true' }, h('span', { class: 'gd-bar-fill', style: `width:${Math.round(Math.min(1, share) * 100)}%` })))),
+              h('td', { class: 'num' }, money(d.gross)),
+              h('td', { class: 'num' }, money(d.insurance)),
+              h('td', { class: 'num' }, money(d.tax)),
+              h('td', { class: 'num' }, h('div', { class: 'qt-mini' }, h('strong', {}, money(s.net)),
+                h('span', { class: 'gd-bar-track tone-ok', 'aria-hidden': 'true' }, h('span', { class: 'gd-bar-fill', style: `width:${Math.round((s.net / top) * 100)}%` })))))
+          }))
+        }
+        const sorter = h('div', { class: 'gd-seg', role: 'group', 'aria-label': 'Sắp xếp' },
+          [['name', 'Theo tên'], ['net', 'Thực lĩnh cao']].map(([key, label]) =>
+            h('button', { type: 'button', 'aria-pressed': slipSort === key ? 'true' : 'false', onclick: (event) => {
+              slipSort = key
+              for (const b of sorter.children) b.setAttribute('aria-pressed', b === event.currentTarget ? 'true' : 'false')
+              fill()
+            } }, label)))
+        const search = h('input', { type: 'search', class: 'qt-search', placeholder: 'Tìm theo tên…', 'aria-label': 'Tìm người trong bảng lương', value: slipSearch, oninput: (event) => { slipSearch = event.target.value; fill() } })
+        fill()
+        return panel('Từng người', 'users', count,
+          h('div', { class: 'qt-toolbar', style: 'margin-bottom:10px' }, search, sorter),
+          h('div', { class: 'gd-scroll' }, h('table', { class: 'gd-table' },
+            h('caption', { class: 'sr-only' }, `Bảng lương ${monthName(month)}`),
+            h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, 'Người'), h('th', { class: 'num', scope: 'col' }, 'Ngày công'), h('th', { class: 'num', scope: 'col' }, 'Tổng thu nhập'),
+              h('th', { class: 'num', scope: 'col' }, 'Bảo hiểm'), h('th', { class: 'num', scope: 'col' }, 'Thuế TNCN'), h('th', { class: 'num', scope: 'col' }, 'Thực lĩnh'))),
+            body)))
+      }
+
+      // ---- Tab: salary grades ----
+      function gradesTab() {
+        const grades = [...data.grades].sort((a, b) => b.coefficient - a.coefficient)
+        const top = Math.max(1, ...grades.map((g) => fullPay(g)))
+        const holders = (id) => data.profiles.filter((p) => p.grade_id === id).length
+        const form = h('form', { class: 'qt-form', id: 'grade-form' },
+          h('label', {}, 'Mã', h('input', { name: 'code', required: true, maxlength: 20, placeholder: 'CV-1' })),
+          h('label', {}, 'Tên bậc', h('input', { name: 'name', required: true, maxlength: 80, placeholder: 'Chuyên viên bậc 1' })),
+          h('label', {}, 'Hệ số', h('input', { name: 'coefficient', required: true, inputmode: 'decimal', placeholder: '2,34' })),
+          h('label', {}, 'Phụ cấp của bậc (đồng)', h('input', { name: 'allowance', type: 'number', min: 0, step: 1000, value: 0 })))
+        const preview = h('strong', {}, '—')
+        const coefficientOf = () => Number(String(form.coefficient.value).replace(',', '.'))
+        const refresh = () => {
+          const value = coefficientOf()
+          preview.textContent = value > 0 ? money(data.base_salary * value + (Number(form.allowance.value) || 0)) : '—'
+        }
+        form.addEventListener('input', refresh)
+        const submit = h('button', { type: 'submit' }, 'Lưu bậc lương')
+        form.addEventListener('submit', (event) => {
+          event.preventDefault()
+          act(submit, 'Đang lưu…', async () => {
+            await server('/api/bac-luong', { method: 'POST', body: { code: form.code.value, name: form.name.value, coefficient: coefficientOf(), allowance: Number(form.allowance.value) || 0 } })
+            const saved = form.code.value
+            form.reset()
+            refresh()
+            await load()
+            say(`Đã lưu bậc ${saved}.`)
+          })
+        })
+        const edit = (g) => {
+          form.code.value = g.code
+          form.name.value = g.name
+          form.coefficient.value = String(g.coefficient).replace('.', ',')
+          form.allowance.value = g.allowance
+          refresh()
+          form.name.focus()
+        }
+        const ladder = grades.length
+          ? h('ol', { class: 'qt-ladder', 'aria-label': 'Bậc lương từ cao xuống thấp' }, grades.map((g) => {
+              const pay = fullPay(g)
+              return h('li', { class: 'qt-rung' },
+                h('span', { class: 'qt-coef', title: 'Hệ số' }, num(g.coefficient, 2)),
+                h('div', { style: 'min-width:0' }, h('div', { class: 'gd-title' }, g.name), h('div', { class: 'gd-sub' }, `${g.code} · phụ cấp ${money(g.allowance)} · ${holders(g.id)} người`)),
+                h('div', { class: 'num', style: 'display:flex;align-items:center;gap:8px;justify-content:flex-end' },
+                  h('span', { title: 'Lương đủ công trước phụ cấp riêng' }, h('strong', {}, money(pay))),
+                  h('button', { type: 'button', class: 'gd-ghost', onclick: () => edit(g), 'aria-label': `Sửa bậc ${g.name}` }, 'Sửa')),
+                h('span', { class: 'gd-bar-track', 'aria-hidden': 'true' }, h('span', { class: 'gd-bar-fill', style: `width:${Math.round((pay / top) * 100)}%` })))
+            }))
+          : empty('Chưa có bậc lương', 'Thêm bậc đầu tiên ở khung bên cạnh.', 'trend')
+        return h('div', { class: 'gd-cols' },
+          panel('Thang bậc lương', 'trend', h('span', { class: 'gd-sub' }, `Lương cơ sở ${money(data.base_salary)}`), ladder),
+          panel('Thêm hoặc sửa bậc', 'plus', null, form,
+            h('div', { class: 'qt-preview' }, h('span', { class: 'gd-sub' }, 'Lương đủ công ước tính'), preview),
+            h('p', { class: 'gd-sub' }, 'Lương cơ sở × hệ số + phụ cấp của bậc. Nhập mã đã có thì bậc đó được cập nhật.'),
+            h('div', { class: 'qt-actions', style: 'margin-top:8px' }, submit, h('button', { type: 'button', class: 'gd-ghost', onclick: () => { form.reset(); refresh() } }, 'Xoá ô'))))
+      }
+
+      // ---- Tab: salary profiles ----
+      function profilesTab() {
+        const profileOf = (id) => data.profiles.find((p) => p.user_id === id)
+        const everyone = people?.length ? people : data.profiles.map((p) => ({ id: p.user_id, display_name: p.display_name }))
+        const list = h('ul', { class: 'qt-pick', 'aria-label': 'Danh sách người' })
+        const counter = h('span', { class: 'gd-sub' })
+        const title = h('span', {})
+        const shown = () => everyone.filter((u) => lower(u.display_name).includes(lower(personSearch)))
+        const countChosen = () => {
+          counter.textContent = `Đã chọn ${chosen.size}`
+          title.textContent = chosen.size ? `Áp dụng cho ${chosen.size} người` : 'Chọn người ở danh sách'
+          submit.disabled = !chosen.size || !data.grades.length
+          estimate()
+        }
+        const fillList = () => {
+          const rows = shown()
+          list.replaceChildren(...(rows.length ? rows.map((u) => {
+            const profile = profileOf(u.id)
+            const grade = profile ? gradeById(profile.grade_id) : null
+            return h('li', {}, h('label', {},
+              h('input', { type: 'checkbox', checked: chosen.has(u.id) ? true : null, onchange: (event) => { event.target.checked ? chosen.add(u.id) : chosen.delete(u.id); countChosen() } }),
+              avatar(u.display_name),
+              h('span', { class: 'gd-grow gd-title' }, u.display_name),
+              grade ? chip(grade.code, 'accent') : chip('Chưa có hồ sơ', 'muted')))
+          }) : [h('li', {}, empty('Không thấy ai', personSearch ? 'Thử tìm tên khác.' : 'Danh bạ chưa có người nào.', 'users'))]))
+        }
+        const form = h('form', { class: 'qt-form' },
+          h('label', {}, 'Bậc lương', h('select', { name: 'grade_id', required: true }, data.grades.map((g) => h('option', { value: g.id }, `${g.code} — ${g.name}`)))),
+          h('label', {}, 'Phụ cấp riêng (đồng)', h('input', { name: 'extra_allowance', type: 'number', min: 0, step: 1000, value: 0 })),
+          h('label', {}, 'Người phụ thuộc', h('input', { name: 'dependents', type: 'number', min: 0, step: 1, value: 0 })),
+          h('label', {}, 'Công chuẩn/tháng', h('input', { name: 'standard_days', type: 'number', min: 1, max: 31, step: 0.5, value: 22 })))
+        const preview = h('strong', {}, '—')
+        const estimate = () => { preview.textContent = money(fullPay(gradeById(Number(form.grade_id.value)), form.extra_allowance.value)) }
+        form.addEventListener('input', estimate)
+        const submit = h('button', { type: 'submit' }, 'Lưu hồ sơ lương')
+        form.addEventListener('submit', (event) => {
+          event.preventDefault()
+          const picked = everyone.filter((u) => chosen.has(u.id)).map((u) => ({ id: u.id, display_name: u.display_name }))
+          if (!picked.length) return say('Chọn ít nhất một người.', 'bad')
+          act(submit, 'Đang lưu…', async () => {
+            const result = await server('/api/ho-so-luong', { method: 'POST', body: {
+              grade_id: Number(form.grade_id.value), extra_allowance: Number(form.extra_allowance.value) || 0,
+              dependents: Number(form.dependents.value) || 0, standard_days: Number(form.standard_days.value) || 22, people: picked } })
+            chosen = new Set()
+            await load()
+            say(`Đã lưu hồ sơ lương cho ${result.saved} người.`)
+          })
+        })
+        const edit = (p) => {
+          chosen = new Set([p.user_id])
+          form.grade_id.value = p.grade_id
+          form.extra_allowance.value = p.extra_allowance
+          form.dependents.value = p.dependents
+          form.standard_days.value = p.standard_days
+          fillList()
+          countChosen()
+          form.grade_id.focus()
+        }
+        const search = h('input', { type: 'search', class: 'qt-search', placeholder: 'Tìm theo tên…', 'aria-label': 'Tìm người', value: personSearch, oninput: (event) => { personSearch = event.target.value; fillList(); fillTable() } })
+        const tableBody = h('tbody')
+        const fillTable = () => {
+          const rows = data.profiles.filter((p) => lower(p.display_name).includes(lower(personSearch)))
+          tableBody.replaceChildren(...rows.map((p) => {
+            const grade = gradeById(p.grade_id)
+            return h('tr', {},
+              h('td', {}, h('div', { class: 'qt-person' }, avatar(p.display_name), h('span', { class: 'gd-title' }, p.display_name))),
+              h('td', {}, grade ? chip(`${grade.code} · ${num(grade.coefficient, 2)}`, 'accent') : '—'),
+              h('td', { class: 'num' }, money(p.extra_allowance)),
+              h('td', { class: 'num' }, p.dependents),
+              h('td', { class: 'num' }, num(p.standard_days)),
+              h('td', { class: 'num' }, money(fullPay(grade, p.extra_allowance))),
+              h('td', { class: 'num' }, h('button', { type: 'button', class: 'gd-ghost', onclick: () => edit(p), 'aria-label': `Sửa hồ sơ lương của ${p.display_name}` }, 'Sửa')))
+          }))
+        }
+        fillList()
+        fillTable()
+        countChosen()
+        const shownAll = () => { for (const u of shown()) chosen.add(u.id); fillList(); countChosen() }
+        return [
+          !data.grades.length ? h('p', { class: 'gd-note tone-warn', style: 'margin:0 0 14px' }, icon('alert', 15), 'Chưa có bậc lương: thêm bậc ở mục Bậc lương trước.') : null,
+          h('div', { class: 'gd-cols' },
+            panel('Chọn người', 'users', counter,
+              h('div', { class: 'qt-toolbar' }, search,
+                h('button', { type: 'button', class: 'gd-ghost', onclick: shownAll }, 'Chọn tất cả đang hiện'),
+                h('button', { type: 'button', class: 'gd-ghost', onclick: () => { chosen = new Set(); fillList(); countChosen() } }, 'Bỏ chọn')),
+              people === null ? h('p', { class: 'gd-sub' }, 'Đang tải danh bạ…') : null,
+              list),
+            panel(title, 'settings', null, form,
+              h('div', { class: 'qt-preview' }, h('span', { class: 'gd-sub' }, 'Lương đủ công mỗi người'), preview),
+              h('p', { class: 'gd-sub' }, 'Người phụ thuộc dùng để giảm trừ khi tính thuế. Người đã có hồ sơ sẽ được cập nhật.'),
+              h('div', { class: 'qt-actions', style: 'margin-top:8px' }, submit))),
+          panel('Hồ sơ lương hiện có', 'file', h('span', { class: 'gd-sub' }, `${data.profiles.length} người`),
+            data.profiles.length
+              ? h('div', { class: 'gd-scroll' }, h('table', { class: 'gd-table' },
+                  h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, 'Người'), h('th', { scope: 'col' }, 'Bậc'), h('th', { class: 'num', scope: 'col' }, 'Phụ cấp riêng'),
+                    h('th', { class: 'num', scope: 'col' }, 'Phụ thuộc'), h('th', { class: 'num', scope: 'col' }, 'Công chuẩn'), h('th', { class: 'num', scope: 'col' }, 'Lương đủ công'), h('th', { scope: 'col' }, h('span', { class: 'sr-only' }, 'Thao tác')))),
+                  tableBody))
+              : empty('Chưa có hồ sơ lương', 'Chọn người, chọn bậc rồi lưu.', 'users')),
+        ]
+      }
+
+      // ---- Tab: KPI criteria ----
+      function kpiTab() {
+        if (!criteria || !criteriaDirty) criteria = data.criteria.map((c) => ({ name: c.name, weight: c.weight }))
+        const rows = h('div', {})
+        const sum = h('span', {})
+        const chart = h('div', {})
+        const submit = h('button', { type: 'button' }, 'Lưu tiêu chí')
+        const hint = h('p', { class: 'gd-sub', 'aria-live': 'polite' })
+        const totalWeight = () => Math.round(criteria.reduce((s, c) => s + (Number(c.weight) || 0), 0) * 100) / 100
+        const refresh = () => {
+          const total = totalWeight()
+          const good = Math.abs(total - 100) < 0.01
+          const named = criteria.every((c) => c.name.trim() && Number(c.weight) > 0)
+          sum.replaceChildren(chip(`Tổng ${num(total, 2)}%`, good ? 'ok' : 'warn', good ? 'check' : 'alert'))
+          chart.replaceChildren(stack([
+            ...criteria.map((c, i) => ({ label: c.name || `Tiêu chí ${i + 1}`, value: Number(c.weight) || 0, tone: SERIES[i % SERIES.length] })),
+            ...(total < 100 ? [{ label: 'Còn thiếu', value: 100 - total, tone: 'muted' }] : []),
+          ], { format: (v) => `${num(v, 2)}%` }))
+          submit.disabled = !good || !named || !criteria.length || !criteriaDirty
+          hint.textContent = !criteria.length ? 'Cần ít nhất một tiêu chí.' : !named ? 'Mỗi tiêu chí cần tên và trọng số lớn hơn 0.' : !good ? `Tổng trọng số phải bằng 100% (đang ${num(total, 2)}%${total > 100 ? ', thừa ' + num(total - 100, 2) : ', thiếu ' + num(100 - total, 2)}).` : criteriaDirty ? 'Có thay đổi chưa lưu.' : 'Đang dùng bộ tiêu chí này.'
+        }
+        const fillRows = () => {
+          rows.replaceChildren(...criteria.map((c, i) =>
+            h('div', { class: 'qt-crit' },
+              h('div', { class: `qt-name tone-${SERIES[i % SERIES.length]}` }, h('i', { class: 'gd-dot', 'aria-hidden': 'true' }),
+                h('input', { value: c.name, maxlength: 80, placeholder: 'Tên tiêu chí', 'aria-label': `Tên tiêu chí ${i + 1}`, oninput: (event) => { c.name = event.target.value; criteriaDirty = true; refresh() } })),
+              h('input', { type: 'number', min: 0, max: 100, step: 1, value: c.weight, 'aria-label': `Trọng số tiêu chí ${i + 1} (%)`, oninput: (event) => { c.weight = Number(event.target.value); criteriaDirty = true; refresh() } }),
+              h('button', { type: 'button', class: 'gd-ghost qt-icon-btn', 'aria-label': `Bỏ tiêu chí ${c.name || i + 1}`, title: 'Bỏ tiêu chí', onclick: () => { criteria.splice(i, 1); criteriaDirty = true; fillRows(); refresh() } }, '×'))))
+        }
+        const even = () => {
+          if (!criteria.length) return
+          const share = Math.floor((100 / criteria.length) * 100) / 100
+          criteria.forEach((c, i) => { c.weight = i === criteria.length - 1 ? Math.round((100 - share * (criteria.length - 1)) * 100) / 100 : share })
+          criteriaDirty = true
+          fillRows()
+          refresh()
+        }
+        submit.addEventListener('click', async () => {
+          if (!(await desktiny.confirm(`Lưu ${criteria.length} tiêu chí KPI? Các lần chấm sau sẽ dùng bộ tiêu chí mới.`))) return
+          act(submit, 'Đang lưu…', async () => {
+            await server('/api/tieu-chi', { method: 'POST', body: { items: criteria.map((c) => ({ name: c.name.trim(), weight: Number(c.weight) })) } })
+            criteriaDirty = false
+            await load()
+            say('Đã lưu tiêu chí KPI.')
+            desktiny.toast('Đã lưu tiêu chí.')
+          })
+        })
+        const scale = data.grade_scale || []
+        const spread = data.kpi
+        const result = panel('Kết quả đã chấm', 'star', spread.count ? h('span', { class: 'gd-sub' }, `${spread.count} hồ sơ · bình quân ${num(spread.average)} điểm`) : null,
+          spread.count
+            ? bars(scale.map((g, i) => ({ label: g.name, value: spread.grades[g.name] || 0, tone: GRADE_TONES[i] || 'muted', text: `${spread.grades[g.name] || 0}` })))
+            : empty('Chưa chấm hồ sơ nào', 'Quản lý chấm ở tab “Chấm điểm KPI” trong phiếu đánh giá.', 'star'))
+        const view = h('div', { class: 'gd-cols' },
+          panel('Tiêu chí và trọng số', 'settings', sum,
+            h('div', { style: 'margin-bottom:12px' }, chart),
+            rows,
+            hint,
+            h('div', { class: 'qt-actions', style: 'margin-top:8px' },
+              submit,
+              h('button', { type: 'button', class: 'gd-ghost', onclick: () => { criteria.push({ name: '', weight: 0 }); criteriaDirty = true; fillRows(); refresh(); rows.lastElementChild?.querySelector('input')?.focus() } }, icon('plus', 14), ' Thêm tiêu chí'),
+              h('button', { type: 'button', class: 'gd-ghost', onclick: even }, 'Chia đều'),
+              criteriaDirty ? h('button', { type: 'button', class: 'gd-ghost', onclick: () => { criteriaDirty = false; render() } }, 'Bỏ thay đổi') : null)),
+          result)
+        fillRows()
+        refresh()
+        return view
+      }
+
+      function render() {
+        header()
+        if (!data) return
+        const view = { luong: payrollTab, bac: gradesTab, 'ho-so': profilesTab, kpi: kpiTab }[tab]()
+        $('#main').replaceChildren(...[view].flat(Infinity).filter(Boolean))
+      }
+
+      async function load() {
+        $('#main').setAttribute('aria-busy', 'true')
+        if (!data) $('#main').replaceChildren(h('div', { class: 'gd-stats' }, [1, 2, 3, 4].map(() => h('div', { class: 'gd-stat' }, skeleton(2, 16)))))
+        try {
+          data = await server(`/api/quan-tri?thang=${month}`)
+          render()
+        } catch (error) {
+          header()
+          say(error.message, 'bad')
+        } finally {
+          $('#main').setAttribute('aria-busy', 'false')
+        }
+      }
+      header()
       load()
-      people()
+      server('/api/nguoi').then((list) => { people = list.items }, () => { people = [] }).finally(() => { if (data && tab === 'ho-so') render() })
     </script>
   </body>
 </html>
