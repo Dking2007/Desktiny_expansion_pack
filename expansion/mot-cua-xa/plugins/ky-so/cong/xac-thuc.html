@@ -5,33 +5,404 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
     <title>Xác thực chữ ký</title>
+    <!-- The shared kit, next to the plugin's pages (relative, so it also works behind a reverse-proxy prefix). -->
+    <link rel="stylesheet" href="../ui/chung.css" />
+    <link rel="stylesheet" href="../ui/giao-dien.css" />
     <style>
-      body { max-width: 640px; margin: 40px auto; padding: 0 16px; font: 15px/1.6 system-ui, sans-serif; color: #0f172a; }
-      input, button { font: inherit; padding: 8px 10px; }
-      .ok { color: #15803d; } .bad { color: #b91c1c; } code { word-break: break-all; }
+      /* Outside Desktiny no theme arrives: this page brings its own calm colours, light and dark. */
+      :root {
+        --dk-navy: #1c2330;
+        --dk-muted: #5d6573;
+        --dk-surface: #ffffff;
+        --dk-surface-2: #f6f5f2;
+        --dk-canvas: #f1efea;
+        --dk-border: #e2ded6;
+        --dk-teal: #1e3a5f;
+        --dk-teal-strong: #162c49;
+        --dk-teal-soft: #e8eef6;
+        --dk-teal-ink: #1e3a5f;
+        --dk-green-ink: #17803d;
+        --dk-red: #b42318;
+      }
+      :root[data-theme='dark'] {
+        --dk-navy: #e7e9ee;
+        --dk-muted: #a3abb8;
+        --dk-surface: #191d24;
+        --dk-surface-2: #20252e;
+        --dk-canvas: #111419;
+        --dk-border: #313844;
+        --dk-teal: #8fb4e3;
+        --dk-teal-strong: #b5cff0;
+        --dk-teal-soft: #1e2a3b;
+        --dk-teal-ink: #b5cff0;
+        --dk-green-ink: #6fd49a;
+        --dk-red: #f2867a;
+      }
+      html {
+        background: var(--gd-canvas);
+      }
+      body {
+        max-width: 620px;
+        margin: 0 auto;
+        padding: 40px 16px 48px;
+        background: var(--gd-canvas);
+      }
+      button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: var(--gd-surface);
+      }
+      input,
+      button {
+        box-sizing: border-box;
+        max-width: 100%;
+      }
+      .vt-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+        color: var(--gd-muted);
+        font-family: var(--gd-display);
+        font-size: 13.5px;
+        font-weight: 600;
+      }
+      .vt-brand span:first-child {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: var(--gd-accent-soft);
+        color: var(--gd-accent-ink);
+      }
+      h1 {
+        margin: 0 0 6px;
+        font-size: 28px;
+        line-height: 1.2;
+      }
+      .vt-lead {
+        margin: 0 0 22px;
+        color: var(--gd-muted);
+      }
+      .vt-form {
+        display: grid;
+        gap: 8px;
+        padding: 18px;
+        border: 1px solid var(--gd-border);
+        border-radius: 12px;
+        background: var(--gd-surface);
+      }
+      .vt-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .vt-row input {
+        flex: 1 1 240px;
+        min-width: 0;
+        padding: 11px 14px;
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 20px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .vt-row input::placeholder {
+        font-family: var(--gd-font);
+        font-size: 15px;
+        letter-spacing: 0;
+        text-transform: none;
+      }
+      .vt-row button {
+        flex: 0 0 auto;
+        padding: 11px 20px;
+        font-size: 15px;
+      }
+      .gd-note > svg {
+        flex: none;
+        margin-top: 3px;
+      }
+      #out {
+        margin-top: 26px;
+      }
+      .vt-doc {
+        min-height: 220px;
+      }
+      .vt-doc-top {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 4px 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--gd-border);
+        font-family: var(--gd-display);
+        font-size: 13px;
+      }
+      .vt-doc-top strong {
+        font-weight: 700;
+      }
+      .vt-doc-top span {
+        color: var(--gd-muted);
+      }
+      .vt-doc dl {
+        display: grid;
+        grid-template-columns: max-content minmax(0, 1fr);
+        gap: 10px 18px;
+        margin: 16px 0 0;
+        padding-right: 118px;
+      }
+      .vt-doc dt {
+        color: var(--gd-muted);
+        font-size: 13.5px;
+      }
+      .vt-doc dd {
+        margin: 0;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+      }
+      .vt-hash {
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 12.5px;
+        font-weight: 500;
+        line-height: 1.6;
+        word-spacing: 0.3em;
+      }
+      .vt-seal {
+        position: absolute;
+        top: 58px;
+        right: 18px;
+      }
+      .vt-seal .gd-seal {
+        animation: vt-stamp 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+      }
+      @keyframes vt-stamp {
+        from {
+          opacity: 0;
+          transform: scale(1.7) rotate(-22deg);
+        }
+        to {
+          opacity: 0.88;
+          transform: scale(1) rotate(-9deg);
+        }
+      }
+      .gd-seal.tone-bad {
+        border-color: var(--gd-son);
+        color: var(--gd-son);
+      }
+      .vt-compare {
+        display: grid;
+        gap: 10px;
+        margin-top: 18px;
+        padding: 16px 18px;
+        border: 1px solid var(--gd-border);
+        border-radius: 12px;
+        background: var(--gd-surface);
+      }
+      .vt-compare h2 {
+        margin: 0;
+        font-size: 15px;
+      }
+      .vt-compare p {
+        margin: 0;
+      }
+      .vt-file {
+        position: relative;
+        justify-self: start;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border: 1px solid var(--gd-border);
+        border-radius: 8px;
+        background: var(--gd-surface);
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .vt-file:focus-within {
+        outline: 2px solid var(--gd-accent);
+        outline-offset: 2px;
+      }
+      .vt-file input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+      }
+      .vt-foot {
+        margin-top: 28px;
+        color: var(--gd-muted);
+        font-size: 13px;
+      }
+      @media (max-width: 520px) {
+        body {
+          padding-top: 24px;
+        }
+        h1 {
+          font-size: 23px;
+        }
+        .vt-doc dl {
+          grid-template-columns: 1fr;
+          gap: 2px;
+          padding-right: 0;
+        }
+        .vt-doc dd {
+          margin-bottom: 8px;
+        }
+        .vt-seal {
+          position: static;
+          display: flex;
+          justify-content: flex-end;
+          margin: -6px 0 -4px;
+        }
+        .vt-row button {
+          flex: 1 1 100%;
+        }
+      }
     </style>
   </head>
   <body>
-    <h1>Xác thực chữ ký văn bản</h1>
-    <p>Nhập mã xác thực in trên phiếu xác nhận ký số. Đối chiếu SHA-256 với tệp bạn đang có để chắc đó là đúng tệp đã ký.</p>
-    <form id="form"><input id="code" required maxlength="20" placeholder="Mã xác thực" /> <button>Kiểm tra</button></form>
+    <div class="vt-brand"><span id="brand-icon"></span><span>Trang xác thực văn bản ký số</span></div>
+    <h1>Kiểm tra mã xác thực</h1>
+    <p class="vt-lead">Nhập mã in trên phiếu xác nhận ký số để biết ai đã ký tệp nào, vào lúc nào, và chữ ký còn hợp lệ không.</p>
+
+    <form class="vt-form" id="form">
+      <label for="code">Mã xác thực</label>
+      <div class="vt-row">
+        <input id="code" name="ma" required maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Ví dụ: 3F9A 0C1B 77D2" aria-describedby="code-hint" />
+        <button type="submit" id="go">Kiểm tra</button>
+      </div>
+      <span class="gd-sub" id="code-hint">Mã gồm 12 chữ và số; khoảng trắng không quan trọng.</span>
+    </form>
+
     <div id="out" aria-live="polite"></div>
-    <script>
-      const out = document.getElementById('out')
-      document.getElementById('form').addEventListener('submit', async (event) => {
+
+    <p class="vt-foot">Trang này chỉ đọc thông tin ký đã lưu, không lưu mã bạn nhập. Tệp bạn chọn để đối chiếu được tính ngay trên máy của bạn, không gửi đi đâu.</p>
+
+    <script type="module">
+      // A public page outside Desktiny: plain DOM, no frame SDK.
+      const $ = (selector) => document.querySelector(selector)
+      function h(tag, attributes = {}, ...children) {
+        const element = document.createElement(tag)
+        for (const [key, value] of Object.entries(attributes || {})) {
+          if (value === false || value === null || value === undefined) continue
+          if (key.startsWith('on')) element.addEventListener(key.slice(2), value)
+          else element.setAttribute(key, value === true ? '' : String(value))
+        }
+        for (const child of children.flat()) {
+          if (child === null || child === undefined || child === false) continue
+          element.append(child instanceof Node ? child : document.createTextNode(String(child)))
+        }
+        return element
+      }
+      const SVG = 'http://www.w3.org/2000/svg'
+      function icon(paths, size = 16) {
+        const svg = document.createElementNS(SVG, 'svg')
+        for (const [k, v] of Object.entries({ width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 1.9, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true' })) svg.setAttribute(k, v)
+        for (const d of paths) {
+          const path = document.createElementNS(SVG, 'path')
+          path.setAttribute('d', d)
+          svg.append(path)
+        }
+        return svg
+      }
+      const SHIELD = ['M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6l8-3z', 'M8.5 12l2.5 2.5 4.5-5']
+      const ALERT = ['M12 3 2 20h20L12 3z', 'M12 10v4', 'M12 17.5v.5']
+      const CHECK = ['M5 12.5 10 17 19 7']
+      const FILE = ['M6 3h8l4 4v14H6z', 'M14 3v4h4']
+
+      // Follow the reader's light or dark setting (giao-dien.css keys its dark tones on data-theme).
+      const dark = matchMedia('(prefers-color-scheme: dark)')
+      const theme = () => (document.documentElement.dataset.theme = dark.matches ? 'dark' : 'light')
+      theme()
+      dark.addEventListener('change', theme)
+      $('#brand-icon').append(icon(SHIELD, 18))
+
+      const clean = (value) => value.replace(/[^0-9a-z]/gi, '').toUpperCase()
+      const grouped = (code) => code.match(/.{1,4}/g)?.join(' ') ?? ''
+      const MONTH = (iso) => `${iso.slice(11, 16)}, ngày ${Number(iso.slice(8, 10))} tháng ${Number(iso.slice(5, 7))} năm ${iso.slice(0, 4)}`
+      const seal = (text, sub, tone) => h('span', { class: `gd-seal tone-${tone}`, role: 'img', 'aria-label': sub ? `${text}, ${sub}` : text }, h('span', { 'aria-hidden': 'true' }, text, sub ? h('small', {}, sub) : null))
+      const note = (tone, paths, ...text) => h('p', { class: `gd-note tone-${tone}`, role: tone === 'bad' ? 'alert' : null }, icon(paths, 15), h('span', {}, ...text))
+
+      function result(code, data) {
+        const day = `${data.signed_at.slice(8, 10)}/${data.signed_at.slice(5, 7)}/${data.signed_at.slice(0, 4)}`
+        const doc = h('article', { class: 'gd-doc vt-doc', 'aria-label': 'Phiếu xác nhận ký số' },
+          h('div', { class: 'vt-doc-top' }, h('strong', {}, 'Phiếu xác nhận ký số'), h('span', {}, `Mã ${grouped(code)}`)),
+          h('div', { class: 'vt-seal' }, data.valid ? seal('Chữ ký hợp lệ', day, 'ok') : seal('Không hợp lệ', 'chữ ký không khớp', 'bad')),
+          h('dl', {},
+            h('dt', {}, 'Tệp đã ký'), h('dd', {}, data.file_name),
+            h('dt', {}, 'Người ký'), h('dd', {}, data.signer),
+            h('dt', {}, 'Thời điểm ký'), h('dd', {}, MONTH(data.signed_at)),
+            h('dt', {}, 'Dấu vân tay SHA-256'), h('dd', { class: 'vt-hash' }, data.sha256.match(/.{1,8}/g).join(' '))))
+        const verdict = data.valid
+          ? note('ok', CHECK, 'Chữ ký khớp với khoá ký của cơ quan: thông tin trên phiếu đúng như lúc ký.')
+          : note('bad', ALERT, 'Chữ ký không khớp với khoá ký của cơ quan. Thông tin ký có thể đã bị sửa, hoặc cơ quan đã đổi khoá. Hãy liên hệ cơ quan ban hành trước khi dùng văn bản này.')
+        $('#out').replaceChildren(doc, verdict, compare(data.sha256))
+      }
+
+      // Hash the reader's own copy in the browser and compare it with the fingerprint taken at signing.
+      function compare(expected) {
+        const outcome = h('div', { 'aria-live': 'polite' })
+        const supported = Boolean(globalThis.crypto?.subtle)
+        const pick = h('input', { type: 'file', 'aria-label': 'Chọn tệp để đối chiếu' })
+        pick.addEventListener('change', async () => {
+          const file = pick.files?.[0]
+          if (!file) return
+          outcome.replaceChildren(h('p', { class: 'gd-sub' }, `Đang tính dấu vân tay của ${file.name}…`))
+          try {
+            const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer())
+            const hex = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('')
+            outcome.replaceChildren(hex === expected
+              ? note('ok', CHECK, h('strong', {}, file.name), ' trùng khớp: đây đúng là tệp đã được ký.')
+              : note('bad', ALERT, h('strong', {}, file.name), ' không khớp: tệp này khác tệp đã ký (có thể đã bị sửa, hoặc là tệp khác).'))
+          } catch {
+            outcome.replaceChildren(note('bad', ALERT, 'Không đọc được tệp này.'))
+          }
+        })
+        return h('section', { class: 'vt-compare', 'aria-labelledby': 'compare-title' },
+          h('h2', { id: 'compare-title' }, 'Đối chiếu với tệp bạn đang có'),
+          supported
+            ? [h('p', { class: 'gd-sub' }, 'Chọn tệp bạn nhận được; trang tính dấu vân tay của tệp ngay trên máy bạn và so với dấu vân tay lúc ký.'),
+                h('label', { class: 'vt-file' }, icon(FILE, 16), 'Chọn tệp', pick), outcome]
+            : h('p', { class: 'gd-sub' }, 'Trình duyệt này không tự tính được dấu vân tay. Hãy tính SHA-256 của tệp bằng công cụ khác và so với dãy ở trên.'))
+      }
+
+      async function check(raw) {
+        const code = clean(raw)
+        if (!code) return
+        $('#go').disabled = true
+        $('#out').replaceChildren(h('div', { class: 'gd-skeleton', style: 'height:220px;border-radius:4px', 'aria-hidden': 'true' }))
+        try {
+          const response = await fetch('../xac-thuc/' + encodeURIComponent(code))
+          const data = await response.json().catch(() => ({}))
+          if (response.status === 404) {
+            $('#out').replaceChildren(note('bad', ALERT, h('strong', {}, `Không có mã ${grouped(code)}. `), 'Kiểm tra lại từng ký tự trên phiếu (chữ O và số 0, chữ B và số 8 dễ nhầm). Nếu vẫn không thấy, văn bản này không có trong sổ ký của cơ quan.'))
+          } else if (!response.ok) {
+            $('#out').replaceChildren(note('bad', ALERT, data.message || `Không kiểm tra được (lỗi ${response.status}). Thử lại sau.`))
+          } else {
+            result(code, data)
+          }
+          history.replaceState(null, '', `?ma=${code}`)
+        } catch {
+          $('#out').replaceChildren(note('bad', ALERT, 'Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.'))
+        } finally {
+          $('#go').disabled = false
+        }
+      }
+
+      $('#form').addEventListener('submit', (event) => {
         event.preventDefault()
-        const response = await fetch('../xac-thuc/' + encodeURIComponent(document.getElementById('code').value.trim()))
-        const data = await response.json()
-        out.replaceChildren()
-        const line = (label, value) => { const p = document.createElement('p'); p.append(label + ': '); const c = document.createElement('code'); c.textContent = value; p.append(c); out.append(p) }
-        if (!response.ok) { const p = document.createElement('p'); p.className = 'bad'; p.textContent = data.message; return out.append(p) }
-        const head = document.createElement('p')
-        head.className = data.valid ? 'ok' : 'bad'
-        head.textContent = data.valid ? 'Chữ ký hợp lệ.' : 'Chữ ký KHÔNG hợp lệ.'
-        out.append(head)
-        line('Tệp', data.file_name); line('Người ký', data.signer); line('Thời điểm', data.signed_at); line('SHA-256', data.sha256)
+        check($('#code').value)
       })
+      // A link or QR code can carry the code: ?ma=3F9A0C1B77D2.
+      const given = new URLSearchParams(location.search).get('ma')
+      if (given) {
+        $('#code').value = grouped(clean(given))
+        check(given)
+      }
     </script>
   </body>
 </html>

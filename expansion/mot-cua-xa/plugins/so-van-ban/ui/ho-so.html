@@ -7,25 +7,85 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Số văn bản của hồ sơ</title>
     <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <link rel="stylesheet" href="so-van-ban.css" />
+    <style>
+      body {
+        padding-top: 12px;
+      }
+      .hs-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 4px 12px;
+        margin-bottom: 6px;
+      }
+      .hs-head h1 {
+        margin: 0;
+        font-size: 16px;
+      }
+      .hs-list > li {
+        align-items: flex-start;
+        gap: 16px;
+        padding: 14px 2px;
+      }
+      .hs-list .sv-no {
+        font-size: 22px;
+      }
+      .hs-meta {
+        margin: 2px 0 0;
+        color: var(--gd-muted);
+        font-size: 13px;
+      }
+      .hs-summary {
+        margin: 4px 0 0;
+      }
+      .hs-reason {
+        margin: 4px 0 0;
+        color: var(--gd-son);
+        font-size: 13px;
+      }
+    </style>
   </head>
   <body>
-    <table>
-      <thead><tr><th>Số, ký hiệu</th><th>Sổ</th><th>Ngày</th><th>Trích yếu</th><th>Người cấp</th></tr></thead>
-      <tbody id="rows"><tr><td colspan="5" class="muted">Đang tải…</td></tr></tbody>
-    </table>
+    <div class="hs-head">
+      <h1>Số văn bản của hồ sơ</h1>
+      <span class="gd-sub" id="count"></span>
+    </div>
+    <div id="out" aria-live="polite" aria-busy="true"></div>
     <script type="module">
       import { $, desktiny, h, server } from './mo-rong.js'
-      const context = await desktiny.context
+      import { chip, empty, icon, skeleton } from './bieu-do.js'
+      import { dayOf, numberMark, thumb, timeOf } from './van-ban.js'
+
+      $('#out').replaceChildren(skeleton(3, 16))
       try {
+        const context = await desktiny.context
         const data = await server(`/api/ho-so/${context.record.case_id}`)
-        const names = Object.fromEntries(data.books.map((b) => [b.code, b.name]))
-        $('#rows').replaceChildren(
-          ...(data.entries.length
-            ? data.entries.map((e) => h('tr', { class: e.state === 'cancelled' ? 'muted' : '' }, h('td', {}, e.full_number, e.state === 'cancelled' ? ' (đã huỷ)' : ''), h('td', {}, names[e.book] ?? e.book), h('td', {}, e.issued_at.slice(0, 10)), h('td', {}, e.summary), h('td', {}, e.issued_by)))
-            : [h('tr', {}, h('td', { colspan: 5, class: 'muted' }, 'Hồ sơ chưa được cấp số văn bản nào.'))]),
+        const books = Object.fromEntries(data.books.map((b) => [b.code, b]))
+        const live = data.entries.filter((e) => e.state !== 'cancelled').length
+        $('#count').textContent = data.entries.length ? `${live} số đang dùng${data.entries.length > live ? `, ${data.entries.length - live} số đã huỷ` : ''}` : ''
+        $('#out').replaceChildren(
+          data.entries.length
+            ? h('ul', { class: 'gd-list hs-list' },
+                [...data.entries].reverse().map((e) => {
+                  const book = books[e.book]
+                  const cancelled = e.state === 'cancelled'
+                  return h('li', {},
+                    thumb(book?.symbol || e.book, cancelled),
+                    h('div', { class: 'gd-grow' },
+                      h('div', {}, numberMark(e.full_number, { cancelled }), ' ', cancelled ? chip('Đã huỷ', 'bad') : null),
+                      h('p', { class: 'hs-meta' }, `${book?.name ?? e.book}, cấp ngày ${dayOf(e.issued_at)} lúc ${timeOf(e.issued_at)}, ${e.issued_by}`),
+                      e.summary ? h('p', { class: 'hs-summary' }, e.summary) : null,
+                      cancelled ? h('p', { class: 'hs-reason' }, `Lý do huỷ: ${e.cancel_reason || 'không ghi'}`) : null))
+                }))
+            : empty('Hồ sơ chưa có số văn bản', 'Dùng nút “Cấp số văn bản” trên hồ sơ, hoặc bước cấp số trong quy trình.'),
         )
       } catch (error) {
-        $('#rows').replaceChildren(h('tr', {}, h('td', { colspan: 5, class: 'bad' }, error.message)))
+        $('#out').replaceChildren(h('p', { class: 'gd-note tone-bad', role: 'alert' }, icon('alert', 15), error.message))
+      } finally {
+        $('#out').setAttribute('aria-busy', 'false')
       }
     </script>
   </body>

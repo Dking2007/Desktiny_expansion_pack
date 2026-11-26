@@ -9,6 +9,8 @@
 * Desktiny then tells the plugin about that dossier (submitted, at a step, sent back, approved, rejected, closed);
   the plugin reads its tracking code and keeps the request's status.
 * /cong/tra-cuu.html: the code and the secret show the status and its dates, never the dossier's content.
+* Each default procedure has a short guide for the citizen (papers to bring, usual time); the usual time gives an
+  expected return date counted in working days (weekends only: holidays are not known here, so it is indicative).
 
 The plugin's server must be reachable from outside for the two public pages; Desktiny itself stays inside.
 """
@@ -22,7 +24,7 @@ import secrets
 import sys
 import time
 from collections import deque
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -57,8 +59,40 @@ STATUS = {
 }
 EVENT_STATUS = {"case.submitted": "processing", "case.step_entered": "processing", "case.needs_revision": "needs_revision",
                 "case.approved": "approved", "case.rejected": "rejected"}  # fmt: skip
+# What a citizen reads before choosing: papers to bring and the usual time, in working days for the expected date
+# (None: no date can be promised). Reference only, like the pack's knowledge; keyed by the names in
+# `danh_sach_thu_tuc`, so a procedure the organisation adds without an entry here simply shows no guide.
+GUIDE = {
+    "Đăng ký khai sinh": {"thoi_han": "Trong ngày làm việc nếu đủ giấy tờ", "ngay": 1, "giay_to": [
+        "Giấy chứng sinh (bản chính) hoặc giấy tờ thay giấy chứng sinh", "Căn cước của người đi đăng ký",
+        "Giấy chứng nhận kết hôn của cha mẹ (nếu có)"]},
+    "Đăng ký kết hôn": {"thoi_han": "Trong ngày; cần xác minh thì lâu hơn", "ngay": 1, "giay_to": [
+        "Căn cước của hai bên", "Giấy xác nhận tình trạng hôn nhân, nếu một bên không thường trú tại xã",
+        "Hai bên cùng có mặt khi nhận giấy chứng nhận"]},
+    "Chứng thực bản sao từ bản chính": {"thoi_han": "Trong ngày; nộp sau 15 giờ thì ngày làm việc tiếp theo", "ngay": 1,
+                                        "giay_to": ["Bản chính giấy tờ cần chứng thực", "Bản sao cần chứng thực, nếu đã tự sao",
+                                                    "Căn cước của người yêu cầu"]},
+    "Xác nhận tình trạng hôn nhân": {"thoi_han": "Khoảng 3 ngày làm việc", "ngay": 3, "giay_to": [
+        "Căn cước của người yêu cầu", "Giấy tờ chứng minh đã ly hôn hoặc vợ, chồng đã mất (nếu có)"]},
+    "Đăng ký khai tử": {"thoi_han": "Trong ngày làm việc", "ngay": 1, "giay_to": [
+        "Giấy báo tử hoặc giấy tờ thay giấy báo tử", "Căn cước của người đi khai tử"]},
+    "Đề nghị hoà giải": {"thoi_han": "Thường trong 15 ngày; tổ hoà giải sẽ hẹn ngày", "ngay": None, "giay_to": [
+        "Căn cước của người yêu cầu", "Giấy tờ liên quan đến việc tranh chấp (nếu có)"]},
+}  # fmt: skip
 ID_NUMBER = re.compile(r"^\d{12}$")
 PHONE = re.compile(r"^(0|\+84)\d{9,10}$")
+
+
+def expected(procedure: str, filed: str) -> str | None:
+    """The expected return date ('YYYY-MM-DD'): the procedure's usual working days after the day it was filed."""
+    days = (GUIDE.get(procedure) or {}).get("ngay")
+    if not days:
+        return None
+    day = date.fromisoformat(filed[:10])
+    while days:
+        day += timedelta(days=1)
+        days -= day.weekday() < 5
+    return day.isoformat()
 
 
 class Window:
@@ -115,7 +149,9 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
             app.desktiny.send_event("ho_so_truc_tuyen", {"ma_tra_cuu": code, "thu_tuc": procedure, "ho_ten": name,
                                                          "so_cccd": id_number, "so_dien_thoai": phone, "dia_chi": address,
                                                          "noi_dung": content[:1000]}, key=f"nop:{code}")  # fmt: skip
-        return {"ma_tra_cuu": code, "ma_bi_mat": secret, "thu_tuc": procedure}
+        filed = stamp()
+        return {"ma_tra_cuu": code, "ma_bi_mat": secret, "thu_tuc": procedure, "ngay_nop": filed,
+                "hen_tra": expected(procedure, filed), "giay_to": (GUIDE.get(procedure) or {}).get("giay_to", [])}  # fmt: skip
 
     # ---- Public pages ---------------------------------------------------------------------------
 
@@ -124,7 +160,8 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
         challenge_id, a, b = secrets.token_hex(8), random.randint(1, 9), random.randint(1, 9)
         db.run("DELETE FROM challenges WHERE created < ?", time.time() - 1800)
         db.run("INSERT INTO challenges (id, answer, created) VALUES (?, ?, ?)", challenge_id, a + b, time.time())
-        return {"co_quan": config()["ten_co_quan"], "thu_tuc": procedures(),
+        guide = {p: {"thoi_han": GUIDE[p]["thoi_han"], "giay_to": GUIDE[p]["giay_to"]} for p in procedures() if p in GUIDE}
+        return {"co_quan": config()["ten_co_quan"], "thu_tuc": procedures(), "huong_dan": guide,
                 "cau_hoi": {"id": challenge_id, "noi_dung": f"{a} cộng {b} bằng mấy?"}}  # fmt: skip
 
     @app.route("POST", "/cong/api/nop")
@@ -146,7 +183,11 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
         return {
             "ma_tra_cuu": row["code"], "thu_tuc": row["procedure"], "ngay_nop": row["created_at"][:10],
             "trang_thai": STATUS.get(row["status"], row["status"]), "ma_ho_so": row["case_code"], "buoc": row["step"],
-            "lich_su": [{"trang_thai": STATUS.get(h["status"], h["status"]), "luc": h["at"], "ghi_chu": h["note"]}
+            # For the page's timeline and stamp: the status key, the expected date and the office's name; still
+            # nothing about the person or the dossier's content.
+            "trang_thai_ma": row["status"], "hen_tra": expected(row["procedure"], row["created_at"]),
+            "co_quan": config()["ten_co_quan"],
+            "lich_su": [{"trang_thai": STATUS.get(h["status"], h["status"]), "luc": h["at"], "ghi_chu": h["note"], "ma": h["status"]}
                         for h in db.all("SELECT * FROM history WHERE code = ? ORDER BY id", row["code"])],
         }  # fmt: skip
 
@@ -189,15 +230,21 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
     def for_case(request):
         case = app.as_viewer(request).case(request.params["case_id"])
         code = str((case.get("payload") or {}).get("ma_tra_cuu") or "").strip().upper()
-        row = db.one("SELECT code, procedure, source, status, created_at FROM requests WHERE code = ?", code)
-        return {"request": {**row, "status_label": STATUS.get(row["status"])} if row else None}
+        row = db.one("SELECT code, procedure, full_name, phone, address, content, source, status, created_at, updated_at "
+                     "FROM requests WHERE code = ?", code)  # fmt: skip
+        if not row:
+            return {"request": None}
+        history = db.all("SELECT status, at FROM history WHERE code = ? ORDER BY id", code)
+        return {"request": {**row, "status_label": STATUS.get(row["status"]), "expected": expected(row["procedure"], row["created_at"]),
+                            "history": [{**h, "label": STATUS.get(h["status"], h["status"])} for h in history]}}  # fmt: skip
 
     @app.route("GET", "/api/quan-tri", admin=True)
     def overview(request):
         status = request.query.get("trang_thai")
-        sql = "SELECT code, procedure, full_name, phone, source, status, case_code, created_at FROM requests"
+        sql = "SELECT code, procedure, full_name, phone, source, status, case_id, case_code, created_at, updated_at FROM requests"
         rows = db.all(sql + (" WHERE status = ?" if status else "") + " ORDER BY created_at DESC LIMIT 500", *([status] if status else []))
-        return {"items": [{**r, "status_label": STATUS.get(r["status"])} for r in rows], "statuses": STATUS}
+        items = [{**r, "status_label": STATUS.get(r["status"]), "expected": expected(r["procedure"], r["created_at"])} for r in rows]
+        return {"items": items, "statuses": STATUS, "today": now().date().isoformat()}
 
     return app
 

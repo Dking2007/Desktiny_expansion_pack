@@ -7,43 +7,261 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Văn bản chờ ký</title>
     <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <link rel="stylesheet" href="ky-so.css" />
+    <style>
+      .ck-side {
+        display: grid;
+        justify-items: end;
+        gap: 8px;
+      }
+      .ck-layout {
+        display: grid;
+        grid-template-columns: minmax(250px, 340px) minmax(0, 1fr);
+        gap: 22px;
+        align-items: start;
+      }
+      .ck-queue {
+        display: grid;
+        gap: 2px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .ck-item {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: start;
+        gap: 12px;
+        width: 100%;
+        padding: 10px;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        background: transparent;
+        color: var(--gd-ink);
+        font-weight: 400;
+        text-align: left;
+      }
+      .ck-item:hover {
+        background: var(--gd-surface-2);
+      }
+      .ck-item[aria-current='true'] {
+        border-color: var(--gd-accent);
+        background: var(--gd-accent-soft);
+      }
+      .ck-item strong {
+        display: -webkit-box;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        font-weight: 650;
+        line-height: 1.35;
+      }
+      .ck-item .gd-sub {
+        display: block;
+        margin-top: 3px;
+      }
+      .ck-item .gd-chip {
+        margin-top: 6px;
+      }
+      .ck-sign {
+        display: grid;
+        gap: 14px;
+        margin-top: 18px;
+      }
+      .ck-refuse {
+        display: grid;
+        gap: 8px;
+      }
+      .ck-refuse[hidden] {
+        display: none;
+      }
+      .ck-refuse textarea {
+        width: 100%;
+      }
+      .ck-done {
+        display: grid;
+        gap: 10px;
+        margin-top: 18px;
+      }
+      .ck-done p {
+        margin: 0;
+      }
+      @media (max-width: 760px) {
+        .ck-layout {
+          grid-template-columns: 1fr;
+        }
+        .ck-side {
+          justify-items: start;
+        }
+      }
+    </style>
   </head>
   <body>
-    <h1>Văn bản chờ ký</h1>
-    <div id="pin"></div>
-    <p id="status" aria-live="polite"></p>
-    <div id="list"></div>
+    <header class="gd-hero">
+      <div>
+        <h1>Văn bản chờ ký</h1>
+        <p id="lead">Đang tải…</p>
+      </div>
+      <div class="ck-side" id="side"></div>
+    </header>
+    <div id="setup"></div>
+    <main id="main" aria-busy="true"></main>
+
     <script type="module">
-      import { $, desktiny, h, server, show } from './mo-rong.js'
-      import { pinBox } from './pin.js'
-      const status = $('#status')
-      async function load() {
-        if (!(await pinBox($('#pin')))) return
-        const data = await server('/api/cho-ky')
-        if (!data.items.length) return $('#list').replaceChildren(h('p', { class: 'muted' }, 'Không có văn bản nào chờ bạn ký.'))
-        $('#list').replaceChildren(...data.items.map((item) => {
-          const boxes = item.files.map((f) => h('label', { class: 'row', style: 'font-weight: 400' }, h('input', { type: 'checkbox', value: f.id, checked: true }), f.name))
-          const pin = h('input', { type: 'password', inputmode: 'numeric', placeholder: 'PIN' })
-          const reason = h('input', { placeholder: 'Lý do (khi từ chối)', maxlength: 300 })
-          const decide = async (refuse) => {
-            try {
-              const ids = boxes.map((b) => b.querySelector('input')).filter((i) => i.checked).map((i) => i.value)
-              if (!refuse && !(await desktiny.confirm(`Ký ${ids.length} tệp của hồ sơ “${item.title}”?`))) return
-              const result = await server(`/api/cho-ky/${item.call_id}`, { method: 'POST', body: { pin: pin.value, file_ids: ids, tu_choi: refuse, ly_do: reason.value } })
-              desktiny.toast(refuse ? 'Đã từ chối ký.' : `Đã ký ${result.signed} tệp.`)
-              load()
-            } catch (error) {
-              show(status, error.message, 'bad')
-            }
-          }
-          return h('div', { class: 'card', style: 'margin-bottom: 10px' },
-            h('div', { class: 'row' }, h('strong', {}, item.title), h('span', { class: 'muted' }, `từ ${item.created_at.slice(0, 16).replace('T', ' ')}`),
-              h('a', { href: '#', onclick: (e) => { e.preventDefault(); desktiny.navigate(`/cases/${item.case_id}`) } }, 'Mở hồ sơ')),
-            item.reason ? h('p', { class: 'muted' }, item.reason) : null, ...boxes,
-            h('div', { class: 'row' }, pin, h('button', { type: 'button', onclick: () => decide(false) }, 'Ký'), reason, h('button', { type: 'button', class: 'secondary', onclick: () => decide(true) }, 'Từ chối')))
-        }))
+      import { $, desktiny, h, server } from './mo-rong.js'
+      import { chip, daysUntil, empty, icon, leaf, skeleton } from './bieu-do.js'
+      import { dayOf, fileList, grouped, pinField, pinSetup, sheet, stamp, ticked, timeOf, whoAmI } from './pin.js'
+
+      let me = null
+      let items = []
+      let current = null
+      let finished = null // the item just signed or refused, kept on screen until the person moves on
+
+      function urgency(item) {
+        const left = daysUntil(item.due_at)
+        if (left < 0) return { tone: 'bad', text: `Quá hạn ${-left} ngày` }
+        if (left === 0) return { tone: 'warn', text: 'Hết hạn hôm nay' }
+        if (left === 1) return { tone: 'warn', text: 'Còn 1 ngày' }
+        return { tone: 'muted', text: `Còn ${left} ngày` }
       }
-      load().catch((error) => show(status, error.message, 'bad'))
+
+      function side() {
+        const state = !me ? null : me.locked ? chip('PIN đang bị khoá', 'bad', 'lock') : me.has_pin ? chip('Đã đặt PIN ký', 'ok', 'lock') : chip('Chưa đặt PIN ký', 'warn', 'lock')
+        $('#side').replaceChildren(state || '',
+          me?.has_pin && !me.locked ? h('button', { type: 'button', class: 'gd-ghost ks-small', onclick: () => pinSetup($('#setup'), { change: true, onDone: () => desktiny.toast('Đã đổi mã PIN ký.'), onCancel: () => $('#setup').replaceChildren() }) }, 'Đổi PIN') : '')
+      }
+
+      function lead() {
+        const late = items.filter((i) => daysUntil(i.due_at) < 0).length
+        const today = items.filter((i) => daysUntil(i.due_at) === 0).length
+        $('#lead').textContent = !items.length
+          ? 'Không có văn bản nào chờ bạn ký.'
+          : [`${items.length} văn bản đang chờ bạn ký`, late ? `${late} văn bản đã quá hạn` : '', today ? `${today} văn bản hết hạn hôm nay` : ''].filter(Boolean).join(', ') + '.'
+      }
+
+      function queue() {
+        return h('nav', { 'aria-label': 'Danh sách chờ ký' }, h('ul', { class: 'ck-queue' },
+          items.map((item) => {
+            const due = urgency(item)
+            return h('li', {}, h('button', { type: 'button', class: 'ck-item', 'aria-current': current?.call_id === item.call_id ? 'true' : 'false', onclick: () => open(item, true),
+              'aria-label': `${item.title}, ${item.files.length} tệp, ${due.text}` },
+              leaf(item.due_at, due.tone === 'bad' ? 'bad' : 'muted'),
+              h('span', {}, h('strong', {}, item.title),
+                h('span', { class: 'gd-sub' }, `${item.case_code ? item.case_code + ', ' : ''}${item.files.length} tệp, gửi ngày ${dayOf(item.created_at)}`),
+                chip(due.text, due.tone, due.tone === 'muted' ? 'clock' : 'alert'))))
+          })))
+      }
+
+      function render() {
+        lead()
+        if (!items.length && !finished) {
+          $('#main').replaceChildren(h('section', { class: 'gd-panel' }, empty('Không có văn bản nào chờ bạn ký', 'Khi quy trình đưa văn bản đến bước ký số, văn bản hiện ở đây và bạn nhận được thông báo.', 'check')))
+          return
+        }
+        if (!finished && (!current || !items.some((i) => i.call_id === current.call_id))) current = items[0]
+        $('#main').replaceChildren(h('div', { class: 'ck-layout' }, items.length ? queue() : h('div', {}, empty('Đã ký hết', 'Không còn văn bản nào chờ bạn ký.', 'check')), h('section', { id: 'detail', 'aria-live': 'polite' })))
+        if (finished) showFinished()
+        else detail(current)
+      }
+
+      function open(item, focus) {
+        current = item
+        finished = null
+        render()
+        if (focus && matchMedia('(max-width: 760px)').matches) $('#detail').scrollIntoView({ block: 'start' })
+      }
+
+      function detail(item) {
+        const files = fileList(item.files)
+        const paper = sheet({ code: item.case_code, title: item.title, when: `Gửi lúc ${timeOf(item.created_at)} ngày ${dayOf(item.created_at)}, hạn ký ${dayOf(item.due_at)}`, note: item.reason, files })
+        const pin = pinField('Mã PIN của bạn', { id: 'pin' })
+        const status = h('p', { role: 'status', style: 'margin:0' })
+        const sign = h('button', { type: 'submit' }, icon('check', 16), 'Ký số')
+        const count = () => { const n = ticked(files).length; sign.disabled = !n || me?.locked; sign.lastChild.textContent = n ? `Ký số ${n} tệp` : 'Chọn tệp để ký' }
+        files.addEventListener('change', count)
+        const refuseBox = h('div', { class: 'ck-refuse', hidden: true },
+          h('label', {}, 'Lý do từ chối', h('textarea', { rows: 2, maxlength: 300, placeholder: 'Ví dụ: sai thông tin người yêu cầu, cần bổ sung giấy tờ' })),
+          h('div', { class: 'ks-actions' },
+            h('button', { type: 'button', class: 'gd-ghost', onclick: () => decide(true) }, 'Gửi từ chối'),
+            h('span', { class: 'gd-sub' }, 'Quy trình đi theo nhánh lỗi kèm lý do này.')))
+        const form = h('form', { class: 'ck-sign' },
+          me?.locked ? h('p', { class: 'gd-note tone-bad' }, icon('lock', 15), 'PIN của bạn bị khoá sau 5 lần nhập sai. Nhờ quản trị đặt lại rồi đặt PIN mới.') : null,
+          pin.wrap,
+          h('div', { class: 'ks-actions' }, sign,
+            h('button', { type: 'button', class: 'gd-ghost', 'aria-expanded': 'false', onclick: (event) => { refuseBox.hidden = !refuseBox.hidden; event.currentTarget.setAttribute('aria-expanded', String(!refuseBox.hidden)); if (!refuseBox.hidden) refuseBox.querySelector('textarea').focus() } }, 'Từ chối ký'),
+            h('button', { type: 'button', class: 'gd-ghost', onclick: () => desktiny.navigate(`/cases/${item.case_id}`) }, 'Mở hồ sơ')),
+          refuseBox, status)
+        form.addEventListener('submit', (event) => { event.preventDefault(); decide(false) })
+
+        async function decide(refuse) {
+          const ids = ticked(files)
+          if (!pin.input.value) {
+            status.replaceChildren(h('span', { class: 'gd-note tone-warn' }, icon('lock', 15), refuse ? 'Nhập PIN để xác nhận từ chối.' : 'Nhập PIN để ký.'))
+            return pin.input.focus()
+          }
+          if (!refuse && !(await desktiny.confirm(`Ký số ${ids.length} tệp của hồ sơ “${item.title}”?`))) return
+          if (refuse && !(await desktiny.confirm(`Từ chối ký hồ sơ “${item.title}”?`))) return
+          for (const button of form.querySelectorAll('button')) button.disabled = true
+          try {
+            const result = await server(`/api/cho-ky/${item.call_id}`, { method: 'POST', body: { pin: pin.input.value, file_ids: ids, tu_choi: refuse, ly_do: refuseBox.querySelector('textarea').value } })
+            finished = { item, result, refused: refuse }
+            desktiny.toast(refuse ? 'Đã từ chối ký.' : `Đã ký ${result.signed} tệp.`)
+            items = items.filter((i) => i.call_id !== item.call_id)
+            render()
+          } catch (error) {
+            pin.input.value = ''
+            status.replaceChildren(h('span', { class: 'gd-note tone-bad', role: 'alert' }, icon('alert', 15), error.message))
+            if (/khoá|5 lần/.test(error.message)) whoAmI().then((who) => { me = who; side() })
+            for (const button of form.querySelectorAll('button')) button.disabled = false
+            count()
+            pin.input.focus()
+          }
+        }
+        $('#detail').replaceChildren(paper, form)
+        count()
+      }
+
+      function showFinished() {
+        const { item, result, refused } = finished
+        const signedNames = new Set((result.files || []).map((f) => f.name))
+        const files = h('ul', { class: 'ks-files' }, item.files.map((f) => h('li', {}, h('div', {}, icon(signedNames.has(f.name) ? 'check' : 'file', 17), h('span', {}), h('span', { class: 'ks-file-name' }, f.name)))))
+        const paper = sheet({ code: item.case_code, title: item.title, when: refused ? 'Đã từ chối ký' : `Ký lúc ${timeOf(result.at)} ngày ${dayOf(result.at)}`, note: item.reason, files })
+        const next = items[0]
+        $('#detail').replaceChildren(paper, h('div', { class: 'ck-done' },
+          refused
+            ? h('p', { class: 'gd-note' }, icon('alert', 15), 'Đã từ chối ký. Quy trình đi theo nhánh lỗi kèm lý do của bạn.')
+            : [h('p', { class: 'gd-note tone-ok' }, icon('check', 15), `Đã ký ${result.signed} tệp. Phiếu xác nhận ký số (PDF) đã gắn vào hồ sơ; quy trình đi tiếp.`),
+                h('span', { class: 'gd-sub' }, 'Mã xác thực, để người nhận kiểm tra ở trang Xác thực chữ ký của cơ quan:'),
+                h('ul', { class: 'ks-codes' }, (result.files || []).map((f) => h('li', {}, h('span', { class: 'ks-file-name' }, f.name), h('span', { class: 'ks-code', 'aria-label': `Mã ${f.code}` }, grouped(f.code)))))],
+          h('div', { class: 'ks-actions' },
+            next ? h('button', { type: 'button', onclick: () => open(next, true) }, 'Văn bản tiếp theo') : null,
+            h('button', { type: 'button', class: 'gd-ghost', onclick: () => desktiny.navigate(`/cases/${item.case_id}`) }, 'Mở hồ sơ'))))
+        stamp(paper, refused ? 'Từ chối ký' : 'Đã ký số', refused ? new Date().toLocaleDateString('vi-VN') : `${timeOf(result.at)} ${dayOf(result.at)}`)
+        $('#detail').querySelector('.ks-actions button')?.focus({ preventScroll: true })
+      }
+
+      async function load() {
+        $('#main').setAttribute('aria-busy', 'true')
+        try {
+          me = await whoAmI()
+          side()
+          if (!me.has_pin) {
+            $('#lead').textContent = 'Đặt mã PIN ký trước, rồi xem các văn bản chờ bạn ký.'
+            $('#main').replaceChildren()
+            pinSetup($('#setup'), { onDone: () => { desktiny.toast('Đã đặt mã PIN ký.'); load() } })
+            return
+          }
+          if (!items.length) $('#main').replaceChildren(skeleton(4, 18))
+          items = (await server('/api/cho-ky')).items.sort((a, b) => (a.due_at < b.due_at ? -1 : a.due_at > b.due_at ? 1 : 0))
+          render()
+        } catch (error) {
+          $('#main').replaceChildren(h('p', { class: 'gd-note tone-bad', role: 'alert' }, icon('alert', 15), error.message))
+        } finally {
+          $('#main').setAttribute('aria-busy', 'false')
+        }
+      }
+      load()
     </script>
   </body>
 </html>

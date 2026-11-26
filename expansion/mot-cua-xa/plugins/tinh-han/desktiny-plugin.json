@@ -2,13 +2,13 @@
   "schema": "desktiny-plugin/2",
   "id": "vn.mo-rong.tinh-han",
   "name": "Tính hạn theo ngày làm việc",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "Apache-2.0",
   "authors": ["Desktiny Expansion Pack contributors"],
   "description": "Plugin đóng gói (không cần máy chủ): trang tính hạn giải quyết theo ngày làm việc (bỏ thứ Bảy, Chủ nhật, ngày lễ, tính ngày làm bù) và khung “Hạn giải quyết” trên hồ sơ: hạn, số ngày làm việc còn lại, cảnh báo khi quá hạn.",
   "permissions": ["cases.read"],
   "ui": [
-    { "slot": "page", "title": "Tính hạn giải quyết", "url": "/ui/tinh-han.html", "height": 560 },
-    { "slot": "case.side", "title": "Hạn giải quyết", "url": "/ui/han-ho-so.html", "height": 170 }
+    { "slot": "page", "title": "Tính hạn giải quyết", "url": "/ui/tinh-han.html", "height": 720 },
+    { "slot": "case.side", "title": "Hạn giải quyết", "url": "/ui/han-ho-so.html", "height": 190 }
   ]
 }

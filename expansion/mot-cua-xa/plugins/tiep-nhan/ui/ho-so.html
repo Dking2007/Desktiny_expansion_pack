@@ -7,19 +7,200 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Nộp trực tuyến</title>
     <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <style>
+      body {
+        padding: 12px 14px 14px;
+        font-size: 14px;
+      }
+      .gd-note > svg {
+        flex: none;
+        margin-top: 2px;
+      }
+      .hs {
+        display: grid;
+        gap: 10px;
+      }
+      .hs-top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px 10px;
+      }
+      .hs-code {
+        font-family: var(--gd-display);
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        font-variant-numeric: tabular-nums;
+        user-select: all;
+      }
+      .hs-proc {
+        margin: -6px 0 0;
+        font-weight: 600;
+      }
+      .hs-facts {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 3px 12px;
+        margin: 0;
+        padding: 8px 0;
+        border-top: 1px solid var(--gd-border);
+        border-bottom: 1px solid var(--gd-border);
+        font-size: 13.5px;
+      }
+      .hs-facts dt {
+        color: var(--gd-muted);
+      }
+      .hs-facts dd {
+        min-width: 0;
+        margin: 0;
+        overflow-wrap: anywhere;
+      }
+      .hs-facts .num {
+        font-variant-numeric: tabular-nums;
+        user-select: all;
+      }
+      .hs-due {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .hs-due strong {
+        display: block;
+        font-family: var(--gd-display);
+        font-size: 14px;
+      }
+      .hs-due.late strong {
+        color: var(--gd-son);
+      }
+      /* Where the request is: four short segments, filled up to the current stage. */
+      .hs-track {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 4px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        font-size: 11.5px;
+        color: var(--gd-muted);
+      }
+      .hs-track li {
+        display: grid;
+        gap: 3px;
+      }
+      .hs-track li::before {
+        content: '';
+        height: 4px;
+        border-radius: 999px;
+        background: var(--gd-border);
+      }
+      .hs-track li.done::before {
+        background: var(--gd-accent);
+      }
+      .hs-track li.warn::before {
+        background: var(--gd-warn);
+      }
+      .hs-track li.bad::before {
+        background: var(--gd-son);
+      }
+      .hs-track li.ok::before {
+        background: var(--gd-ok);
+      }
+      .hs-track li.now {
+        color: var(--gd-ink);
+        font-weight: 700;
+      }
+      details summary {
+        color: var(--gd-muted);
+        font-size: 13px;
+        cursor: pointer;
+      }
+      details p {
+        margin: 6px 0 0;
+        white-space: pre-line;
+        overflow-wrap: anywhere;
+      }
+      .gd-empty {
+        padding: 10px 6px;
+      }
+    </style>
   </head>
   <body>
-    <div id="out" class="muted">Đang tải…</div>
+    <div id="out" aria-live="polite" aria-busy="true"></div>
     <script type="module">
       import { $, desktiny, h, server } from './mo-rong.js'
-      const context = await desktiny.context
-      server(`/api/ho-so/${context.record.case_id}`)
-        .then(({ request: r }) => {
-          $('#out').replaceChildren(...(r
-            ? [h('div', {}, h('strong', {}, r.code), ' · ', r.procedure), h('div', { class: 'muted' }, `Nộp ${r.created_at.slice(0, 10)} qua ${r.source}`), h('span', { class: 'tag' }, r.status_label)]
-            : [h('span', { class: 'muted' }, 'Hồ sơ này không đến từ cổng trực tuyến.')]))
-        })
-        .catch((error) => ($('#out').textContent = error.message))
+      import { chip, daysUntil, empty, icon, leaf, skeleton } from './bieu-do.js'
+
+      const TONE = { received: 'info', processing: 'accent', needs_revision: 'warn', approved: 'ok', rejected: 'bad', cancelled: 'muted' }
+      const WEEKDAYS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
+      const pad = (n) => String(n).padStart(2, '0')
+      const day = (value) => {
+        const [y, m, d] = String(value).slice(0, 10).split('-').map(Number)
+        return new Date(y, m - 1, d)
+      }
+      const dmy = (value) => `${pad(day(value).getDate())}/${pad(day(value).getMonth() + 1)}/${day(value).getFullYear()}`
+      const at = (value) => `${String(value).slice(11, 16)}, ${dmy(value)}`
+      const phoneText = (phone) => String(phone).replace(/^(\+84|0)(\d{3})(\d{3})(\d+)$/, '$1$2 $3 $4')
+
+      function track(r) {
+        const after = { received: 1, processing: 2, needs_revision: 2, approved: 4, rejected: 4, cancelled: 4 }[r.status] ?? 1
+        const end = { approved: ['Có kết quả', 'ok'], rejected: ['Không giải quyết', 'bad'], cancelled: ['Đã huỷ', 'bad'] }[r.status]
+        const names = ['Đã nộp', 'Tiếp nhận', r.status === 'needs_revision' ? 'Cần bổ sung' : 'Giải quyết', end ? end[0] : 'Kết quả']
+        return h('ol', { class: 'hs-track', 'aria-label': `Tiến trình: ${r.status_label}` },
+          names.map((name, index) => {
+            let cls = index < after ? 'done' : index === after ? 'now' : ''
+            if (index === 3 && end) cls = `${end[1]} now`
+            if (index === 2 && r.status === 'needs_revision') cls = 'warn now'
+            return h('li', { class: cls, 'aria-current': cls.includes('now') ? 'step' : null }, name)
+          }))
+      }
+
+      function due(r) {
+        if (!r.expected) return null
+        const open = !['approved', 'rejected', 'cancelled'].includes(r.status)
+        const left = daysUntil(r.expected)
+        const late = open && left < 0
+        const date = day(r.expected)
+        const when = `${WEEKDAYS[date.getDay()]}, ${dmy(r.expected)}`
+        return h('div', { class: `hs-due${late ? ' late' : ''}` },
+          leaf(r.expected, late ? 'bad' : 'muted'),
+          h('div', {},
+            h('span', { class: 'gd-sub' }, 'Hẹn trả dự kiến cho người nộp'),
+            h('strong', {}, late ? `${when}, quá ${-left} ngày` : when)))
+      }
+
+      function render(r) {
+        if (!r) {
+          return $('#out').replaceChildren(empty('Không nộp trực tuyến', 'Hồ sơ này được tạo tại quầy hoặc từ nguồn khác.', 'file'))
+        }
+        $('#out').replaceChildren(h('article', { class: 'hs', 'aria-label': `Yêu cầu nộp trực tuyến ${r.code}` },
+          h('div', { class: 'hs-top' },
+            h('span', { class: 'hs-code', title: 'Mã tra cứu của người nộp' }, r.code),
+            chip(r.status_label, TONE[r.status] || 'muted')),
+          h('p', { class: 'hs-proc' }, r.procedure),
+          h('dl', { class: 'hs-facts' },
+            h('dt', {}, 'Người nộp'), h('dd', {}, r.full_name),
+            h('dt', {}, 'Điện thoại'), h('dd', { class: 'num' }, phoneText(r.phone)),
+            r.address ? [h('dt', {}, 'Địa chỉ'), h('dd', {}, r.address)] : null,
+            h('dt', {}, 'Nộp lúc'), h('dd', {}, `${at(r.created_at)}, qua ${r.source}`)),
+          track(r),
+          due(r),
+          r.content ? h('details', {}, h('summary', {}, 'Nội dung người nộp ghi'), h('p', {}, r.content)) : null,
+          h('p', { class: 'gd-sub', style: 'margin:0' }, 'Người nộp không gửi kèm tệp; giấy tờ bản chính được đối chiếu tại quầy.')))
+      }
+
+      $('#out').replaceChildren(skeleton(4, 13))
+      try {
+        const context = await desktiny.context
+        const { request } = await server(`/api/ho-so/${encodeURIComponent(context.record.case_id)}`)
+        render(request)
+      } catch (error) {
+        $('#out').replaceChildren(h('p', { class: 'gd-note tone-bad', role: 'alert' }, icon('alert', 15), error.message))
+      } finally {
+        $('#out').setAttribute('aria-busy', 'false')
+      }
     </script>
   </body>
 </html>

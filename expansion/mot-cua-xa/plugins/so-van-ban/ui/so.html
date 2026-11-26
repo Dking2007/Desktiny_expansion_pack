@@ -7,45 +7,329 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sổ văn bản</title>
     <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <link rel="stylesheet" href="so-van-ban.css" />
+    <style>
+      .sv-tools {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+      .sv-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .sv-tabs button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border: 1px solid var(--gd-border);
+        border-radius: 999px;
+        background: var(--gd-surface);
+        color: var(--gd-ink);
+        font-weight: 600;
+        font-size: 13.5px;
+      }
+      .sv-tabs button small {
+        color: var(--gd-muted);
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+      .sv-tabs button[aria-pressed='true'] {
+        border-color: var(--gd-accent);
+        background: var(--gd-accent);
+        color: var(--gd-surface);
+      }
+      .sv-tabs button[aria-pressed='true'] small {
+        color: inherit;
+        opacity: 0.85;
+      }
+      /* Twelve months, each a column whose height is the count of numbers issued in it. */
+      .sv-months {
+        display: grid;
+        grid-template-columns: minmax(64px, auto) repeat(12, minmax(30px, 1fr));
+        gap: 4px;
+        overflow-x: auto;
+        padding-bottom: 2px;
+      }
+      .sv-months button {
+        display: grid;
+        grid-template-rows: 30px auto;
+        align-items: end;
+        justify-items: center;
+        gap: 3px;
+        padding: 5px 2px 4px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--gd-muted);
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .sv-months button:hover:not(:disabled) {
+        background: var(--gd-surface-2);
+      }
+      .sv-months button[aria-pressed='true'] {
+        border-color: var(--gd-accent);
+        background: var(--gd-accent-soft);
+        color: var(--gd-ink);
+      }
+      .sv-months button:disabled {
+        opacity: 0.45;
+      }
+      .sv-months .bar {
+        display: block;
+        width: 14px;
+        min-height: 2px;
+        border-radius: 3px 3px 1px 1px;
+        background: color-mix(in srgb, var(--gd-accent) 55%, var(--gd-border));
+      }
+      .sv-months button[aria-pressed='true'] .bar {
+        background: var(--gd-accent);
+      }
+      .sv-months .all {
+        grid-template-rows: 30px auto;
+        align-items: center;
+        padding: 5px 8px 4px;
+        color: var(--gd-ink);
+      }
+      .sv-months .all b {
+        font-family: var(--gd-display);
+        font-size: 16px;
+        font-variant-numeric: tabular-nums;
+      }
+      .sv-search {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .sv-search label {
+        position: relative;
+        flex: 1 1 220px;
+        display: block;
+      }
+      .sv-search label .gd-svg-icon {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--gd-muted);
+      }
+      .sv-search input {
+        width: 100%;
+        padding-left: 34px;
+      }
+      #export-box textarea {
+        width: 100%;
+        font: 12.5px/1.45 ui-monospace, Consolas, monospace;
+      }
+      .sv-more {
+        display: flex;
+        justify-content: center;
+        padding: 10px 0 4px;
+      }
+      @media (max-width: 560px) {
+        .sv-tabs {
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          padding-bottom: 2px;
+        }
+        .sv-tabs button {
+          flex: none;
+        }
+      }
+    </style>
   </head>
   <body>
-    <h1>Sổ văn bản</h1>
-    <div class="grid">
-      <label>Sổ <select id="book"><option value="">Tất cả</option></select></label>
-      <label>Năm <input id="year" type="number" min="2000" max="2100" /></label>
-      <label>Tìm <input id="q" placeholder="Số hoặc trích yếu" /></label>
-      <label>&nbsp;<button id="export" type="button" class="secondary">Xuất CSV</button></label>
-    </div>
-    <div id="export-box"></div>
-    <table>
-      <thead><tr><th>Số, ký hiệu</th><th>Ngày</th><th>Trích yếu</th><th>Người cấp</th><th>Hồ sơ</th></tr></thead>
-      <tbody id="rows"></tbody>
-    </table>
+    <header class="gd-hero">
+      <div>
+        <h1>Sổ văn bản</h1>
+        <p id="lead">Các số văn bản đi đã cấp, theo từng sổ.</p>
+      </div>
+      <div class="gd-stepper" id="years"></div>
+    </header>
+    <div class="gd-stats" id="stats" aria-live="polite"></div>
+    <section class="sv-book" aria-labelledby="book-title">
+      <div class="sv-book-head">
+        <h2 id="book-title">Sổ đăng ký văn bản đi</h2>
+        <p id="book-sub"></p>
+      </div>
+      <div class="sv-tools">
+        <div class="sv-tabs" id="tabs" role="group" aria-label="Chọn sổ"></div>
+        <div class="sv-months" id="months" role="group" aria-label="Chọn tháng"></div>
+        <div class="sv-search">
+          <label><span class="sr-only">Tìm số hoặc trích yếu</span><input id="q" type="search" placeholder="Tìm số, trích yếu hoặc người cấp" autocomplete="off" /></label>
+          <button id="export" type="button" class="gd-ghost"></button>
+        </div>
+      </div>
+      <div id="export-box"></div>
+      <div class="gd-scroll" id="table" aria-live="polite" aria-busy="true"></div>
+    </section>
+    <p class="gd-sub">Bạn thấy số của các hồ sơ bạn mở được và số do chính bạn cấp. Cả sổ của cơ quan nằm ở trang quản trị.</p>
+
     <script type="module">
       import { $, desktiny, h, server } from './mo-rong.js'
-      $('#year').value = new Date().getFullYear()
-      const query = () => `so=${encodeURIComponent($('#book').value)}&nam=${$('#year').value}&q=${encodeURIComponent($('#q').value)}`
-      let first = true
-      async function load() {
-        const data = await server(`/api/so?${query()}`)
-        if (first) {
-          $('#book').append(...data.books.map((b) => h('option', { value: b.code }, b.name)))
-          first = false
-        }
-        $('#rows').replaceChildren(...data.entries.map((e) => h('tr', { class: e.state === 'cancelled' ? 'muted' : '' },
-          h('td', {}, e.full_number, e.state === 'cancelled' ? ` (huỷ: ${e.cancel_reason})` : ''), h('td', {}, e.issued_at.slice(0, 10)), h('td', {}, e.summary), h('td', {}, e.issued_by),
-          h('td', {}, e.case_id ? h('a', { href: '#', onclick: (ev) => { ev.preventDefault(); desktiny.navigate(`/cases/${e.case_id}`) } }, 'Mở') : '—'))))
+      import { chip, empty, icon, s, skeleton, stat } from './bieu-do.js'
+      import { dayOf, numberMark, timeOf } from './van-ban.js'
+
+      const now = new Date()
+      const state = { year: now.getFullYear(), book: '', month: 0, q: '', shown: 100 }
+      let data = null
+      $('#export').append(icon('download', 15), 'Xuất bảng')
+      // The kit has no magnifier; drawn here in its line style.
+      $('#q').closest('label').prepend(s('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 1.9, 'stroke-linecap': 'round', 'aria-hidden': 'true', class: 'gd-svg-icon' }, s('circle', { cx: 11, cy: 11, r: 6.5 }), s('path', { d: 'M16 16l4.5 4.5' })))
+
+      function years() {
+        const box = $('#years')
+        box.replaceChildren(
+          h('button', { type: 'button', 'aria-label': 'Năm trước', onclick: () => go(state.year - 1) }, icon('chevronLeft', 15)),
+          h('strong', { 'aria-live': 'polite' }, `Năm ${state.year}`),
+          h('button', { type: 'button', 'aria-label': 'Năm sau', disabled: state.year >= now.getFullYear() ? true : null, onclick: () => go(state.year + 1) }, icon('chevronRight', 15)),
+        )
       }
-      for (const id of ['#book', '#year', '#q']) $(id).addEventListener('change', load)
-      $('#export').addEventListener('click', async () => {
-        const session = await desktiny.token()
-        const text = await (await fetch(`/api/xuat?${query()}`, { headers: { 'X-Desktiny-Session': session.token } })).text()
-        const box = h('textarea', { rows: 8, readonly: true, style: 'width: 100%' })
-        box.value = text.replace(/^﻿/, '')
-        $('#export-box').replaceChildren(h('p', { class: 'muted' }, 'Chọn hết, sao chép rồi dán vào bảng tính.'), box)
-        box.select()
+
+      const names = () => Object.fromEntries(data.books.map((b) => [b.code, b.name]))
+      const monthOf = (entry) => Number(entry.issued_at.slice(5, 7))
+      const matches = (entry, q) => !q || [entry.full_number, entry.summary, entry.issued_by].some((v) => String(v || '').toLocaleLowerCase('vi').includes(q))
+
+      function filtered({ book = state.book, month = state.month } = {}) {
+        const q = state.q.trim().toLocaleLowerCase('vi')
+        return data.entries.filter((e) => (!book || e.book === book) && (!month || monthOf(e) === month) && matches(e, q))
+      }
+
+      function tabs() {
+        const all = filtered({ book: '' })
+        const count = (code) => all.filter((e) => e.book === code).length
+        const tab = (code, label, n) => h('button', { type: 'button', 'aria-pressed': state.book === code ? 'true' : 'false', onclick: () => { state.book = code; state.shown = 100; render() } }, label, h('small', {}, n))
+        $('#tabs').replaceChildren(tab('', 'Tất cả', all.length), ...data.books.map((b) => tab(b.code, b.name, count(b.code))))
+      }
+
+      function months() {
+        const rows = filtered({ month: 0 })
+        const per = Array.from({ length: 12 }, (_, i) => rows.filter((e) => monthOf(e) === i + 1).length)
+        const top = Math.max(1, ...per)
+        const future = (m) => state.year === now.getFullYear() && m > now.getMonth() + 1
+        const pick = (m) => { state.month = m; state.shown = 100; render() }
+        $('#months').replaceChildren(
+          h('button', { type: 'button', class: 'all', 'aria-pressed': state.month === 0 ? 'true' : 'false', onclick: () => pick(0), 'aria-label': `Cả năm: ${rows.length} số` }, h('b', {}, rows.length), 'Cả năm'),
+          ...per.map((n, i) => h('button', { type: 'button', 'aria-pressed': state.month === i + 1 ? 'true' : 'false', disabled: future(i + 1) && !n ? true : null, onclick: () => pick(i + 1), 'aria-label': `Tháng ${i + 1}: ${n} số`, title: `Tháng ${i + 1}: ${n} số` },
+            h('span', { class: 'bar', style: `height:${n ? Math.max(4, Math.round((n / top) * 30)) : 2}px` }), `T${i + 1}`)),
+        )
+      }
+
+      function stats(rows) {
+        const issued = rows.filter((e) => e.state !== 'cancelled')
+        const latest = latestOf(data.entries)
+        $('#stats').replaceChildren(
+          stat({ label: 'Số đã cấp', value: issued.length, hint: scope(), icon: 'file' }),
+          stat({ label: 'Số đã huỷ', value: rows.length - issued.length, hint: 'vẫn giữ trong sổ, không cấp lại', tone: rows.length - issued.length ? 'bad' : 'muted' }),
+          stat({ label: 'Số cấp gần nhất', value: latest ? numberMark(latest.full_number) : '—', hint: latest ? `${dayOf(latest.issued_at)} lúc ${timeOf(latest.issued_at)}, ${latest.issued_by}` : `Chưa có số nào trong năm ${state.year}`, icon: 'clock' }),
+        )
+      }
+
+      function scope() {
+        const book = state.book ? names()[state.book] : 'Mọi sổ'
+        return state.month ? `${book}, tháng ${state.month}/${state.year}` : `${book}, năm ${state.year}`
+      }
+
+      const latestOf = (rows) => rows.reduce((best, e) => (!best || e.issued_at > best.issued_at || (e.issued_at === best.issued_at && e.id > best.id) ? e : best), null)
+
+      function table(rows) {
+        if (!rows.length) {
+          const searching = state.q.trim()
+          return empty(searching ? 'Không tìm thấy số nào' : 'Sổ chưa có số nào', searching ? `Không có số nào khớp “${state.q.trim()}” trong ${scope().toLocaleLowerCase('vi')}.` : `Chưa cấp số nào trong ${scope().toLocaleLowerCase('vi')}.`)
+        }
+        const latest = latestOf(data.entries)
+        const book = names()
+        const sorted = [...rows].sort((a, b) => (a.issued_at < b.issued_at ? 1 : a.issued_at > b.issued_at ? -1 : b.id - a.id))
+        const body = sorted.slice(0, state.shown).map((e) => {
+          const cancelled = e.state === 'cancelled'
+          return h('tr', { class: [cancelled ? 'is-cancelled' : '', latest && e.id === latest.id ? 'is-latest' : ''].join(' ') },
+            h('td', {}, numberMark(e.full_number, { cancelled })),
+            h('td', { class: 'sv-when' }, h('b', {}, dayOf(e.issued_at)), timeOf(e.issued_at)),
+            h('td', { class: 'sv-summary' },
+              e.summary || h('span', { class: 'gd-sub' }, 'Không có trích yếu'),
+              latest && e.id === latest.id ? chip('Mới nhất', 'accent') : null,
+              h('span', { class: 'gd-sub', style: 'display:block' }, book[e.book] ?? e.book),
+              cancelled ? h('span', { class: 'sv-reason' }, `Đã huỷ: ${e.cancel_reason || 'không ghi lý do'}`) : null),
+            h('td', { class: 'sv-by' }, e.issued_by),
+            h('td', { class: 'sv-open' }, e.case_id
+              ? h('button', { type: 'button', class: 'gd-ghost sv-small', onclick: () => desktiny.navigate(`/cases/${e.case_id}`), 'aria-label': `Mở hồ sơ của số ${e.full_number}` }, 'Mở hồ sơ')
+              : h('span', { class: 'gd-sub' }, 'Không gắn hồ sơ')))
+        })
+        return h('div', {},
+          h('table', { class: 'gd-register sv-register' },
+            h('caption', { class: 'sr-only' }, `Sổ đăng ký văn bản đi, ${scope()}`),
+            h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, 'Số, ký hiệu'), h('th', { scope: 'col' }, 'Ngày cấp'), h('th', { scope: 'col' }, 'Trích yếu'), h('th', { scope: 'col' }, 'Người cấp'), h('th', { scope: 'col' }, h('span', { class: 'sr-only' }, 'Hồ sơ')))),
+            h('tbody', {}, body)),
+          sorted.length > state.shown
+            ? h('div', { class: 'sv-more' }, h('button', { type: 'button', class: 'gd-ghost', onclick: () => { state.shown += 100; render() } }, `Hiện thêm (còn ${sorted.length - state.shown} số)`))
+            : null)
+      }
+
+      function render() {
+        const rows = filtered()
+        $('#book-title').textContent = `Sổ đăng ký văn bản đi, năm ${state.year}`
+        $('#book-sub').textContent = `${scope()}: ${rows.length} số`
+        tabs()
+        months()
+        stats(rows)
+        $('#table').replaceChildren(table(rows))
+        if ($('#export-box').firstChild) exportBox(rows)
+      }
+
+      // CSV of what is on screen (the same columns as the server's export), to copy into a spreadsheet: a frame
+      // cannot download files.
+      const csvCell = (value) => (/[",\n]/.test(String(value)) ? `"${String(value).replaceAll('"', '""')}"` : String(value))
+      function exportBox(rows) {
+        const book = names()
+        const lines = [['Sổ', 'Số, ký hiệu', 'Ngày', 'Trích yếu', 'Người cấp', 'Trạng thái', 'Lý do huỷ'],
+          ...rows.map((e) => [book[e.book] ?? e.book, e.full_number, e.issued_at.slice(0, 10), e.summary, e.issued_by, e.state === 'cancelled' ? 'Đã huỷ' : 'Đã cấp', e.cancel_reason || ''])]
+        const box = h('textarea', { rows: 7, readonly: true, 'aria-label': 'Bảng số văn bản dạng CSV' })
+        box.value = lines.map((line) => line.map(csvCell).join(',')).join('\n')
+        const note = h('span', { class: 'gd-sub', 'aria-live': 'polite' }, `${rows.length} dòng của ${scope().toLocaleLowerCase('vi')}. Dán vào bảng tính.`)
+        $('#export-box').replaceChildren(h('div', { style: 'display:grid;gap:6px;margin:0 0 12px' }, box,
+          h('div', { class: 'row' },
+            h('button', { type: 'button', class: 'sv-small', onclick: async () => {
+              box.select()
+              try {
+                await navigator.clipboard.writeText(box.value)
+                note.textContent = 'Đã sao chép. Dán vào bảng tính.'
+              } catch {
+                note.textContent = 'Đã chọn hết; bấm Ctrl+C để sao chép.'
+              }
+            } }, 'Sao chép'),
+            h('button', { type: 'button', class: 'gd-ghost sv-small', onclick: () => $('#export-box').replaceChildren() }, 'Đóng'),
+            note)))
+      }
+      $('#export').addEventListener('click', () => ($('#export-box').firstChild ? $('#export-box').replaceChildren() : exportBox(filtered())))
+
+      let typing
+      $('#q').addEventListener('input', () => {
+        clearTimeout(typing)
+        typing = setTimeout(() => { state.q = $('#q').value; state.shown = 100; if (data) render() }, 150)
       })
-      load()
+
+      async function go(year) {
+        state.year = year
+        state.month = 0
+        years()
+        $('#table').setAttribute('aria-busy', 'true')
+        if (!data) $('#table').replaceChildren(skeleton(5, 16))
+        try {
+          data = await server(`/api/so?nam=${year}`)
+          if (state.book && !data.books.some((b) => b.code === state.book)) state.book = ''
+          render()
+        } catch (error) {
+          $('#table').replaceChildren(h('p', { class: 'gd-note tone-bad', role: 'alert' }, icon('alert', 15), error.message))
+        } finally {
+          $('#table').setAttribute('aria-busy', 'false')
+        }
+      }
+      go(state.year)
     </script>
   </body>
 </html>

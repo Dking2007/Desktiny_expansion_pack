@@ -2,7 +2,7 @@
   "schema": "desktiny-plugin/1",
   "id": "vn.mo-rong.ky-so",
   "name": "Ký số văn bản",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "Apache-2.0",
   "authors": ["Desktiny Expansion Pack contributors"],
   "description": "Ký tài liệu của hồ sơ bằng mã PIN cá nhân và gắn phiếu xác nhận ký số (PDF) vào hồ sơ, từ bước quy trình chạy lâu (chờ người ký) hoặc nút trên hồ sơ. Ai cũng kiểm được mã xác thực. Chữ ký là mô phỏng bằng khoá của cơ quan; thay bằng chứng thư số khi triển khai thật.",
@@ -39,6 +39,6 @@
   },
   "ui": [
     { "slot": "page", "title": "Văn bản chờ ký", "url": "/ui/cho-ky.html", "height": 640 },
-    { "slot": "case.action", "title": "Ký số", "url": "/ui/ky.html", "height": 420 }
+    { "slot": "case.action", "title": "Ký số", "url": "/ui/ky.html", "height": 600 }
   ]
 }

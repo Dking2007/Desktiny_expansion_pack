@@ -30,6 +30,8 @@ from mo_rong import App, HttpError, Response, Settings, Store  # noqa: E402
 from mo_rong.pdf import one_page  # noqa: E402
 
 VN = timezone(timedelta(hours=7))
+# How long the flow step waits for the signer (the manifest's timeout_days): the page shows it as the deadline.
+WAIT_DAYS = int(json.loads((HERE / "desktiny-plugin.json").read_text(encoding="utf-8"))["nodes"][0].get("timeout_days") or 5)
 PAGE_LINK = "/apps/vn.mo-rong.ky-so/0"
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS pins (user_id TEXT PRIMARY KEY, salt TEXT NOT NULL, hash TEXT NOT NULL, failures INTEGER NOT NULL DEFAULT 0);
@@ -93,6 +95,7 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
         at = now().isoformat(timespec="seconds")
         lines, codes = [f"Ho so: {case.get('code', '')} {case['title']}", f"Nguoi ky: {user['display_name']}",
                         f"Thoi diem ky: {at}", ""], []  # fmt: skip
+        signed_files = []
         tool = signer()
         for item in files:
             digest = hashlib.sha256(client.file_content(case["id"], item["id"])).hexdigest()
@@ -101,6 +104,7 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
                    "signature, call_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", code, case["id"], item["id"], item["name"],
                    digest, user["id"], user["display_name"], at, tool.sign(digest, user["id"], at), call_id)  # fmt: skip
             codes.append(code)
+            signed_files.append({"name": item["name"], "code": code})
             lines += [f"Tep: {item['name']}", f"  SHA-256: {digest}", f"  Ma xac thuc: {code}", ""]
         lines += ["Kiem tra ma xac thuc tai trang Xac thuc chu ky cua co quan (/cong/xac-thuc.html).",
                   "Chu ky mo phong bang khoa cua co quan; thay bang chung thu so khi trien khai that."]  # fmt: skip
@@ -109,7 +113,7 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
         attached = client.attach(case["id"], name, receipt, "application/pdf", node_id=node_id, role="result",
                                  key=f"ky-so:{case['id']}:{codes[0]}")  # fmt: skip
         db.run(f"UPDATE signatures SET receipt_id = ? WHERE code IN ({','.join('?' * len(codes))})", attached.get("id"), *codes)
-        return {"signed": len(codes), "codes": codes, "receipt": name, "at": at}
+        return {"signed": len(codes), "codes": codes, "receipt": name, "at": at, "files": signed_files}
 
     # ---- PIN ------------------------------------------------------------------------------------
 
@@ -163,10 +167,11 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
             if row["signer_id"] and row["signer_id"] != user_id:
                 continue
             try:
-                client.case(row["case_id"])  # only dossiers the viewer may see
+                case = client.case(row["case_id"])  # only dossiers the viewer may see
             except Exception:  # noqa: BLE001 (not visible to this person)
                 continue
-            mine.append(row)
+            due = datetime.fromisoformat(row["created_at"]) + timedelta(days=WAIT_DAYS)
+            mine.append({**row, "case_code": case.get("code", ""), "due_at": due.isoformat(timespec="seconds")})
         return mine
 
     @app.route("GET", "/api/cho-ky", viewer=True)
@@ -206,9 +211,9 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
     def case_files(request):
         client = app.as_viewer(request)
         case = client.case(request.params["case_id"])
-        return {"case": {"id": case["id"], "title": case["title"]},
+        return {"case": {"id": case["id"], "code": case.get("code", ""), "title": case["title"]},
                 "files": [f for f in client.case_files(case["id"]) if not f["name"].startswith("xac-nhan-ky-so")],
-                "signatures": db.all("SELECT code, file_name, signer_name, signed_at FROM signatures WHERE case_id = ? "
+                "signatures": db.all("SELECT code, file_id, file_name, signer_name, signed_at FROM signatures WHERE case_id = ? "
                                      "ORDER BY signed_at", case["id"])}  # fmt: skip
 
     @app.route("POST", "/api/ho-so/{case_id}/ky", viewer=True)

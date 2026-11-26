@@ -35,11 +35,11 @@ def test_each_expansion_gets_its_pack_and_plugins_as_zips_with_an_install_guide(
     assert dong_goi.expansions() == ["mot-cua-xa", "nhan-su", "van-thu"]
     assert {
         "nhan-su/goi-nhan-su-1.1.0.zip", "nhan-su/plugin-cham-cong-1.1.0.zip", "nhan-su/plugin-luong-kpi-1.1.0.zip",
-        "nhan-su/plugin-nhac-han-1.1.0.zip", "mot-cua-xa/goi-mot-cua-xa-1.1.0.zip", "mot-cua-xa/plugin-so-van-ban-1.0.0.zip",
-        "mot-cua-xa/plugin-ky-so-1.0.0.zip", "mot-cua-xa/plugin-tiep-nhan-1.0.0.zip", "mot-cua-xa/plugin-tinh-han-1.0.0.zip",
-        "mot-cua-xa/plugin-doc-giay-to-1.0.0.zip", "van-thu/goi-van-thu-1.0.0.zip", "van-thu/plugin-so-van-ban-den-1.0.0.zip",
+        "nhan-su/plugin-nhac-han-1.1.0.zip", "mot-cua-xa/goi-mot-cua-xa-1.1.0.zip", "mot-cua-xa/plugin-so-van-ban-1.1.0.zip",
+        "mot-cua-xa/plugin-ky-so-1.1.0.zip", "mot-cua-xa/plugin-tiep-nhan-1.1.0.zip", "mot-cua-xa/plugin-tinh-han-1.1.0.zip",
+        "mot-cua-xa/plugin-doc-giay-to-1.1.0.zip", "van-thu/goi-van-thu-1.0.0.zip", "van-thu/plugin-so-van-ban-den-1.0.0.zip",
         # Văn thư borrows these from Một cửa: the same zips are also in its own folder.
-        "van-thu/plugin-so-van-ban-1.0.0.zip", "van-thu/plugin-ky-so-1.0.0.zip", "van-thu/plugin-tinh-han-1.0.0.zip",
+        "van-thu/plugin-so-van-ban-1.1.0.zip", "van-thu/plugin-ky-so-1.1.0.zip", "van-thu/plugin-tinh-han-1.1.0.zip",
         "may-chu-plugin/may-chu-plugin-1.1.0.zip",
     } == paths  # fmt: skip
     guide = (out / "HUONG-DAN-CAI.txt").read_text(encoding="utf-8")
@@ -47,10 +47,11 @@ def test_each_expansion_gets_its_pack_and_plugins_as_zips_with_an_install_guide(
 
     pack = out / "mot-cua-xa/goi-mot-cua-xa-1.1.0.zip"
     assert {"desktiny-pack.json", "assets/logo.svg", "processes/khai-sinh.json"} <= names(pack)
-    tinh_han = names(out / "mot-cua-xa/plugin-tinh-han-1.0.0.zip")
+    tinh_han = names(out / "mot-cua-xa/plugin-tinh-han-1.1.0.zip")
     assert {"desktiny-plugin.json", "ui/tinh-han.html", "ui/desktiny-plugin-sdk.js", "ui/chung.css"} <= tinh_han
+    assert {"ui/giao-dien.css", "ui/bieu-do.js", "ui/mo-rong.js", "ui/phong-chu/be-vietnam-pro-vietnamese-700-normal.woff2"} <= tinh_han
     # A connected plugin's zip is its manifest; its server is in the server bundle, in the same layout as here.
-    assert names(out / "mot-cua-xa/plugin-so-van-ban-1.0.0.zip") == {"desktiny-plugin.json"}
+    assert names(out / "mot-cua-xa/plugin-so-van-ban-1.1.0.zip") == {"desktiny-plugin.json"}
     server = names(out / "may-chu-plugin/may-chu-plugin-1.1.0.zip")
     assert {"lib/mo_rong/server.py", "deploy/compose.yaml", "deploy/Dockerfile",
             "expansion/mot-cua-xa/plugins/so-van-ban/server.py", "expansion/nhan-su/plugins/cham-cong/server.py"} <= server  # fmt: skip
@@ -68,17 +69,17 @@ def test_the_same_sources_give_the_same_zip(tmp_path):
 
 def test_host_points_connected_plugins_at_the_real_server(tmp_path):
     dong_goi.build("plugins.co-quan.vn", out=tmp_path)
-    data = read(tmp_path / "mot-cua-xa/plugin-ky-so-1.0.0.zip", "desktiny-plugin.json")
+    data = read(tmp_path / "mot-cua-xa/plugin-ky-so-1.1.0.zip", "desktiny-plugin.json")
     assert data["base_url"] == "https://plugins.co-quan.vn/ky-so"
     assert dong_goi.manifest("ky-so", "10.0.0.5")["base_url"] == "https://10.0.0.5/ky-so"  # dotted: proxied
     assert dong_goi.manifest("ky-so", "may-chu")["base_url"] == "http://may-chu:9204"
-    assert "base_url" not in read(tmp_path / "mot-cua-xa/plugin-tinh-han-1.0.0.zip", "desktiny-plugin.json")
+    assert "base_url" not in read(tmp_path / "mot-cua-xa/plugin-tinh-han-1.1.0.zip", "desktiny-plugin.json")
 
 
 def test_only_the_chosen_packs_and_plugins_are_built(tmp_path):
     built = {path for path, _, _ in dong_goi.build(out=tmp_path, only=["tinh-han", "plugin-cham-cong, ky-so"])}
-    assert built == {"mot-cua-xa/plugin-tinh-han-1.0.0.zip", "nhan-su/plugin-cham-cong-1.1.0.zip",
-                     "mot-cua-xa/plugin-ky-so-1.0.0.zip", "may-chu-plugin/may-chu-plugin-1.1.0.zip"}  # fmt: skip
+    assert built == {"mot-cua-xa/plugin-tinh-han-1.1.0.zip", "nhan-su/plugin-cham-cong-1.1.0.zip",
+                     "mot-cua-xa/plugin-ky-so-1.1.0.zip", "may-chu-plugin/may-chu-plugin-1.1.0.zip"}  # fmt: skip
     # The server bundle holds only the chosen connected plugins, and the guide starts just those services.
     server = names(tmp_path / "may-chu-plugin/may-chu-plugin-1.1.0.zip")
     assert "expansion/nhan-su/plugins/cham-cong/server.py" in server and "expansion/mot-cua-xa/plugins/ky-so/server.py" in server
@@ -92,7 +93,7 @@ def test_an_expansion_name_takes_all_of_it_and_goi_takes_only_the_pack(tmp_path)
     assert dong_goi.select(["goi-nhan-su"]).plugins == []
     # Packaged plugins only: no server bundle, no docker lines in the guide.
     built = {path for path, _, _ in dong_goi.build(out=tmp_path, only=["goi-mot-cua-xa", "doc-giay-to"])}
-    assert built == {"mot-cua-xa/goi-mot-cua-xa-1.1.0.zip", "mot-cua-xa/plugin-doc-giay-to-1.0.0.zip"}
+    assert built == {"mot-cua-xa/goi-mot-cua-xa-1.1.0.zip", "mot-cua-xa/plugin-doc-giay-to-1.1.0.zip"}
     assert "docker" not in (tmp_path / "HUONG-DAN-CAI.txt").read_text(encoding="utf-8")
 
 
@@ -102,12 +103,12 @@ def test_a_borrowing_expansion_builds_complete_without_opening_the_lenders_folde
     assert set(chosen.plugins) == {"so-van-ban", "ky-so", "tinh-han", "so-van-ban-den"}
     built = {path for path, _, _ in dong_goi.build(out=tmp_path, only=["van-thu"])}
     assert all(path.startswith(("van-thu/", "may-chu-plugin/")) for path in built)
-    assert (tmp_path / "van-thu/plugin-ky-so-1.0.0.zip").read_bytes() == dong_goi.zipped(dong_goi.connected_plugin_files("ky-so"))
+    assert (tmp_path / "van-thu/plugin-ky-so-1.1.0.zip").read_bytes() == dong_goi.zipped(dong_goi.connected_plugin_files("ky-so"))
     server = names(tmp_path / "may-chu-plugin/may-chu-plugin-1.1.0.zip")
     assert {"expansion/van-thu/plugins/so-van-ban-den/server.py", "expansion/mot-cua-xa/plugins/ky-so/server.py"} <= server
     # Building a lender's plugin on its own puts it in the lender's folder only.
     assert {p for p, _, _ in dong_goi.build(out=tmp_path, only=["ky-so"])} == {
-        "mot-cua-xa/plugin-ky-so-1.0.0.zip", "may-chu-plugin/may-chu-plugin-1.1.0.zip"}  # fmt: skip
+        "mot-cua-xa/plugin-ky-so-1.1.0.zip", "may-chu-plugin/may-chu-plugin-1.1.0.zip"}  # fmt: skip
 
 
 def test_menu_numbers_follow_the_catalog_and_unknown_names_are_refused(tmp_path):

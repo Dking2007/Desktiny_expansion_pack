@@ -1,0 +1,328 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/* SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors */
+/* Sổ văn bản's own pieces, on top of giao-dien.css: the register number as type, the register book, a document
+   sheet's placeholder body, the small document thumbnail and the stamp landing. */
+
+input,
+select,
+textarea,
+button {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+textarea {
+  resize: vertical;
+}
+.gd-note > svg {
+  flex: none;
+  margin-top: 2px;
+}
+button.gd-ghost,
+button.sv-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+button.sv-small {
+  padding: 5px 10px;
+  font-size: 13px;
+}
+
+/* "12/QĐ-UBND": the numeral carries the weight, the symbol follows it. */
+.sv-no {
+  display: inline-flex;
+  align-items: baseline;
+  font-family: var(--gd-display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.sv-no b {
+  font-weight: 700;
+}
+.sv-no span {
+  font-weight: 600;
+  color: var(--gd-muted);
+}
+.sv-no.is-big {
+  font-size: 40px;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+.sv-no.is-big span {
+  font-size: 0.55em;
+  letter-spacing: 0;
+}
+.sv-no.is-cancelled b,
+.sv-no.is-cancelled span {
+  color: var(--gd-son);
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+}
+
+/* Sổ đăng ký: the book itself, with a stitched binding down the left edge. */
+.sv-book {
+  position: relative;
+  margin: 4px 0 18px;
+  padding: 18px 18px 12px 34px;
+  border-radius: 3px 8px 8px 3px;
+  background: var(--gd-surface);
+  box-shadow: var(--gd-paper-shadow), inset 0 0 0 1px var(--gd-border);
+}
+.sv-book::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 16px;
+  border-radius: 3px 0 0 3px;
+  border-right: 1px dashed color-mix(in srgb, var(--gd-ink) 22%, transparent);
+  background: color-mix(in srgb, var(--gd-accent) 10%, var(--gd-surface-2));
+}
+.sv-book-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 16px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--gd-border);
+}
+.sv-book-head h2 {
+  margin: 0;
+  font-size: 17px;
+}
+.sv-book-head p {
+  margin: 0;
+  color: var(--gd-muted);
+  font-size: 13px;
+}
+
+/* The register's rows. */
+.sv-register td:first-child {
+  font-size: 15px;
+}
+.sv-register .sv-when {
+  white-space: nowrap;
+  color: var(--gd-muted);
+  font-variant-numeric: tabular-nums;
+}
+.sv-register .sv-when b {
+  display: block;
+  color: var(--gd-ink);
+  font-weight: 600;
+}
+.sv-register .sv-summary {
+  min-width: 180px;
+}
+.sv-register .sv-reason {
+  display: block;
+  margin-top: 2px;
+  color: var(--gd-son);
+  font-size: 12.5px;
+}
+.sv-register tr.is-latest td {
+  background: var(--gd-accent-soft);
+}
+.sv-register tr.is-latest td:first-child {
+  box-shadow: inset 3px 0 0 var(--gd-accent);
+}
+.sv-register tr.is-cancelled td:not(:first-child) {
+  color: var(--gd-muted);
+}
+.sv-register .gd-chip {
+  margin-left: 6px;
+  vertical-align: 2px;
+}
+
+/* A document sheet's body, drawn as lines of text that are not there yet. */
+.sv-lines {
+  display: grid;
+  gap: 7px;
+  margin: 4px 0 0;
+}
+.sv-lines i {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--gd-border);
+}
+.sv-lines i:nth-child(1) {
+  width: 94%;
+}
+.sv-lines i:nth-child(2) {
+  width: 100%;
+}
+.sv-lines i:nth-child(3) {
+  width: 78%;
+}
+.sv-lines i:nth-child(4) {
+  width: 56%;
+}
+
+/* The number in a document heading while it is only a preview. */
+.sv-pending,
+.gd-doc-agency .sv-pending {
+  display: inline;
+  border-bottom: 1.5px dashed currentColor;
+}
+
+/* A small document thumbnail: the paper object of a list row. */
+.sv-thumb {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  flex: none;
+  width: 52px;
+  height: 66px;
+  padding: 7px 7px 0;
+  border-radius: 2px;
+  background: var(--gd-surface);
+  box-shadow: 0 1px 0 rgb(15 35 60 / 0.06), 0 5px 12px -7px rgb(15 35 60 / 0.45), inset 0 0 0 1px var(--gd-border);
+  font-family: var(--gd-display);
+  font-size: 9.5px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.1;
+}
+:root[data-theme='dark'] .sv-thumb {
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.4), 0 6px 12px -6px rgb(0 0 0 / 0.8), inset 0 0 0 1px var(--gd-border);
+}
+.sv-thumb i {
+  display: block;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--gd-border);
+}
+.sv-thumb i:last-child {
+  width: 70%;
+}
+.sv-thumb .gd-seal {
+  position: absolute;
+  right: -10px;
+  bottom: -6px;
+  width: 38px;
+  height: 38px;
+  padding: 2px;
+  border-width: 2px;
+  font-size: 7.5px;
+}
+
+/* Stamp landing: one short motion that answers a successful issue. giao-dien.css turns it off for reduced motion. */
+.sv-landing {
+  animation: sv-stamp 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+}
+@keyframes sv-stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.7) rotate(-22deg);
+  }
+  to {
+    opacity: 0.88;
+    transform: scale(1) rotate(-9deg);
+  }
+}
+
+/* Choosing a register: radio rows, each with the number it would give. */
+.sv-choices {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.sv-choice {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--gd-border);
+  border-radius: 9px;
+  font-weight: 400;
+  cursor: pointer;
+}
+.sv-choice:hover {
+  background: var(--gd-surface-2);
+}
+.sv-choice:has(input:checked) {
+  border-color: var(--gd-accent);
+  background: var(--gd-accent-soft);
+}
+.sv-choice:has(input:focus-visible) {
+  outline: 2px solid var(--gd-accent);
+  outline-offset: 2px;
+}
+.sv-choice input {
+  margin: 0;
+  accent-color: var(--gd-accent);
+}
+.sv-choice strong {
+  display: block;
+  font-weight: 650;
+}
+.sv-choice small {
+  color: var(--gd-muted);
+  font-size: 12.5px;
+}
+
+@media (max-width: 560px) {
+  .sv-book {
+    padding: 14px 12px 8px 24px;
+  }
+  .sv-book::before {
+    width: 10px;
+  }
+  .sv-no.is-big {
+    font-size: 32px;
+  }
+  /* The register as stacked entries: number and date on one line, the rest below. */
+  .sv-register thead {
+    display: none;
+  }
+  .sv-register tr {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2px 12px;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--gd-border);
+  }
+  .sv-register td,
+  .sv-register td:first-child {
+    padding: 0;
+    border: 0;
+  }
+  .sv-register td:first-child {
+    width: auto;
+    padding-right: 10px;
+    border-right: 1.5px solid color-mix(in srgb, var(--gd-son) 55%, transparent);
+  }
+  .sv-register .sv-when {
+    text-align: right;
+  }
+  .sv-register .sv-when b {
+    display: inline;
+    margin-right: 6px;
+  }
+  .sv-register td.sv-summary,
+  .sv-register td.sv-by,
+  .sv-register td.sv-open {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+  .sv-register td.sv-by {
+    color: var(--gd-muted);
+    font-size: 12.5px;
+  }
+  .sv-register tr.is-latest {
+    background: var(--gd-accent-soft);
+    box-shadow: inset 3px 0 0 var(--gd-accent);
+  }
+  .sv-register tr.is-latest td {
+    background: none;
+  }
+  .sv-register tr.is-latest td:first-child {
+    box-shadow: none;
+  }
+}

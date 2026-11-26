@@ -309,3 +309,28 @@ export function leaf(value, tone = 'muted') {
 export function mark(symbol, tone = 'muted', label = '') {
   return h('span', { class: `gd-mark tone-${tone}`, title: label || null, 'aria-label': label || null }, symbol)
 }
+
+/**
+ * The heading of an administrative document (Nghị định 30 layout): docHead({ parent, agency, number, place, date }).
+ * `date` is a Date or 'YYYY-MM-DD'; the place-and-date line reads "Xã A, ngày 26 tháng 11 năm 2026".
+ */
+export function docHead({ parent = '', agency = '', number = '', place = '', date } = {}) {
+  const when = date ? dateOf(date) : null
+  return h(
+    'div',
+    { class: 'gd-doc-head' },
+    h('div', { class: 'gd-doc-agency' }, parent ? h('span', {}, parent.toLocaleUpperCase('vi')) : null, h('strong', {}, agency.toLocaleUpperCase('vi')), number ? h('div', { class: 'gd-doc-no' }, `Số: ${number}`) : null),
+    h(
+      'div',
+      { class: 'gd-doc-nation' },
+      h('strong', {}, 'CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM'),
+      h('span', {}, 'Độc lập - Tự do - Hạnh phúc'),
+      when ? h('div', { class: 'gd-doc-date' }, `${place ? place + ', ' : ''}ngày ${when.getDate()} tháng ${when.getMonth() + 1} năm ${when.getFullYear()}`) : null,
+    ),
+  )
+}
+
+/** A red ink stamp showing a state: seal('Đã ký số', '26/11/2026'). Not an emblem, not a real seal. */
+export function seal(text, sub = '', tone = '') {
+  return h('span', { class: `gd-seal${tone ? ' tone-' + tone : ''}`, role: 'img', 'aria-label': sub ? `${text}, ${sub}` : text }, h('span', { 'aria-hidden': 'true' }, text, sub ? h('small', {}, sub) : null))
+}

@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
 import re
+from datetime import datetime
 
-from conftest import call, signed
+from conftest import call, load, signed
 
 PERSON = {"thu_tuc": "Đăng ký khai sinh", "ho_ten": "Phạm Thị Hoa", "so_cccd": "001190012345",
           "so_dien_thoai": "0912345678", "dia_chi": "Thôn Đông", "noi_dung": "Khai sinh cho con"}  # fmt: skip
@@ -60,3 +61,33 @@ def test_outside_systems_need_the_key_and_the_page_limits_repeats(make_app, desk
     _, check = answer(app)
     assert call(app, "POST", "/cong/api/nop", {**PERSON, **check}).status == 429
     assert app.handle("GET", "/cong/nop.html").status == 200
+
+
+def test_the_citizen_gets_a_guide_and_an_expected_date_and_the_lookup_still_shows_nothing_personal(make_app, desktiny):
+    module = load("tiep-nhan")
+    friday = lambda: datetime(2026, 11, 27, 9, 30, tzinfo=module.VN)  # noqa: E731
+    app = make_app("tiep-nhan", now=friday)
+    info, check = answer(app)
+    guide = info["huong_dan"]["Đăng ký khai sinh"]
+    assert guide["thoi_han"] and any("chứng sinh" in paper for paper in guide["giay_to"])
+    assert set(info["huong_dan"]) <= set(info["thu_tuc"])
+    filed = call(app, "POST", "/cong/api/nop", {**PERSON, **check}).data
+    # Filed on a Friday: one working day later is the Monday.
+    assert filed["hen_tra"] == "2026-11-30" and filed["ngay_nop"].startswith("2026-11-27") and filed["giay_to"] == guide["giay_to"]
+    assert module.expected("Xác nhận tình trạng hôn nhân", "2026-11-26T10:00:00+07:00") == "2026-12-01"
+    assert module.expected("Đề nghị hoà giải", "2026-11-26") is None and module.expected("Thủ tục riêng", "2026-11-26") is None
+    code, secret = filed["ma_tra_cuu"], filed["ma_bi_mat"]
+    tracked = app.handle("GET", f"/cong/api/tra-cuu?ma={code}&ma_bi_mat={secret}").data
+    assert tracked["trang_thai_ma"] == "received" and tracked["hen_tra"] == "2026-11-30"
+    assert tracked["co_quan"] == "Bộ phận Một cửa" and [h["ma"] for h in tracked["lich_su"]] == ["received"]
+    for private in ("Phạm", PERSON["so_cccd"], PERSON["so_dien_thoai"], "Thôn Đông", "Khai sinh cho con"):
+        assert private not in str(tracked)
+    desktiny.cases["hs-8"] = {"id": "hs-8", "code": "HS-000008", "status": "processing", "payload": {"ma_tra_cuu": code}}
+    signed(app, "/events", {"type": "case.submitted", "subject": {"type": "case", "id": "hs-8"}})
+    side = call(app, "GET", "/api/ho-so/hs-8", session="phien-an").data["request"]
+    assert side["full_name"] == "Phạm Thị Hoa" and side["phone"] == "0912345678" and side["expected"] == "2026-11-30"
+    assert [h["status"] for h in side["history"]] == ["received", "processing"] and side["history"][1]["label"] == "Đang xử lý"
+    admin = call(app, "GET", "/api/quan-tri", session="phien-qt").data
+    assert admin["today"] == "2026-11-27" and admin["items"][0]["expected"] == "2026-11-30"
+    assert admin["items"][0]["case_code"] == "HS-000008" and "updated_at" in admin["items"][0]
+    assert call(app, "GET", "/api/quan-tri?trang_thai=received", session="phien-qt").data["items"] == []

@@ -94,13 +94,15 @@ function hex(text) {
 
 // "Họ và tên / Full name:" — an English label after a slash, then a colon, may follow the Vietnamese one.
 const LABEL = String.raw`(?:\s*/\s*[A-Za-z][A-Za-z .,]*)?\s*[:：]?\s*`
-function after(text, labels) {
-  for (const label of labels) {
+/** The value after the first label found, and which label it was (its index in `labels`). */
+function labelled(text, labels) {
+  for (const [index, label] of labels.entries()) {
     const found = new RegExp(`(?:^|\\n)\\s*(?:${label})${LABEL}([^\\n]+)`, 'iu').exec(text)
-    if (found) return found[1].trim().replace(/\s{2,}/g, ' ')
+    if (found) return { value: found[1].trim().replace(/\s{2,}/g, ' '), index }
   }
-  return ''
+  return { value: '', index: -1 }
 }
+const after = (text, labels) => labelled(text, labels).value
 function isoDate(text) {
   const found = /(\d{1,2})\s*[/.-]\s*(\d{1,2})\s*[/.-]\s*(\d{4})/.exec(text || '')
   if (!found) return ''
@@ -116,32 +118,121 @@ function titleCase(name) {
     .map((word) => word.charAt(0).toLocaleUpperCase('vi') + word.slice(1))
     .join(' ')
 }
+/** A date that exists on the calendar ("2026-02-30" does not). */
+function realDate(value) {
+  const [y, m, d] = value.split('-').map(Number)
+  const date = new Date(Date.UTC(y, m - 1, d))
+  return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d
+}
+
+/**
+ * The 12-digit personal identification number: 3 digits of the province of birth registration (001–096), one digit
+ * for sex and century (0/1: male/female born 1900–1999, 2/3: 2000–2099, …), then the last two digits of the year.
+ */
+export function idNumberParts(number) {
+  if (!/^\d{12}$/.test(String(number || ''))) return null
+  const province = Number(number.slice(0, 3))
+  const code = Number(number[3])
+  const century = 1900 + Math.floor(code / 2) * 100
+  return { province, validProvince: province >= 1 && province <= 96, sex: code % 2 ? 'Nữ' : 'Nam', year: century + Number(number.slice(4, 6)) }
+}
+
+/** A 10-digit tax code's check digit (the 10th) matches the first nine. */
+export function taxCodeChecks(code) {
+  const digits = String(code || '').slice(0, 10)
+  if (!/^\d{10}$/.test(digits)) return false
+  const weights = [31, 29, 23, 19, 17, 13, 7, 5, 3]
+  const sum = weights.reduce((total, weight, i) => total + weight * Number(digits[i]), 0)
+  return (10 - (sum % 11)) % 10 === Number(digits[9])
+}
+
+/** What kind of paper the text is, from its title. */
+export function paperKind(text) {
+  const t = String(text || '').normalize('NFC')
+  if (/căn cước|can cuoc|identity card/iu.test(t)) return 'Căn cước'
+  if (/chứng minh nhân dân|chung minh nhan dan/iu.test(t)) return 'Chứng minh nhân dân'
+  if (/hộ chiếu|passport/iu.test(t)) return 'Hộ chiếu'
+  if (/đăng ký thuế|thông báo mã số thuế|tax registration/iu.test(t)) return 'Giấy tờ thuế'
+  return 'Giấy tờ'
+}
+
+/** How sure a value is: high when the label and the format both agree, lower when something only looks right. */
+export const SURE = 0.9
+export const CHECK = 0.6
+
+/**
+ * Details found in the text with how sure each one is: { key: { value, confidence (0–1), note } }. A note says
+ * why a value needs a closer look (or what was checked). A person checks every value before it is written.
+ */
+export function analyze(text) {
+  const t = String(text || '').normalize('NFC')
+  const found = {}
+  const put = (key, value, confidence, note = '') => (found[key] = { value, confidence, note })
+
+  const name = after(t, ['Họ và tên', 'Họ, chữ đệm và tên', 'Họ tên', 'Full name', 'Ho va ten'])
+  if (name) {
+    const clean = titleCase(name.replace(/[^\p{L}\s]/gu, '').trim())
+    const words = clean.split(' ').length
+    if (clean !== titleCase(name)) put('ho_ten', clean, CHECK, 'Đã bỏ ký tự lạ trong tên.')
+    else if (words < 2 || words > 6) put('ho_ten', clean, CHECK, 'Tên có số chữ bất thường.')
+    else put('ho_ten', clean, 0.95)
+  }
+
+  const born = isoDate(after(t, ['Ngày, tháng, năm sinh', 'Ngày sinh', 'Date of birth', 'Ngay sinh']))
+  if (born) {
+    const year = Number(born.slice(0, 4))
+    if (!realDate(born)) put('ngay_sinh', born, 0.3, 'Ngày này không có trên lịch.')
+    else if (year < 1900 || year > new Date().getFullYear()) put('ngay_sinh', born, 0.4, 'Năm sinh bất thường.')
+    else put('ngay_sinh', born, 0.95)
+  }
+
+  const sex = after(t, ['Giới tính', 'Sex', 'Gioi tinh'])
+  if (/^n[ữu]/iu.test(sex) || /female/i.test(sex)) put('gioi_tinh', 'Nữ', 0.95)
+  else if (/^nam/iu.test(sex) || /\bmale/i.test(sex)) put('gioi_tinh', 'Nam', 0.95)
+
+  const labelledId = /(?:số|so|no\.?|số định danh|CCCD|CMND)[^\d\n]{0,25}(\d{12})\b/iu.exec(t)
+  const idNumber = labelledId || /\b(0\d{11})\b/.exec(t)
+  if (idNumber) {
+    const parts = idNumberParts(idNumber[1])
+    const notes = []
+    if (!labelledId) notes.push('Không thấy nhãn “Số” cạnh dãy số.')
+    if (!parts.validProvince) notes.push('Ba chữ số đầu không phải mã tỉnh.')
+    if (found.ngay_sinh && parts.year !== Number(found.ngay_sinh.value.slice(0, 4))) notes.push('Không khớp năm sinh.')
+    if (found.gioi_tinh && parts.sex !== found.gioi_tinh.value) notes.push('Không khớp giới tính.')
+    const crossChecked = Boolean(found.ngay_sinh && found.gioi_tinh)
+    if (notes.length) put('so_cccd', idNumber[1], notes.length > 1 ? 0.35 : CHECK, notes.join(' '))
+    else put('so_cccd', idNumber[1], crossChecked ? 0.98 : SURE, crossChecked ? 'Khớp năm sinh và giới tính.' : '')
+  }
+
+  const origin = after(t, ['Quê quán', 'Place of origin', 'Que quan'])
+  if (origin) put('que_quan', origin, origin.length >= 6 ? SURE : CHECK, origin.length >= 6 ? '' : 'Địa chỉ quá ngắn.')
+  const home = labelled(t, ['Nơi thường trú', 'Nơi cư trú', 'Place of residence', 'Noi thuong tru', 'Địa chỉ'])
+  if (home.value) {
+    if (home.index === 4) put('noi_thuong_tru', home.value, CHECK, 'Lấy từ dòng “Địa chỉ”, có thể không phải nơi thường trú.')
+    else put('noi_thuong_tru', home.value, home.value.length >= 6 ? SURE : CHECK, home.value.length >= 6 ? '' : 'Địa chỉ quá ngắn.')
+  }
+
+  const tax = /(?:mã số thuế|MST|tax code)[^\d\n]{0,10}(\d{10}(?:-\d{3})?)\b/iu.exec(t)
+  if (tax) {
+    const checks = taxCodeChecks(tax[1])
+    put('ma_so_thue', tax[1], checks ? 0.95 : CHECK, checks ? 'Chữ số kiểm tra hợp lệ.' : 'Chữ số kiểm tra không khớp, nên đối chiếu.')
+  }
+
+  const phone = /(?:điện thoại|ĐT|SĐT|phone)[^\d\n+]{0,10}((?:\+84|0)[\d .]{9,13})/iu.exec(t)
+  if (phone) {
+    const number = phone[1].replace(/[ .]/g, '')
+    const valid = /^(?:0|\+84)[35789]\d{8}$/.test(number) || /^02\d{9}$/.test(number)
+    put('so_dien_thoai', number, valid ? SURE : CHECK, valid ? '' : 'Độ dài hoặc đầu số lạ.')
+  }
+  return found
+}
 
 /**
  * Details found in the text, by the form field keys they fill. Only what is clearly there is returned;
  * a person checks every value before it is written into the dossier.
  */
 export function recognize(text) {
-  const t = String(text || '').normalize('NFC')
-  const found = {}
-  const idNumber = /(?:số|so|no\.?|số định danh|CCCD|CMND)[^\d\n]{0,25}(\d{12})\b/iu.exec(t) || /\b(0\d{11})\b/.exec(t)
-  if (idNumber) found.so_cccd = idNumber[1]
-  const name = after(t, ['Họ và tên', 'Họ, chữ đệm và tên', 'Họ tên', 'Full name', 'Ho va ten'])
-  if (name) found.ho_ten = titleCase(name.replace(/[^\p{L}\s]/gu, '').trim())
-  const born = after(t, ['Ngày, tháng, năm sinh', 'Ngày sinh', 'Date of birth', 'Ngay sinh'])
-  if (isoDate(born)) found.ngay_sinh = isoDate(born)
-  const sex = after(t, ['Giới tính', 'Sex', 'Gioi tinh'])
-  if (/^n[ữu]/iu.test(sex) || /female/i.test(sex)) found.gioi_tinh = 'Nữ'
-  else if (/^nam/iu.test(sex) || /\bmale/i.test(sex)) found.gioi_tinh = 'Nam'
-  const origin = after(t, ['Quê quán', 'Place of origin', 'Que quan'])
-  if (origin) found.que_quan = origin
-  const home = after(t, ['Nơi thường trú', 'Nơi cư trú', 'Place of residence', 'Noi thuong tru', 'Địa chỉ'])
-  if (home) found.noi_thuong_tru = home
-  const tax = /(?:mã số thuế|MST|tax code)[^\d\n]{0,10}(\d{10}(?:-\d{3})?)\b/iu.exec(t)
-  if (tax) found.ma_so_thue = tax[1]
-  const phone = /(?:điện thoại|ĐT|SĐT|phone)[^\d\n+]{0,10}((?:\+84|0)[\d .]{9,13})/iu.exec(t)
-  if (phone) found.so_dien_thoai = phone[1].replace(/[ .]/g, '')
-  return found
+  return Object.fromEntries(Object.entries(analyze(text)).map(([key, item]) => [key, item.value]))
 }
 
 export const FIELDS = {

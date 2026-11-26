@@ -7,43 +7,339 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Cấu hình sổ văn bản</title>
     <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <link rel="stylesheet" href="so-van-ban.css" />
+    <style>
+      .qt-books {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+        gap: 12px;
+      }
+      .qt-book {
+        display: grid;
+        align-content: start;
+        gap: 6px;
+        padding: 14px 16px;
+        border: 1px solid var(--gd-border);
+        border-radius: var(--gd-radius);
+        background: var(--gd-surface);
+      }
+      .qt-book[aria-current='true'] {
+        border-color: var(--gd-accent);
+        box-shadow: inset 0 0 0 1px var(--gd-accent);
+      }
+      .qt-book-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .qt-book-top strong {
+        font-family: var(--gd-display);
+        font-size: 15px;
+      }
+      .qt-book .sv-no {
+        font-size: 26px;
+      }
+      .qt-book p {
+        margin: 0;
+        color: var(--gd-muted);
+        font-size: 13px;
+      }
+      .qt-book button {
+        justify-self: start;
+        margin-top: 4px;
+      }
+      .qt-add {
+        display: grid;
+        place-items: center;
+        gap: 6px;
+        min-height: 150px;
+        border: 1.5px dashed var(--gd-border);
+        border-radius: var(--gd-radius);
+        background: transparent;
+        color: var(--gd-muted);
+        font-weight: 600;
+      }
+      .qt-add:hover {
+        border-color: var(--gd-accent);
+        color: var(--gd-accent-ink);
+      }
+      .qt-editor {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 22px;
+        align-items: start;
+      }
+      .qt-form {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .qt-form label input {
+        width: 100%;
+      }
+      .qt-form .wide {
+        grid-column: 1 / -1;
+      }
+      .qt-check {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        font-weight: 400;
+      }
+      .qt-form .qt-check input {
+        flex: none;
+        width: auto;
+        margin-top: 3px;
+        accent-color: var(--gd-accent);
+      }
+      .qt-check strong {
+        display: block;
+        font-weight: 600;
+      }
+      .qt-next {
+        margin: 12px 0 0;
+        text-align: center;
+      }
+      .qt-next .sv-no {
+        font-size: 30px;
+      }
+      .qt-cancel-row td {
+        background: var(--gd-surface-2);
+      }
+      .gd-register .qt-cancel-row td:first-child {
+        width: auto;
+        border-right: 0;
+        font-family: var(--gd-font);
+        font-weight: 400;
+        text-align: left;
+        white-space: normal;
+      }
+      .qt-cancel-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .qt-cancel-form input {
+        flex: 1 1 220px;
+      }
+      @media (max-width: 720px) {
+        .qt-editor {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 560px) {
+        .gd-register .qt-cancel-row td:first-child {
+          grid-column: 1 / -1;
+          padding: 0;
+        }
+      }
+      @media (max-width: 420px) {
+        .qt-form {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
   </head>
   <body>
-    <h1>Cấu hình sổ văn bản</h1>
-    <p class="muted">Ký hiệu cơ quan đặt ở Quản trị › Plugin › Cấu hình. Số đã cấp không bao giờ cấp lại; số sai thì huỷ (giữ trong sổ, ghi lý do).</p>
-    <p id="status" aria-live="polite"></p>
-    <table><thead><tr><th>Mã</th><th>Tên</th><th>Ký hiệu</th><th class="num">Bắt đầu từ</th><th>Theo năm</th></tr></thead><tbody id="books"></tbody></table>
-    <form id="book-form" class="grid">
-      <label>Mã <input name="code" required maxlength="10" placeholder="HD" /></label>
-      <label>Tên <input name="name" required maxlength="80" placeholder="Hợp đồng" /></label>
-      <label>Ký hiệu <input name="symbol" maxlength="20" placeholder="HĐ" /></label>
-      <label>Bắt đầu từ số <input name="start_number" type="number" min="1" value="1" /></label>
-      <label>&nbsp;<button type="submit">Lưu sổ</button></label>
-    </form>
-    <h2>Huỷ một số đã cấp</h2>
-    <div class="grid">
-      <label>Số đã cấp <select id="entry"></select></label>
-      <label>Lý do <input id="reason" maxlength="300" /></label>
-      <label>&nbsp;<button id="cancel" type="button" class="secondary">Huỷ số</button></label>
-    </div>
+    <header class="gd-hero">
+      <div>
+        <h1>Cấu hình sổ văn bản</h1>
+        <p id="lead">Mỗi sổ có ký hiệu và cách đánh số riêng. Số đã cấp không bao giờ cấp lại; cấp nhầm thì huỷ, số vẫn nằm trong sổ.</p>
+      </div>
+    </header>
+    <div id="agency"></div>
+
+    <section class="gd-panel" aria-labelledby="books-title">
+      <div class="gd-panel-head"><h2 id="books-title"></h2></div>
+      <div class="gd-panel-body"><div class="qt-books" id="books" aria-busy="true"></div></div>
+    </section>
+
+    <section class="gd-panel" aria-labelledby="editor-title" id="editor-panel">
+      <div class="gd-panel-head"><h2 id="editor-title">Thêm sổ</h2></div>
+      <div class="gd-panel-body qt-editor">
+        <form id="book-form" class="qt-form">
+          <label>Mã sổ <input name="code" required maxlength="10" placeholder="HD" pattern="[A-Za-z0-9]+" autocomplete="off" /></label>
+          <label>Tên sổ <input name="name" required maxlength="80" placeholder="Hợp đồng" autocomplete="off" /></label>
+          <label>Ký hiệu văn bản <input name="symbol" maxlength="20" placeholder="HĐ" autocomplete="off" /></label>
+          <label>Bắt đầu từ số <input name="start_number" type="number" min="1" value="1" /></label>
+          <label class="qt-check wide"><input name="yearly" type="checkbox" checked /><span><strong>Đánh số lại từ đầu mỗi năm</strong><span class="gd-sub">Bỏ chọn nếu sổ đánh số liên tục qua các năm.</span></span></label>
+          <p class="gd-sub wide" id="hint" style="margin: 0"></p>
+          <div class="row wide"><button type="submit" id="save">Lưu sổ</button><button type="button" class="gd-ghost" id="fresh">Thêm sổ khác</button></div>
+          <p class="wide" id="status" role="status" style="margin: 0"></p>
+        </form>
+        <figure style="margin: 0">
+          <div id="sheet"></div>
+          <figcaption class="qt-next" id="next"></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="gd-panel" aria-labelledby="cancel-title">
+      <div class="gd-panel-head">
+        <h2 id="cancel-title"></h2>
+        <input id="q" type="search" placeholder="Tìm số hoặc trích yếu" aria-label="Tìm số hoặc trích yếu" style="min-width: 0; flex: 0 1 260px" />
+      </div>
+      <div class="gd-panel-body gd-scroll" id="entries" aria-live="polite"></div>
+    </section>
+
     <script type="module">
-      import { $, desktiny, h, server, show } from './mo-rong.js'
-      const fail = (error) => show($('#status'), error.message, 'bad')
-      async function load() {
-        const data = await server(`/api/so?nam=${new Date().getFullYear()}`).catch(fail)
-        if (!data) return
-        $('#books').replaceChildren(...data.books.map((b) => h('tr', {}, h('td', {}, b.code), h('td', {}, b.name), h('td', {}, b.symbol || '—'), h('td', { class: 'num' }, b.start_number), h('td', {}, b.yearly ? 'Có' : 'Không'))))
-        $('#entry').replaceChildren(...data.entries.filter((e) => e.state !== 'cancelled').map((e) => h('option', { value: e.id }, `${e.full_number} — ${e.summary}`)))
+      import { $, desktiny, h, server } from './mo-rong.js'
+      import { chip, empty, icon, skeleton } from './bieu-do.js'
+      import { dayOf, docSheet, numberMark, today } from './van-ban.js'
+
+      const year = new Date().getFullYear()
+      let data = null
+      let editing = null
+      let shown = 50
+      let opened = null
+      const form = $('#book-form')
+      const field = form.elements
+      const fail = (error, where = $('#status')) => where.replaceChildren(h('span', { class: 'gd-note tone-bad', role: 'alert' }, icon('alert', 15), error.message))
+      const tail = (symbol) => [symbol, data?.agency.symbol].filter(Boolean).join('-')
+      const format = (n, symbol) => (tail(symbol) ? `${n}/${tail(symbol)}` : String(n))
+
+      function rule(book) {
+        return book.yearly ? `Đánh lại từ số ${book.start_number} mỗi năm` : `Đánh số liên tục từ số ${book.start_number}, không theo năm`
       }
-      $('#book-form').addEventListener('submit', async (event) => {
+
+      function cards() {
+        $('#books-title').replaceChildren(icon('file', 17), `Các sổ (${data.books.length})`)
+        $('#books').replaceChildren(
+          ...data.books.map((book) => h('article', { class: 'qt-book', 'aria-current': editing?.code === book.code ? 'true' : 'false', 'aria-label': `Sổ ${book.name}` },
+            h('div', { class: 'qt-book-top' }, h('strong', {}, book.name), chip(book.code, 'muted')),
+            h('span', { class: 'gd-sub' }, 'Số tiếp theo'),
+            numberMark(book.next_full_number),
+            h('p', {}, rule(book)),
+            h('p', {}, book.issued ? `${book.yearly ? `Năm ${year}` : 'Đến nay'}: ${book.issued} số${book.cancelled ? `, trong đó ${book.cancelled} số đã huỷ` : ''}` : `${book.yearly ? `Năm ${year}` : 'Đến nay'} chưa cấp số nào`),
+            h('button', { type: 'button', class: 'gd-ghost sv-small', onclick: () => edit(book), 'aria-label': `Sửa sổ ${book.name}` }, icon('settings', 14), 'Sửa'))),
+          h('button', { type: 'button', class: 'qt-add', onclick: () => edit(null) }, icon('plus', 22), 'Thêm sổ'),
+        )
+      }
+
+      function edit(book) {
+        editing = book
+        form.reset()
+        field.code.readOnly = Boolean(book)
+        if (book) {
+          field.code.value = book.code
+          field.name.value = book.name
+          field.symbol.value = book.symbol
+          field.start_number.value = book.start_number
+          field.yearly.checked = Boolean(book.yearly)
+        }
+        $('#editor-title').textContent = book ? `Sửa sổ ${book.name}` : 'Thêm sổ'
+        $('#status').replaceChildren()
+        cards()
+        live()
+        if (book || data) $('#editor-panel').scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+        ;(book ? field.name : field.code).focus({ preventScroll: true })
+      }
+
+      // The preview follows what is typed: the number this register will give next, in its full form.
+      function live() {
+        const start = Math.max(1, Number(field.start_number.value) || 1)
+        const used = editing && editing.issued > 0
+        const next = used ? editing.next_number : start
+        const symbol = field.symbol.value.trim()
+        const name = field.name.value.trim() || 'Văn bản'
+        $('#sheet').replaceChildren(docSheet({ agency: data?.agency, number: format(next, symbol), date: today(), kind: name, summary: 'V/v …', label: `Xem trước: ${name} số ${format(next, symbol)}` }))
+        $('#next').replaceChildren(h('span', { class: 'gd-sub', style: 'display:block' }, 'Số tiếp theo sẽ là'), numberMark(format(next, symbol)))
+        $('#hint').textContent = used
+          ? `Sổ đã có số trong ${editing.yearly ? `năm ${year}` : 'chuỗi số hiện tại'}, nên số bắt đầu chỉ áp dụng ${field.yearly.checked ? 'từ năm sau' : 'khi sổ bắt đầu chuỗi số mới'}. Đổi ký hiệu chỉ áp dụng cho số cấp sau.`
+          : 'Ký hiệu cơ quan được thêm sau ký hiệu văn bản. Để trống ký hiệu văn bản (như công văn) thì số chỉ có ký hiệu cơ quan.'
+      }
+      form.addEventListener('input', live)
+      field.yearly.addEventListener('change', live)
+      $('#fresh').addEventListener('click', () => edit(null))
+
+      form.addEventListener('submit', async (event) => {
         event.preventDefault()
-        await server('/api/quan-tri/so', { method: 'POST', body: Object.fromEntries(new FormData(event.target)) }).then(() => { event.target.reset(); load() }, fail)
+        const body = { code: field.code.value, name: field.name.value, symbol: field.symbol.value, start_number: Number(field.start_number.value) || 1, yearly: field.yearly.checked }
+        $('#save').disabled = true
+        try {
+          const saved = await server('/api/quan-tri/so', { method: 'POST', body })
+          desktiny.toast(editing ? `Đã lưu sổ ${body.name}.` : `Đã thêm sổ ${body.name}.`)
+          await load()
+          edit(data.books.find((b) => b.code === saved.code) || null)
+          $('#status').replaceChildren(h('span', { class: 'gd-note tone-ok' }, icon('check', 15), 'Đã lưu.'))
+        } catch (error) {
+          fail(error)
+        } finally {
+          $('#save').disabled = false
+        }
       })
-      $('#cancel').addEventListener('click', async () => {
-        if (!$('#entry').value || !(await desktiny.confirm('Huỷ số này? Số vẫn nằm trong sổ và không được cấp lại.'))) return
-        await server(`/api/quan-tri/huy/${$('#entry').value}`, { method: 'POST', body: { ly_do: $('#reason').value } }).then(load, fail)
-      })
-      load()
+
+      function entries() {
+        const q = $('#q').value.trim().toLocaleLowerCase('vi')
+        const book = Object.fromEntries(data.books.map((b) => [b.code, b.name]))
+        const rows = data.entries
+          .filter((e) => !q || `${e.full_number} ${e.summary}`.toLocaleLowerCase('vi').includes(q))
+          .sort((a, b) => (a.issued_at < b.issued_at ? 1 : a.issued_at > b.issued_at ? -1 : b.id - a.id))
+        $('#cancel-title').replaceChildren(icon('lock', 17), `Huỷ số đã cấp năm ${year}`)
+        if (!rows.length) return $('#entries').replaceChildren(empty(q ? 'Không tìm thấy số nào' : `Năm ${year} chưa cấp số nào`, q ? 'Thử tìm theo số hoặc vài chữ của trích yếu.' : null))
+        const body = []
+        for (const e of rows.slice(0, shown)) {
+          const cancelled = e.state === 'cancelled'
+          body.push(h('tr', { class: cancelled ? 'is-cancelled' : '' },
+            h('td', {}, numberMark(e.full_number, { cancelled })),
+            h('td', { class: 'sv-when' }, h('b', {}, dayOf(e.issued_at)), book[e.book] ?? e.book),
+            h('td', { class: 'sv-summary' }, e.summary, cancelled ? h('span', { class: 'sv-reason' }, `Đã huỷ: ${e.cancel_reason || 'không ghi lý do'}`) : null),
+            h('td', { class: 'sv-open' }, cancelled ? null : h('button', { type: 'button', class: 'gd-ghost sv-small', 'aria-expanded': opened === e.id ? 'true' : 'false', onclick: () => { opened = opened === e.id ? null : e.id; entries() } }, 'Huỷ số'))))
+          if (opened === e.id) body.push(cancelRow(e))
+        }
+        $('#entries').replaceChildren(
+          h('table', { class: 'gd-register sv-register' },
+            h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, 'Số, ký hiệu'), h('th', { scope: 'col' }, 'Ngày, sổ'), h('th', { scope: 'col' }, 'Trích yếu'), h('th', { scope: 'col' }, h('span', { class: 'sr-only' }, 'Thao tác')))),
+            h('tbody', {}, body)),
+          rows.length > shown ? h('div', { class: 'row', style: 'justify-content:center;padding-top:10px' }, h('button', { type: 'button', class: 'gd-ghost', onclick: () => { shown += 50; entries() } }, `Hiện thêm (còn ${rows.length - shown} số)`)) : null)
+        $('#entries').querySelector('.qt-cancel-form input')?.focus()
+      }
+
+      function cancelRow(entry) {
+        const reason = h('input', { maxlength: 300, placeholder: 'Lý do huỷ, ví dụ: cấp nhầm sổ', 'aria-label': `Lý do huỷ số ${entry.full_number}`, required: true })
+        const note = h('span', { role: 'status' })
+        const confirm = async (event) => {
+          event.preventDefault()
+          if (!reason.value.trim()) return note.replaceChildren(h('span', { class: 'bad' }, 'Nêu lý do huỷ số.'))
+          if (!(await desktiny.confirm(`Huỷ số ${entry.full_number}? Số vẫn nằm trong sổ, ghi lý do, và không được cấp lại.`))) return
+          try {
+            await server(`/api/quan-tri/huy/${entry.id}`, { method: 'POST', body: { ly_do: reason.value.trim() } })
+            desktiny.toast(`Đã huỷ số ${entry.full_number}.`)
+            opened = null
+            await load()
+          } catch (error) {
+            fail(error, note)
+          }
+        }
+        return h('tr', { class: 'qt-cancel-row' }, h('td', { colspan: 4 },
+          h('form', { class: 'qt-cancel-form', onsubmit: confirm }, reason,
+            h('button', { type: 'submit', class: 'sv-small' }, 'Xác nhận huỷ'),
+            h('button', { type: 'button', class: 'gd-ghost sv-small', onclick: () => { opened = null; entries() } }, 'Thôi'), note)))
+      }
+      let typing
+      $('#q').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(() => { shown = 50; if (data) entries() }, 150) })
+
+      function agency() {
+        const a = data.agency
+        $('#agency').replaceChildren(h('p', { class: `gd-note${a.name ? '' : ' tone-warn'}`, style: 'margin:-4px 0 16px' }, icon(a.name ? 'settings' : 'alert', 15),
+          a.name
+            ? `Cơ quan ban hành: ${a.name}, ký hiệu ${a.symbol || '(chưa đặt)'}${a.place ? `, địa danh ${a.place}` : ''}. Đổi ở Quản trị › Plugin › Cấu hình.`
+            : `Ký hiệu cơ quan: ${a.symbol || '(chưa đặt)'}. Đặt thêm tên cơ quan và địa danh ở Quản trị › Plugin › Cấu hình để phần đầu văn bản xem trước đầy đủ.`))
+      }
+
+      async function load() {
+        data = await server(`/api/so?nam=${year}`)
+        if (editing) editing = data.books.find((b) => b.code === editing.code) || null
+        agency()
+        cards()
+        entries()
+        live()
+      }
+      $('#books').replaceChildren(skeleton(3, 16))
+      load().then(() => $('#books').setAttribute('aria-busy', 'false'), (error) => fail(error, $('#books')))
     </script>
   </body>
 </html>

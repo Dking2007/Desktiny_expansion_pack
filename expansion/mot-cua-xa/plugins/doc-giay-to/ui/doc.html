@@ -7,99 +7,753 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Đọc giấy tờ</title>
     <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <style>
+      body {
+        padding: 16px 18px 20px;
+      }
+      .gd-hero {
+        margin-bottom: 14px;
+        padding-bottom: 12px;
+      }
+      .gd-hero h1 {
+        font-size: 21px;
+      }
+      h2.dg-h {
+        margin: 0 0 8px;
+        font-size: 14.5px;
+        font-weight: 600;
+      }
+      .dg-source {
+        display: grid;
+        gap: 18px;
+      }
+      .dg-files .gd-list > li {
+        padding: 8px 2px;
+      }
+      .dg-files .gd-svg-icon {
+        flex: none;
+        color: var(--gd-muted);
+      }
+      .dg-files button {
+        padding: 6px 14px;
+        font-size: 13.5px;
+      }
+      .dg-drop {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 16px 18px;
+        border: 1.5px dashed var(--gd-border);
+        border-radius: 12px;
+        background: var(--gd-surface);
+        font-weight: 400;
+        cursor: pointer;
+      }
+      .dg-drop:hover,
+      .dg-drop.is-over {
+        border-color: var(--gd-accent);
+        background: var(--gd-accent-soft);
+      }
+      .dg-drop:focus-within {
+        outline: 2px solid var(--gd-accent);
+        outline-offset: 2px;
+      }
+      .dg-drop .gd-svg-icon {
+        flex: none;
+        color: var(--gd-accent-ink);
+      }
+      .dg-drop strong {
+        display: block;
+        font-size: 14.5px;
+      }
+      .dg-drop small {
+        color: var(--gd-muted);
+        font-size: 12.5px;
+      }
+      .dg-paste {
+        display: grid;
+        gap: 8px;
+      }
+      .dg-paste label {
+        font-weight: 600;
+      }
+      .dg-paste textarea,
+      .dg-raw textarea {
+        width: 100%;
+        min-height: 110px;
+        font-family: var(--gd-font);
+        font-size: 14px;
+        resize: vertical;
+      }
+      .dg-paste .row small {
+        color: var(--gd-muted);
+        font-size: 12px;
+      }
+
+      /* Review: the paper as it was read, next to the values to write. */
+      .dg-from {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 14px;
+        color: var(--gd-muted);
+        font-size: 13.5px;
+      }
+      .dg-from strong {
+        color: var(--gd-ink);
+      }
+      .dg-review {
+        display: grid;
+        grid-template-columns: minmax(250px, 0.9fr) minmax(0, 1.1fr);
+        gap: 22px;
+        align-items: start;
+      }
+      .dg-paper {
+        position: sticky;
+        top: 8px;
+      }
+      .dg-card {
+        position: relative;
+        padding: 14px 16px 16px;
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--gd-accent) 4%, var(--gd-surface));
+        box-shadow: var(--gd-paper-shadow), inset 0 0 0 1px var(--gd-border);
+        transform: rotate(-0.6deg);
+      }
+      .dg-card-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+        margin: -2px 0 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--gd-border);
+      }
+      .dg-card-head strong {
+        font-family: var(--gd-display);
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .dg-card-head span {
+        overflow: hidden;
+        max-width: 50%;
+        color: var(--gd-muted);
+        font-size: 11.5px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .dg-card-body {
+        display: grid;
+        grid-template-columns: 64px minmax(0, 1fr);
+        gap: 12px;
+      }
+      .dg-photo {
+        display: grid;
+        place-items: center;
+        height: 80px;
+        border: 1px solid var(--gd-border);
+        border-radius: 6px;
+        background: var(--gd-surface-2);
+        color: var(--gd-muted);
+        font-family: var(--gd-display);
+        font-size: 20px;
+        font-weight: 700;
+      }
+      .dg-lines {
+        display: grid;
+        gap: 6px;
+        margin: 0;
+      }
+      .dg-line {
+        display: grid;
+        margin: 0;
+        padding: 2px 6px;
+        border-radius: 5px;
+        transition: background 0.15s;
+      }
+      .dg-line dt {
+        color: var(--gd-muted);
+        font-size: 11px;
+      }
+      .dg-line dd {
+        margin: 0;
+        font-size: 13.5px;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+        font-variant-numeric: tabular-nums;
+      }
+      .dg-line.is-name dd {
+        font-family: var(--gd-display);
+        font-size: 16px;
+        font-weight: 700;
+      }
+      .dg-line.is-id dd {
+        font-family: var(--gd-display);
+        font-size: 15px;
+        letter-spacing: 0.08em;
+      }
+      .dg-line.is-unsure dd {
+        text-decoration: underline wavy var(--gd-warn);
+        text-underline-offset: 3px;
+      }
+      .dg-line.is-off {
+        opacity: 0.45;
+      }
+      .dg-line.is-focus {
+        background: var(--gd-accent-soft);
+      }
+      .dg-line.span {
+        grid-column: 1 / -1;
+      }
+      .dg-card .gd-seal {
+        position: absolute;
+        right: 10px;
+        bottom: 8px;
+        background: color-mix(in srgb, var(--gd-surface) 55%, transparent);
+      }
+      .dg-card .gd-seal.dg-stamp {
+        animation: dg-stamp 0.32s cubic-bezier(0.3, 1.4, 0.5, 1);
+      }
+      @keyframes dg-stamp {
+        from {
+          transform: rotate(-9deg) scale(1.5);
+          opacity: 0;
+        }
+        to {
+          transform: rotate(-9deg) scale(1);
+          opacity: 0.88;
+        }
+      }
+      .dg-paper > p {
+        margin: 12px 2px 0;
+        color: var(--gd-muted);
+        font-size: 12px;
+      }
+
+      .dg-fields {
+        display: grid;
+        gap: 0;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .dg-field {
+        display: grid;
+        gap: 5px;
+        padding: 10px 0;
+        border-top: 1px solid var(--gd-border);
+      }
+      .dg-field:first-child {
+        border-top: 0;
+        padding-top: 0;
+      }
+      .dg-field-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 4px 10px;
+      }
+      .dg-field-head label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13.5px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .dg-field-head input[type='checkbox'] {
+        width: 17px;
+        height: 17px;
+        margin: 0;
+        accent-color: var(--gd-accent);
+      }
+      .dg-field .dg-value {
+        width: 100%;
+        height: 38px;
+        font-size: 14.5px;
+        font-variant-numeric: tabular-nums;
+      }
+      .dg-field.is-off .dg-value {
+        color: var(--gd-muted);
+      }
+      .dg-sure {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--tone);
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .dg-sure i {
+        display: inline-flex;
+        gap: 2px;
+        align-items: flex-end;
+      }
+      .dg-sure i b {
+        width: 4px;
+        border-radius: 1px;
+        background: var(--gd-border);
+      }
+      .dg-sure i b:nth-child(1) {
+        height: 6px;
+      }
+      .dg-sure i b:nth-child(2) {
+        height: 9px;
+      }
+      .dg-sure i b:nth-child(3) {
+        height: 12px;
+      }
+      .dg-sure i b.on {
+        background: var(--tone);
+      }
+      .dg-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px 12px;
+        color: var(--gd-muted);
+        font-size: 12.5px;
+      }
+      .dg-meta .is-warn {
+        color: var(--gd-warn);
+      }
+      .dg-meta s {
+        color: var(--gd-muted);
+      }
+      .dg-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px solid var(--gd-border);
+      }
+      .dg-actions p {
+        flex: 1;
+        min-width: 180px;
+        margin: 0;
+        font-size: 13.5px;
+      }
+      .dg-raw {
+        margin-top: 14px;
+      }
+      .dg-raw summary {
+        color: var(--gd-muted);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .dg-raw .row {
+        margin-top: 8px;
+      }
+      .dg-done {
+        display: grid;
+        gap: 4px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .dg-done li {
+        display: grid;
+        grid-template-columns: minmax(110px, 0.8fr) minmax(0, 1.2fr);
+        gap: 10px;
+        padding: 8px 0;
+        border-top: 1px solid var(--gd-border);
+        font-size: 14px;
+      }
+      .dg-done li:first-child {
+        border-top: 0;
+      }
+      .dg-done li > span:first-child {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        color: var(--gd-muted);
+      }
+      .dg-done li > span:first-child .gd-svg-icon {
+        color: var(--gd-ok);
+      }
+      .dg-done b {
+        font-weight: 600;
+        overflow-wrap: anywhere;
+      }
+      .dg-done small {
+        display: block;
+        color: var(--gd-muted);
+      }
+      @media (max-width: 640px) {
+        .dg-review {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .dg-paper {
+          position: static;
+        }
+      }
+      @media (max-width: 380px) {
+        body {
+          padding: 12px;
+        }
+        .dg-card-body {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .dg-photo {
+          display: none;
+        }
+        .dg-done li {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 0;
+        }
+        .dg-actions p {
+          flex-basis: 100%;
+        }
+        .dg-actions button {
+          flex: 1;
+        }
+      }
+      textarea:focus-visible {
+        outline: 2px solid var(--gd-accent);
+        outline-offset: 2px;
+      }
+      /* Desktiny's dark accent is light: dark text on it reads better than white. */
+      :root[data-theme='dark'] button.is-primary {
+        color: var(--gd-surface);
+      }
+    </style>
   </head>
   <body>
-    <p class="muted">Chọn tài liệu để đọc, hoặc dán nội dung chữ (từ ứng dụng quét trên điện thoại). Kiểm từng giá trị trước khi ghi.</p>
-    <div id="files" class="row"></div>
-    <label>Nội dung chữ <textarea id="text" rows="6" style="width: 100%"></textarea></label>
-    <div class="row"><button id="read" type="button" class="secondary">Nhận dạng nội dung</button></div>
-    <table>
-      <thead><tr><th></th><th>Trường</th><th>Đề xuất</th><th>Đang có</th></tr></thead>
-      <tbody id="rows"><tr><td colspan="4" class="muted">Chưa đọc.</td></tr></tbody>
-    </table>
-    <div class="row"><button id="write" type="button" disabled>Ghi vào hồ sơ</button><button id="close" type="button" class="secondary">Đóng</button></div>
-    <p id="status" aria-live="polite"></p>
+    <header class="gd-hero">
+      <div>
+        <h1>Đọc giấy tờ</h1>
+        <p>Đọc lớp chữ của giấy tờ để điền sẵn hồ sơ. Mọi thứ chạy trên máy này, không gửi đi đâu.</p>
+      </div>
+    </header>
+    <main id="app" aria-busy="true"></main>
+    <p id="status" class="gd-note" role="status" aria-live="polite"></p>
+
     <script type="module">
-      import { connect } from './desktiny-plugin-sdk.js'
-      import { FIELDS, recognize, textOf } from './nhan-dang.js'
-      const desktiny = connect()
-      const $ = (id) => document.getElementById(id)
-      const status = (text, cls = '') => Object.assign($('status'), { textContent: text, className: cls })
+      import { $, desktiny, h } from './mo-rong.js'
+      import { chip, empty, icon, initials, localDay, seal, skeleton } from './bieu-do.js'
+      import { CHECK, FIELDS, SURE, analyze, paperKind, textOf } from './nhan-dang.js'
+
+      const app = $('#app')
+      const state = { view: 'source', text: '', source: '', found: {}, kind: 'Giấy tờ', written: null }
+      let dossier = null
+      let me = null
+      let files = []
+
+      function status(text = '', tone = 'muted') {
+        const note = $('#status')
+        note.className = `gd-note tone-${tone}`
+        note.replaceChildren(...(text ? [icon(tone === 'bad' ? 'alert' : tone === 'ok' ? 'check' : 'file', 15), text] : []))
+      }
+
+      const formKeys = () => new Set((dossier?.form?.fields ?? []).map((f) => f.key))
+      const allowedKeys = () => new Set(me?.fields ?? [])
+      const writable = (key) => formKeys().has(key) && allowedKeys().has(key)
+      const labelOf = (key) => (dossier?.form?.fields ?? []).find((f) => f.key === key)?.label || FIELDS[key]
+      const current = (key) => {
+        const value = dossier?.payload?.[key]
+        return value === undefined || value === null || value === '' ? '' : String(value)
+      }
+      const shown = (key, value) => (key === 'ngay_sinh' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value.split('-').reverse().join('/') : value)
+      const sureOf = (confidence) =>
+        confidence >= SURE ? { level: 3, tone: 'ok', text: 'Chắc chắn' } : confidence >= CHECK ? { level: 2, tone: 'warn', text: 'Nên kiểm' } : { level: 1, tone: 'bad', text: 'Cần kiểm kỹ' }
+
+      // ---- Choosing what to read ----------------------------------------------------------------
+
+      async function readBytes(bytes, type, name) {
+        const text = (await textOf(bytes, type, name)).trim()
+        if (!text) {
+          state.view = 'source'
+          render()
+          status(`${name} không có lớp chữ (ảnh quét). Dùng ứng dụng quét có nhận dạng chữ rồi dán nội dung chữ vào ô phía trên.`, 'bad')
+          $('#paste')?.focus()
+          return
+        }
+        recognise(text, name)
+      }
+
+      async function readCaseFile(file, button) {
+        button.disabled = true
+        status(`Đang đọc ${file.name}…`)
+        try {
+          const session = await desktiny.token()
+          const response = await fetch(new URL(file.content_url, session.api_base).href, { headers: { Authorization: `Bearer ${session.token}` } })
+          if (!response.ok) throw new Error(`Không tải được tệp (${response.status}).`)
+          await readBytes(new Uint8Array(await response.arrayBuffer()), file.type, file.name)
+        } catch (error) {
+          status(error.message, 'bad')
+        } finally {
+          button.disabled = false
+        }
+      }
+
+      async function readLocalFile(file) {
+        if (!file) return
+        if (file.size > 20 * 1024 * 1024) return status('Tệp quá lớn (trên 20 MB).', 'bad')
+        status(`Đang đọc ${file.name}…`)
+        try {
+          await readBytes(new Uint8Array(await file.arrayBuffer()), file.type, file.name)
+        } catch (error) {
+          status(error.message || 'Không đọc được tệp.', 'bad')
+        }
+      }
+
+      function recognise(text, source) {
+        state.text = text
+        state.source = source
+        state.found = analyze(text)
+        state.kind = paperKind(text)
+        state.view = 'review'
+        status()
+        render()
+      }
+
+      function sourceView() {
+        const list = files.length
+          ? h('section', { class: 'dg-files', 'aria-labelledby': 'files-title' },
+              h('h2', { class: 'dg-h', id: 'files-title' }, 'Tài liệu của hồ sơ'),
+              h('ul', { class: 'gd-list' },
+                files.map((file) => {
+                  const button = h('button', { type: 'button', class: 'gd-ghost', 'aria-label': `Đọc ${file.name}` }, 'Đọc')
+                  button.addEventListener('click', () => readCaseFile(file, button))
+                  return h('li', {}, icon('file', 20),
+                    h('span', { class: 'gd-grow' }, h('div', { class: 'gd-title', title: file.name }, file.name), h('div', { class: 'gd-sub' }, /pdf/i.test(file.type || file.name) ? 'PDF' : 'Tệp chữ')),
+                    button)
+                })))
+          : h('p', { class: 'muted', style: 'margin:0' }, 'Hồ sơ chưa có tài liệu. Có thể chọn tệp từ máy hoặc dán nội dung chữ.')
+
+        const picker = h('input', { type: 'file', class: 'sr-only', accept: '.txt,.pdf,text/plain,application/pdf', 'aria-label': 'Chọn tệp giấy tờ từ máy' })
+        picker.addEventListener('change', () => readLocalFile(picker.files[0]))
+        const drop = h('label', { class: 'dg-drop' }, picker, icon('download', 26),
+          h('span', {}, h('strong', {}, 'Kéo tệp vào đây hoặc bấm để chọn'), h('small', {}, 'Tệp chữ hoặc PDF có lớp chữ. Tệp chỉ được đọc trên máy này.')))
+        drop.addEventListener('dragover', (event) => {
+          event.preventDefault()
+          drop.classList.add('is-over')
+        })
+        drop.addEventListener('dragleave', () => drop.classList.remove('is-over'))
+        drop.addEventListener('drop', (event) => {
+          event.preventDefault()
+          drop.classList.remove('is-over')
+          readLocalFile(event.dataTransfer?.files?.[0])
+        })
+
+        const paste = h('textarea', { id: 'paste', rows: 6, spellcheck: 'false', placeholder: 'Họ và tên: Nguyễn Thị Mai\nNgày sinh: 05/03/1990\nSố: 001190012345' })
+        paste.value = state.text
+        const go = h('button', { type: 'button', class: 'is-primary' }, 'Nhận dạng')
+        const run = () => (paste.value.trim() ? recognise(paste.value.trim(), 'nội dung dán vào') : status('Dán nội dung chữ của giấy tờ trước.', 'bad'))
+        go.addEventListener('click', run)
+        paste.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) run()
+        })
+        return h('div', { class: 'dg-source' }, list, drop,
+          h('div', { class: 'dg-paste' },
+            h('label', { for: 'paste' }, 'Hoặc dán nội dung chữ từ ứng dụng quét'),
+            paste,
+            h('div', { class: 'row' }, go, h('small', {}, 'Ctrl + Enter để nhận dạng'))))
+      }
+
+      // ---- Checking the values ------------------------------------------------------------------
+
+      function paperCard(values, { stamped = false } = {}) {
+        const keys = Object.keys(FIELDS).filter((key) => key in values)
+        const name = values.ho_ten?.value || ''
+        const line = (key) =>
+          h('div', {
+            class: ['dg-line', key === 'ho_ten' ? 'is-name span' : '', key === 'so_cccd' ? 'is-id' : '', /que_quan|noi_thuong_tru/.test(key) ? 'span' : '',
+              values[key].confidence < SURE ? 'is-unsure' : '', values[key].off ? 'is-off' : ''].filter(Boolean).join(' '),
+            'data-line': key,
+          }, h('dt', {}, FIELDS[key]), h('dd', {}, shown(key, values[key].value) || '—'))
+        const top = keys.filter((k) => ['ho_ten', 'so_cccd', 'ngay_sinh', 'gioi_tinh'].includes(k))
+        const rest = keys.filter((k) => !top.includes(k))
+        return h('figure', { class: 'dg-card', style: 'margin:0', 'aria-label': `${state.kind} đã đọc` },
+          h('div', { class: 'dg-card-head' }, h('strong', {}, state.kind), h('span', { title: state.source }, state.source)),
+          h('div', { class: 'dg-card-body' },
+            h('div', { class: 'dg-photo', 'aria-hidden': 'true' }, name ? initials(name) : icon('users', 26)),
+            h('dl', { class: 'dg-lines' }, top.map(line))),
+          rest.length ? h('dl', { class: 'dg-lines', style: 'margin-top:8px' }, rest.map(line)) : null,
+          stamped ? seal('Đã điền hồ sơ', localDay().split('-').reverse().join('/')) : null)
+      }
+
+      function valueInput(key, value, onInput) {
+        let input
+        if (key === 'gioi_tinh') {
+          input = h('select', { class: 'dg-value' }, ['Nam', 'Nữ'].map((option) => h('option', { value: option, selected: option === value ? true : null }, option)))
+        } else {
+          input = h('input', { class: 'dg-value', type: key === 'ngay_sinh' ? 'date' : 'text', inputmode: /so_cccd|ma_so_thue|so_dien_thoai/.test(key) ? 'numeric' : null, autocomplete: 'off', spellcheck: 'false' })
+          input.value = value
+        }
+        input.addEventListener('input', onInput)
+        input.addEventListener('change', onInput)
+        return input
+      }
+
+      function reviewView() {
+        const keys = Object.keys(FIELDS).filter((key) => key in state.found)
+        const from = h('div', { class: 'dg-from' },
+          h('span', {}, 'Đọc từ ', h('strong', {}, state.source)),
+          h('button', { type: 'button', class: 'gd-ghost', onclick: () => { state.view = 'source'; render() } }, 'Đọc giấy tờ khác'))
+        if (!keys.length) {
+          return h('div', {}, from,
+            empty('Không nhận ra thông tin nào', 'Nội dung chữ không có các nhãn quen thuộc như “Họ và tên”, “Ngày sinh”, “Số”. Sửa nội dung bên dưới rồi nhận dạng lại.', 'file'),
+            rawText(true))
+        }
+        // The values as the person edits them; the card shows them live.
+        const values = Object.fromEntries(keys.map((key) => [key, { ...state.found[key], off: !writable(key) }]))
+        const paper = h('div', { class: 'dg-paper' }, paperCard(values),
+          h('p', {}, 'Bản đọc được, chưa phải giấy tờ gốc. Đối chiếu với bản chính trước khi ghi.'))
+        const refreshCard = () => paper.firstChild.replaceWith(paperCard(values))
+        const summary = h('p', { 'aria-live': 'polite' })
+        const write = h('button', { type: 'button', class: 'is-primary' }, 'Ghi vào hồ sơ')
+        const boxes = {}
+        const inputs = {}
+
+        function chosen() {
+          return keys.filter((key) => boxes[key].checked && writable(key)).map((key) => ({ key, value: inputs[key].value.trim(), old: current(key) }))
+        }
+        function updateSummary() {
+          const picked = chosen()
+          const replace = picked.filter((item) => item.old && item.old !== item.value).length
+          const blank = picked.filter((item) => !item.value).length
+          write.disabled = !picked.length || blank > 0
+          summary.textContent = !picked.length
+            ? keys.some(writable) ? 'Chọn ít nhất một trường để ghi.' : 'Biểu mẫu của hồ sơ không có trường nào plugin được phép ghi.'
+            : blank
+              ? 'Có trường được chọn nhưng để trống.'
+              : `Sẽ ghi ${picked.length} trường${replace ? `, trong đó ${replace} trường thay giá trị đang có` : ''}.`
+        }
+
+        const rows = keys.map((key) => {
+          const item = state.found[key]
+          const sure = sureOf(item.confidence)
+          const id = `f-${key}`
+          const ok = writable(key)
+          const old = current(key)
+          const box = h('input', { type: 'checkbox', id, checked: ok && old !== item.value ? true : null, disabled: ok ? null : true })
+          boxes[key] = box
+          const diff = h('span')
+          const showDiff = () => {
+            const value = inputs[key].value.trim()
+            diff.className = old && old !== value && box.checked ? 'is-warn' : ''
+            diff.textContent = !ok ? '' : !old ? 'Hồ sơ chưa có' : old === value ? 'Trùng với hồ sơ' : `Hồ sơ đang có: ${shown(key, old)}`
+          }
+          const input = valueInput(key, item.value, () => {
+            values[key].value = input.value.trim()
+            values[key].confidence = input.value.trim() === item.value ? item.confidence : 1
+            refreshCard()
+            focusLine(document.activeElement === input)
+            showDiff()
+            updateSummary()
+          })
+          inputs[key] = input
+          input.setAttribute('aria-labelledby', `${id}-label`)
+          input.setAttribute('aria-describedby', `${id}-meta`)
+          if (!ok) input.disabled = true
+          box.addEventListener('change', () => {
+            showDiff()
+            updateSummary()
+          })
+          const focusLine = (on) => paper.querySelector(`[data-line="${key}"]`)?.classList.toggle('is-focus', on)
+          input.addEventListener('focus', () => focusLine(true))
+          input.addEventListener('blur', () => focusLine(false))
+          showDiff()
+          return h('li', { class: `dg-field${ok ? '' : ' is-off'}` },
+            h('div', { class: 'dg-field-head' },
+              h('label', { for: id }, box, h('span', { id: `${id}-label` }, labelOf(key))),
+              h('span', { class: `dg-sure tone-${sure.tone}`, title: `Độ tin cậy khoảng ${Math.round(item.confidence * 100)}%` },
+                h('i', { 'aria-hidden': 'true' }, [1, 2, 3].map((n) => h('b', { class: n <= sure.level ? 'on' : '' }))),
+                sure.text)),
+            input,
+            h('div', { class: 'dg-meta', id: `${id}-meta` },
+              item.note ? h('span', { class: item.confidence < SURE ? 'is-warn' : '' }, item.note) : null,
+              ok ? diff : h('span', {}, formKeys().has(key) ? 'Plugin chưa được cấp quyền ghi trường này.' : 'Biểu mẫu của hồ sơ không có trường này.')))
+        })
+
+        write.addEventListener('click', () => save(chosen(), values, write))
+        const cancel = h('button', { type: 'button', class: 'gd-ghost', onclick: () => desktiny.close(null) }, 'Huỷ')
+        updateSummary()
+        return h('div', {}, from,
+          h('div', { class: 'dg-review' }, paper,
+            h('section', { 'aria-labelledby': 'fields-title' },
+              h('h2', { class: 'dg-h', id: 'fields-title' }, `Thông tin nhận ra (${keys.length})`),
+              h('ul', { class: 'dg-fields' }, rows),
+              rawText(false))),
+          h('div', { class: 'dg-actions' }, summary, cancel, write))
+      }
+
+      function rawText(open) {
+        const area = h('textarea', { rows: 6, spellcheck: 'false', 'aria-label': 'Nội dung chữ đã đọc' })
+        area.value = state.text
+        const again = h('button', { type: 'button', class: 'gd-ghost', onclick: () => recognise(area.value.trim(), state.source) }, 'Nhận dạng lại')
+        return h('details', { class: 'dg-raw', open: open ? true : null }, h('summary', {}, 'Nội dung chữ đã đọc'), area, h('div', { class: 'row' }, again))
+      }
+
+      async function save(picked, values, button) {
+        if (!picked.length) return
+        const replace = picked.filter((item) => item.old && item.old !== item.value).length
+        const names = picked.map((item) => labelOf(item.key)).join(', ')
+        const question = `Ghi ${picked.length} trường vào hồ sơ: ${names}?${replace ? ` ${replace} trường sẽ thay giá trị đang có.` : ''}`
+        if (!(await desktiny.confirm(question))) return
+        button.disabled = true
+        status('Đang ghi vào hồ sơ…')
+        try {
+          const body = Object.fromEntries(picked.map((item) => [item.key, item.value]))
+          await desktiny.api(`/cases/${caseId}/plugin-fields`, { method: 'PATCH', body: { values: body } })
+          state.written = { picked, values }
+          state.view = 'done'
+          status()
+          desktiny.toast(`Đã ghi ${picked.length} trường vào hồ sơ.`)
+          desktiny.refresh()
+          render()
+        } catch (error) {
+          button.disabled = false
+          status(error.message || 'Không ghi được vào hồ sơ.', 'bad')
+        }
+      }
+
+      // ---- Done ---------------------------------------------------------------------------------
+
+      function doneView() {
+        const { picked, values } = state.written
+        const card = paperCard(values, { stamped: true })
+        card.querySelector('.gd-seal')?.classList.add('dg-stamp')
+        const result = Object.fromEntries(picked.map((item) => [item.key, item.value]))
+        const finish = h('button', { type: 'button', class: 'is-primary', onclick: () => desktiny.close(result) }, 'Xong')
+        requestAnimationFrame(() => finish.focus())
+        return h('div', { class: 'dg-review' },
+          h('div', { class: 'dg-paper' }, card),
+          h('section', { 'aria-labelledby': 'done-title' },
+            h('h2', { class: 'dg-h', id: 'done-title' }, `Đã ghi ${picked.length} trường vào hồ sơ`),
+            h('ul', { class: 'dg-done' },
+              picked.map((item) => h('li', {},
+                h('span', {}, icon('check', 15), labelOf(item.key)),
+                h('span', {}, h('b', {}, shown(item.key, item.value)), item.old && item.old !== item.value ? h('small', {}, 'Thay cho ', h('s', {}, shown(item.key, item.old))) : null)))),
+            h('div', { class: 'dg-actions' }, h('p', { class: 'muted' }, 'Các trường khác của hồ sơ giữ nguyên.'), finish)))
+      }
+
+      function render() {
+        app.removeAttribute('aria-busy')
+        app.replaceChildren(state.view === 'review' ? reviewView() : state.view === 'done' ? doneView() : sourceView())
+      }
+
+      // ---- Start --------------------------------------------------------------------------------
+
+      app.replaceChildren(skeleton(4, 16))
       const context = await desktiny.context
       const caseId = context.record.case_id
-      let dossier, me
       try {
         ;[dossier, me] = await Promise.all([desktiny.api(`/cases/${caseId}`), desktiny.api('/me')])
       } catch (error) {
-        status(error.message, 'bad')
+        status(error.message || 'Không tải được hồ sơ.', 'bad')
       }
-      // Only fields this dossier's form has and the administrator let the plugin write.
-      const writable = new Set((dossier?.form.fields ?? []).map((f) => f.key).filter((k) => (me?.fields ?? []).includes(k)))
-      const files = await desktiny.api(`/cases/${caseId}/files`).then((r) => r.items).catch(() => [])
-      for (const file of files) {
-        const button = Object.assign(document.createElement('button'), { type: 'button', className: 'secondary', textContent: `Đọc ${file.name}` })
-        button.addEventListener('click', async () => {
-          status(`Đang đọc ${file.name}…`)
-          try {
-            const session = await desktiny.token()
-            const response = await fetch(new URL(file.content_url, session.api_base).href, { headers: { Authorization: `Bearer ${session.token}` } })
-            if (!response.ok) throw new Error(`Không tải được tệp (${response.status}).`)
-            const text = await textOf(new Uint8Array(await response.arrayBuffer()), file.type, file.name)
-            $('text').value = text.trim()
-            status(text.trim() ? 'Đã đọc; bấm “Nhận dạng nội dung”.' : 'Tệp không có lớp chữ (ảnh quét): dán nội dung chữ vào ô bên dưới.', text.trim() ? 'ok' : 'bad')
-            if (text.trim()) show()
-          } catch (error) {
-            status(error.message, 'bad')
-          }
-        })
-        $('files').append(button)
-      }
-      if (!files.length) status('Hồ sơ chưa có tài liệu; có thể dán nội dung chữ.', 'muted')
-      let proposal = {}
-      function show() {
-        proposal = recognize($('text').value)
-        const keys = Object.keys(FIELDS).filter((k) => k in proposal)
-        $('rows').replaceChildren(
-          ...(keys.length ? keys : ['']).map((key) => {
-            const row = document.createElement('tr')
-            if (!key) {
-              row.append(Object.assign(document.createElement('td'), { colSpan: 4, className: 'muted', textContent: 'Không nhận ra thông tin nào.' }))
-              return row
-            }
-            const box = Object.assign(document.createElement('input'), { type: 'checkbox', checked: writable.has(key), disabled: !writable.has(key) })
-            box.dataset.key = key
-            const input = Object.assign(document.createElement('input'), { value: proposal[key] })
-            input.dataset.value = key
-            const cells = [box, FIELDS[key] + (writable.has(key) ? '' : ' (biểu mẫu không có trường này)'), input, String(dossier?.payload?.[key] ?? '—')]
-            for (const cell of cells) {
-              const td = document.createElement('td')
-              td.append(cell)
-              row.append(td)
-            }
-            return row
-          }),
-        )
-        $('write').disabled = !keys.some((k) => writable.has(k))
-      }
-      $('read').addEventListener('click', show)
-      $('close').addEventListener('click', () => desktiny.close(null))
-      $('write').addEventListener('click', async () => {
-        const values = {}
-        for (const box of document.querySelectorAll('input[type=checkbox][data-key]:checked')) {
-          const key = box.dataset.key
-          values[key] = document.querySelector(`input[data-value="${key}"]`).value.trim()
-        }
-        if (!Object.keys(values).length) return status('Chọn ít nhất một trường.', 'bad')
-        if (!(await desktiny.confirm(`Ghi ${Object.keys(values).length} trường vào hồ sơ?`))) return
-        try {
-          await desktiny.api(`/cases/${caseId}/plugin-fields`, { method: 'PATCH', body: { values } })
-          desktiny.toast('Đã ghi thông tin vào hồ sơ.')
-          desktiny.refresh()
-          desktiny.close(values)
-        } catch (error) {
-          status(error.message, 'bad')
-        }
-      })
+      files = await desktiny.api(`/cases/${caseId}/files`).then((r) => r.items || []).catch(() => [])
+      render()
+      if (dossier && !Object.keys(FIELDS).some(writable)) status('Biểu mẫu của hồ sơ không có trường nào plugin được phép ghi; vẫn đọc được để xem.', 'warn')
     </script>
   </body>
 </html>

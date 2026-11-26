@@ -51,7 +51,7 @@ from desktiny_plugin.cli import problems as plugin_problems  # noqa: E402
 
 DIST = ROOT / "dist"
 SERVER_DIR = "may-chu-plugin"
-SHARED = ["desktiny-plugin-sdk.js", "chung.css"]
+SHARED = ["desktiny-plugin-sdk.js", "chung.css", "mo-rong.js", "giao-dien.css", "bieu-do.js"]
 SKIP = {"__pycache__", ".pytest_cache", "data", ".env"}
 # Zip entries get a fixed date so the same sources always give the same archive.
 STAMP = (2026, 1, 1, 0, 0, 0)
@@ -148,6 +148,9 @@ def packaged_plugin_files(name: str) -> dict[str, bytes]:
     files |= {f"ui/{path}": data for path, data in folder(base / "ui").items()}
     for shared in SHARED:
         files[f"ui/{shared}"] = (ROOT / "sdk" / shared).read_bytes()
+    # Desktiny's faces for giao-dien.css (it loads them from phong-chu/ next to itself).
+    for font in sorted((ROOT / "sdk" / "phong-chu").glob("*.woff2")):
+        files[f"ui/phong-chu/{font.name}"] = font.read_bytes()
     if (base / "README.md").is_file():
         files["README.md"] = (base / "README.md").read_bytes()
     return files

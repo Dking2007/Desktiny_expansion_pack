@@ -7,46 +7,655 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Tính hạn giải quyết</title>
     <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <style>
+      .th-top {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+        gap: 18px 28px;
+        align-items: start;
+        margin-bottom: 18px;
+      }
+      .th-form {
+        display: grid;
+        gap: 16px;
+      }
+      .th-field {
+        display: grid;
+        gap: 6px;
+      }
+      .th-field > span,
+      .th-presets legend {
+        color: var(--gd-muted);
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .th-line {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .th-line input[type='date'] {
+        flex: 1;
+        min-width: 150px;
+        height: 40px;
+        font-variant-numeric: tabular-nums;
+      }
+      .th-count {
+        display: inline-flex;
+        align-items: stretch;
+        border: 1px solid var(--gd-border);
+        border-radius: 10px;
+        background: var(--gd-surface);
+      }
+      .th-count button {
+        width: 42px;
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+        color: var(--gd-ink);
+        font-size: 20px;
+        font-weight: 600;
+        line-height: 1;
+      }
+      .th-count button:hover:not(:disabled) {
+        background: var(--gd-surface-2);
+      }
+      .th-count button:first-child {
+        border-right: 1px solid var(--gd-border);
+        border-radius: 10px 0 0 10px;
+      }
+      .th-count button:last-child {
+        border-left: 1px solid var(--gd-border);
+        border-radius: 0 10px 10px 0;
+      }
+      .th-count input {
+        width: 76px;
+        height: 46px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        font-family: var(--gd-display);
+        font-size: 22px;
+        font-weight: 700;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+        -moz-appearance: textfield;
+      }
+      .th-count input::-webkit-inner-spin-button,
+      .th-count input::-webkit-outer-spin-button {
+        margin: 0;
+        -webkit-appearance: none;
+      }
+      .th-unit {
+        color: var(--gd-muted);
+        font-size: 13.5px;
+      }
+      .th-presets {
+        display: grid;
+        gap: 6px;
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+      .th-presets div {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+      }
+      .th-preset {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border: 1px solid var(--gd-border);
+        border-radius: 10px;
+        background: var(--gd-surface);
+        color: var(--gd-ink);
+        font-weight: 400;
+        text-align: left;
+      }
+      .th-preset:hover {
+        border-color: var(--gd-accent);
+      }
+      .th-preset b {
+        flex: none;
+        min-width: 30px;
+        font-family: var(--gd-display);
+        font-size: 18px;
+        font-weight: 700;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+      }
+      .th-preset span {
+        font-size: 12.5px;
+        line-height: 1.3;
+      }
+      .th-preset[aria-pressed='true'] {
+        border-color: var(--gd-accent);
+        background: var(--gd-accent-soft);
+        box-shadow: inset 0 0 0 1px var(--gd-accent);
+      }
+      .th-preset[aria-pressed='true'] b {
+        color: var(--gd-accent-ink);
+      }
+
+      /* The result: the due date as a tear-off sheet, with the reckoning beside it. */
+      .th-result {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px 22px;
+        align-items: flex-start;
+        padding-top: 6px;
+      }
+      .th-sheet {
+        perspective: 600px;
+      }
+      .th-sheet .gd-tear {
+        width: 150px;
+        transform-origin: 50% 0;
+      }
+      .th-sheet .gd-tear-day {
+        font-size: 76px;
+      }
+      .th-sheet .gd-tear.th-turn {
+        animation: th-turn 0.42s cubic-bezier(0.2, 0.7, 0.3, 1);
+      }
+      @keyframes th-turn {
+        from {
+          transform: rotateX(-82deg);
+          opacity: 0.25;
+        }
+        to {
+          transform: none;
+          opacity: 1;
+        }
+      }
+      .th-reckon {
+        flex: 1;
+        min-width: 210px;
+      }
+      .th-reckon h2 {
+        margin: 0;
+        color: var(--gd-muted);
+        font-family: var(--gd-font);
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0;
+      }
+      .th-due {
+        margin: 2px 0 4px;
+        font-family: var(--gd-display);
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 1.2;
+        font-variant-numeric: tabular-nums;
+      }
+      .th-why {
+        margin: 0 0 10px;
+        color: var(--gd-muted);
+        font-size: 14px;
+      }
+      .th-reckon .gd-stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin: 12px 0 0;
+      }
+      .th-reckon .gd-stat-value {
+        font-size: 22px;
+      }
+
+      /* The calendar: the days counted, the days skipped, and the span between receipt and the due date. */
+      .th-cal .gd-cal-day.future {
+        color: var(--gd-ink);
+        opacity: 1;
+      }
+      .th-cal .gd-cal-day.off {
+        color: var(--gd-muted);
+      }
+      .th-cal .gd-cal-day.th-span:not(.off) {
+        background: color-mix(in srgb, var(--gd-accent) 6%, var(--gd-surface));
+      }
+      .th-cal .gd-cal-day.th-start {
+        border-color: var(--gd-info);
+        border-style: dashed;
+      }
+      .th-cal .gd-cal-day.th-end {
+        border-color: var(--gd-son);
+        background: var(--gd-son);
+        box-shadow: none;
+        color: #fff;
+      }
+      .th-cal .gd-cal-day.th-end b,
+      .th-cal .gd-cal-day.th-end small {
+        color: #fff;
+      }
+      .th-cal .gd-cal-day.th-end .gd-mark {
+        border-color: #fff;
+        color: #fff;
+      }
+      :root[data-theme='dark'] .th-cal .gd-cal-day.th-end,
+      :root[data-theme='dark'] .th-cal .gd-cal-day.th-end b,
+      :root[data-theme='dark'] .th-cal .gd-cal-day.th-end small {
+        color: #1a0d0b;
+      }
+      :root[data-theme='dark'] .th-cal .gd-cal-day.th-end .gd-mark {
+        border-color: #1a0d0b;
+        color: #1a0d0b;
+      }
+      .th-cal .gd-cal-day.tone-accent .gd-mark {
+        border-color: transparent;
+        background: var(--gd-accent-soft);
+        color: var(--gd-accent-ink);
+      }
+      .th-legend .th-key {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 1px solid var(--gd-border);
+        border-radius: 4px;
+        background: var(--gd-surface);
+      }
+      .th-key.counted {
+        box-shadow: inset 0 -3px 0 var(--gd-accent-ink);
+      }
+      .th-key.holiday {
+        box-shadow: inset 0 -3px 0 var(--gd-bad);
+      }
+      .th-key.off {
+        background: repeating-linear-gradient(135deg, var(--gd-border) 0 2px, var(--gd-surface-2) 2px 4px);
+      }
+      .th-key.start {
+        border: 1.5px dashed var(--gd-info);
+      }
+      .th-key.end {
+        border-color: var(--gd-son);
+        background: var(--gd-son);
+      }
+      .th-month-notes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 16px;
+        margin: 12px 0 0;
+        padding: 10px 0 0;
+        border-top: 1px solid var(--gd-border);
+        list-style: none;
+        font-size: 13px;
+      }
+      .th-month-notes li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .th-month-notes .gd-leaf {
+        width: 36px;
+      }
+      .th-month-notes .gd-leaf span {
+        font-size: 14px;
+      }
+      .th-pick {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 12px;
+        margin-top: 12px;
+        padding: 10px 12px;
+        border: 1px solid var(--gd-border);
+        border-radius: 10px;
+        font-size: 14px;
+      }
+      .th-pick:empty,
+      .th-month-notes[hidden] {
+        display: none;
+      }
+      textarea:focus-visible {
+        outline: 2px solid var(--gd-accent);
+        outline-offset: 2px;
+      }
+      .th-pick strong {
+        font-family: var(--gd-display);
+        font-weight: 600;
+      }
+      .th-pick .gd-grow {
+        min-width: 180px;
+      }
+      .th-pick button {
+        padding: 6px 12px;
+        font-size: 13px;
+      }
+      details.gd-panel > summary {
+        padding: 12px 16px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      details.gd-panel textarea {
+        width: 100%;
+        font-family: var(--gd-font);
+        font-size: 13.5px;
+        font-variant-numeric: tabular-nums;
+        resize: vertical;
+      }
+      .th-lists {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+        gap: 12px 16px;
+      }
+      @media (max-width: 760px) {
+        .th-top {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      @media (max-width: 420px) {
+        .th-sheet .gd-tear {
+          width: 118px;
+        }
+        .th-sheet .gd-tear-day {
+          font-size: 58px;
+        }
+        .th-due {
+          font-size: 20px;
+        }
+        .th-reckon .gd-stats {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .th-reckon .gd-stat {
+          grid-template-columns: minmax(0, 1fr) auto;
+          align-items: baseline;
+          gap: 0 12px;
+          padding: 7px 2px;
+        }
+        .th-reckon .gd-stat-value {
+          grid-column: 2;
+          grid-row: 1 / span 2;
+        }
+        .th-reckon .gd-stat-hint {
+          grid-column: 1;
+        }
+        .th-cal .gd-cal-top .gd-mark {
+          display: none;
+        }
+        .gd-cal {
+          gap: 3px;
+        }
+        .gd-cal-day {
+          padding: 4px 5px;
+        }
+      }
+    </style>
   </head>
   <body>
-    <h1>Tính hạn giải quyết theo ngày làm việc</h1>
-    <p class="muted">Không tính thứ Bảy, Chủ nhật và ngày nghỉ lễ; ngày làm bù vẫn tính. Tính ngay trên trang, không gửi dữ liệu đi đâu.</p>
-    <div class="grid">
-      <label>Ngày tiếp nhận <input id="from" type="date" /></label>
-      <label>Số ngày làm việc <input id="days" type="number" min="0" max="365" value="5" /></label>
+    <header class="gd-hero">
+      <div>
+        <h1>Tính hạn giải quyết</h1>
+        <p>Không tính thứ Bảy, Chủ nhật và ngày nghỉ lễ; ngày làm bù vẫn tính. Tính ngay trên trang, không gửi dữ liệu đi đâu.</p>
+      </div>
+    </header>
+
+    <div class="th-top">
+      <section class="th-form" aria-label="Ngày tiếp nhận và thời hạn">
+        <div class="th-field">
+          <span id="from-label">Ngày tiếp nhận</span>
+          <div class="th-line">
+            <input id="from" type="date" aria-labelledby="from-label" required />
+            <button id="today" type="button" class="gd-ghost">Hôm nay</button>
+          </div>
+        </div>
+        <div class="th-field">
+          <span id="days-label">Thời hạn</span>
+          <div class="th-line">
+            <div class="th-count" role="group" aria-labelledby="days-label">
+              <button id="minus" type="button" aria-label="Bớt một ngày">−</button>
+              <input id="days" type="number" inputmode="numeric" min="0" max="365" value="5" aria-label="Số ngày làm việc" />
+              <button id="plus" type="button" aria-label="Thêm một ngày">+</button>
+            </div>
+            <span class="th-unit" id="unit">ngày làm việc</span>
+          </div>
+        </div>
+        <fieldset class="th-presets">
+          <legend>Thời hạn thường gặp</legend>
+          <div id="presets"></div>
+        </fieldset>
+      </section>
+
+      <section class="th-result" aria-labelledby="result-title">
+        <div class="th-sheet" id="sheet"></div>
+        <div class="th-reckon">
+          <h2 id="result-title">Hạn trả kết quả</h2>
+          <p class="th-due" id="due" aria-live="polite"></p>
+          <p class="th-why" id="why"></p>
+          <span id="left"></span>
+          <div class="gd-stats" id="ledger"></div>
+        </div>
+      </section>
     </div>
-    <p id="out" class="card" aria-live="polite"></p>
-    <h2>Đếm ngày làm việc giữa hai ngày</h2>
-    <div class="grid">
-      <label>Từ ngày <input id="a" type="date" /></label>
-      <label>Đến ngày <input id="b" type="date" /></label>
-    </div>
-    <p id="between" aria-live="polite"></p>
-    <h2>Ngày nghỉ lễ và ngày làm bù</h2>
-    <div class="grid">
-      <label>Ngày nghỉ (mỗi dòng một ngày) <textarea id="holidays" rows="8"></textarea></label>
-      <label>Ngày làm bù (thứ Bảy, Chủ nhật đi làm) <textarea id="workdays" rows="8"></textarea></label>
-    </div>
-    <p class="muted">Sửa ở đây chỉ có tác dụng trên trang đang mở. Danh sách mặc định nằm trong tệp ngay-lam-viec.js của plugin; sửa tệp đó rồi đóng gói lại để cả cơ quan dùng.</p>
+
+    <section class="gd-panel" aria-labelledby="cal-title">
+      <div class="gd-panel-head">
+        <h2 id="cal-title">Lịch đếm ngày</h2>
+        <span id="stepper"></span>
+      </div>
+      <div class="gd-panel-body">
+        <div id="calendar" class="th-cal"></div>
+        <div class="gd-legend th-legend" aria-hidden="true">
+          <span><i class="th-key start"></i>Ngày tiếp nhận</span>
+          <span><i class="th-key counted"></i>Ngày được tính</span>
+          <span><i class="th-key end"></i>Hạn trả</span>
+          <span><i class="th-key holiday"></i>Nghỉ lễ</span>
+          <span><i class="th-key off"></i>Cuối tuần</span>
+        </div>
+        <ul class="th-month-notes" id="month-notes" aria-label="Ngày nghỉ lễ trong tháng"></ul>
+        <div class="th-pick" id="pick" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <details class="gd-panel" id="lists">
+      <summary>Ngày nghỉ lễ và ngày làm bù</summary>
+      <div class="gd-panel-body">
+        <div class="th-lists">
+          <label>Ngày nghỉ, mỗi dòng một ngày, có thể ghi tên sau ngày <textarea id="holidays" rows="9" spellcheck="false"></textarea></label>
+          <label>Ngày làm bù (thứ Bảy, Chủ nhật đi làm) <textarea id="workdays" rows="9" spellcheck="false" placeholder="2026-05-09 Làm bù"></textarea></label>
+        </div>
+        <div class="th-line" style="margin-top: 10px">
+          <button id="reset" type="button" class="gd-ghost">Khôi phục danh sách mặc định</button>
+        </div>
+        <p class="muted">Sửa ở đây chỉ có tác dụng trên trang đang mở. Danh sách dùng chung nằm trong tệp ngay-lam-viec.js của plugin; sửa tệp đó rồi đóng gói lại để cả cơ quan dùng.</p>
+      </div>
+    </details>
+
     <script type="module">
-      import { connect } from './desktiny-plugin-sdk.js'
-      import { HOLIDAYS, WORKDAYS, addWorkingDays, iso, workingDaysBetween } from './ngay-lam-viec.js'
-      connect()
-      const $ = (id) => document.getElementById(id)
-      const today = iso(new Date())
-      $('from').value = $('a').value = $('b').value = today
-      $('holidays').value = Object.values(HOLIDAYS).flat().join('\n')
-      $('workdays').value = WORKDAYS.join('\n')
-      const days = (id) => new Set($(id).value.split(/\s+/).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)))
-      const long = (date) => date.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' })
-      function update() {
-        const count = Number($('days').value)
-        if (!$('from').value || !(count >= 0 && count <= 365)) return ($('out').textContent = 'Nhập ngày tiếp nhận và số ngày từ 0 đến 365.')
-        const due = addWorkingDays($('from').value, count, days('holidays'), days('workdays'))
-        $('out').replaceChildren('Hạn trả kết quả: ', Object.assign(document.createElement('strong'), { textContent: long(due) }), count === 0 ? ' (trong ngày)' : '')
-        if ($('a').value && $('b').value) $('between').textContent = `${workingDaysBetween($('a').value, $('b').value, days('holidays'), days('workdays'))} ngày làm việc.`
+      import { $, h } from './mo-rong.js'
+      import { calendar, chip, leaf, localDay, monthStepper, stat, tear } from './bieu-do.js'
+      import { HOLIDAYS, PRESETS, WORKDAYS, dayKind, dueDetails, holidayName, parseDayList, workingDaysBetween } from './ngay-lam-viec.js'
+
+      const WEEKDAYS = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy']
+      const MAX = 365
+      const today = localDay()
+      const defaults = {
+        holidays: Object.values(HOLIDAYS).flat().map((d) => (holidayName(d) ? `${d} ${holidayName(d)}` : d)).join('\n'),
+        workdays: WORKDAYS.join('\n'),
       }
-      for (const id of ['from', 'days', 'a', 'b', 'holidays', 'workdays']) $(id).addEventListener('input', update)
+      const state = { month: today.slice(0, 7), follow: true, picked: null, shownDue: null, way: null }
+
+      const dateOf = (key) => {
+        const [y, m, d] = key.split('-').map(Number)
+        return new Date(y, m - 1, d)
+      }
+      const short = (key) => key.split('-').reverse().join('/')
+      const long = (key) => `${WEEKDAYS[dateOf(key).getDay()]}, ${short(key)}`
+      const days = () => Number($('#days').value)
+      const validDays = () => $('#days').value !== '' && Number.isInteger(days()) && days() >= 0 && days() <= MAX
+
+      function lists() {
+        const holidays = parseDayList($('#holidays').value)
+        const workdays = parseDayList($('#workdays').value)
+        return { holidays: holidays.days, workdays: workdays.days, names: { ...workdays.names, ...holidays.names } }
+      }
+      const nameOf = (key, names) => names[key] || holidayName(key) || 'Ngày nghỉ lễ'
+
+      function setDays(value) {
+        $('#days').value = String(Math.max(0, Math.min(MAX, Math.round(Number(value) || 0))))
+        update()
+      }
+
+      function renderPresets() {
+        $('#presets').replaceChildren(
+          ...PRESETS.map((preset) =>
+            h('button', {
+              type: 'button',
+              class: 'th-preset',
+              'aria-pressed': validDays() && days() === preset.days ? 'true' : 'false',
+              'aria-label': `${preset.label}: ${preset.days === 0 ? 'trong ngày' : preset.days + ' ngày làm việc'}`,
+              onclick: () => setDays(preset.days),
+            }, h('b', { 'aria-hidden': 'true' }, preset.days === 0 ? '0' : preset.days), h('span', { 'aria-hidden': 'true' }, preset.days === 0 ? `Trong ngày: ${preset.label.toLocaleLowerCase('vi')}` : preset.label)),
+          ),
+        )
+      }
+
+      /** The tear-off sheet; it turns over to the new date when the due date changes. */
+      function renderSheet(due) {
+        const sheet = tear(due, state.way.counted.length ? `${state.way.counted.length} ngày làm việc` : 'Trong ngày')
+        if (state.shownDue && state.shownDue !== due) sheet.classList.add('th-turn')
+        state.shownDue = due
+        $('#sheet').replaceChildren(sheet)
+      }
+
+      function renderResult() {
+        const way = state.way
+        const { names } = lists()
+        renderSheet(way.due)
+        $('#due').textContent = long(way.due)
+        const weekend = way.skipped.filter((s) => s.kind === 'weekend').length
+        const holiday = way.skipped.filter((s) => s.kind === 'holiday')
+        let why
+        if (!way.counted.length) why = way.from === way.due ? `Nhận ngày ${short(way.from)}, giải quyết trong ngày.` : `Nhận ngày ${short(way.from)} là ngày nghỉ, nên giải quyết trong ngày làm việc kế tiếp.`
+        else why = `Nhận ngày ${short(way.from)}, cộng ${way.counted.length} ngày làm việc (không tính ngày nhận).`
+        if (holiday.length) why += ` Bỏ qua ${[...new Set(holiday.map((s) => nameOf(s.day, names)))].join(', ')}.`
+        $('#why').textContent = why
+        const left = workingDaysBetween(today, way.due, lists().holidays, lists().workdays)
+        $('#left').replaceChildren(
+          way.due < today
+            ? chip(`Đã qua hạn ${-left || 1} ngày làm việc`, 'bad', 'alert')
+            : way.due === today
+              ? chip('Hạn là hôm nay', 'warn', 'clock')
+              : chip(`Còn ${left} ngày làm việc kể từ hôm nay`, 'accent', 'clock'),
+        )
+        $('#ledger').replaceChildren(
+          stat({ label: 'Ngày làm việc', value: way.counted.length }),
+          stat({ label: 'Ngày nghỉ', value: way.skipped.length, hint: way.skipped.length ? [weekend ? `${weekend} cuối tuần` : '', holiday.length ? `${holiday.length} nghỉ lễ` : ''].filter(Boolean).join(', ') : 'không có' }),
+          stat({ label: 'Ngày lịch', value: way.calendarDays, hint: 'tính cả ngày nghỉ' }),
+        )
+      }
+
+      function renderCalendar() {
+        const way = state.way
+        const { holidays, workdays, names } = lists()
+        const order = new Map(way.counted.map((d, i) => [d, i + 1]))
+        const [y, m] = state.month.split('-').map(Number)
+        const count = new Date(y, m, 0).getDate()
+        const info = {}
+        const monthHolidays = []
+        for (let d = 1; d <= count; d++) {
+          const key = `${state.month}-${String(d).padStart(2, '0')}`
+          const kind = dayKind(key, holidays, workdays)
+          const n = order.get(key)
+          if (kind === 'holiday') {
+            info[key] = { tone: 'bad', label: nameOf(key, names), title: `Nghỉ lễ: ${nameOf(key, names)}` }
+            monthHolidays.push(key)
+          }
+          if (n) info[key] = { tone: 'accent', mark: n, label: key === way.due ? 'Hạn trả' : kind === 'moved' ? 'Làm bù' : '', title: `Ngày làm việc thứ ${n}${key === way.due ? ', hạn trả kết quả' : ''}${kind === 'moved' ? ' (ngày làm bù)' : ''}` }
+          else if (key === way.due) info[key] = { tone: 'accent', label: 'Hạn trả', title: 'Hạn trả kết quả, giải quyết trong ngày' }
+          if (key === way.from && key !== way.due) info[key] = { ...(info[key] || {}), tone: info[key]?.tone || 'info', label: 'Tiếp nhận', title: `Ngày tiếp nhận${info[key]?.title ? ', ' + info[key].title.toLocaleLowerCase('vi') : ''}` }
+          if (!info[key] && kind === 'moved') info[key] = { tone: 'accent', label: 'Làm bù', title: 'Ngày làm bù' }
+        }
+        const grid = calendar(state.month, info, { selected: state.picked, onPick: pick })
+        grid.setAttribute('aria-label', `Lịch tháng ${m}/${y}: ngày tiếp nhận, các ngày làm việc được tính và hạn trả`)
+        // The kit draws one button per day in order; mark the span from receipt to the due date on them.
+        grid.querySelectorAll('.gd-cal-day').forEach((cell, i) => {
+          const key = `${state.month}-${String(i + 1).padStart(2, '0')}`
+          if (key > way.from && key < way.due) cell.classList.add('th-span')
+          if (key === way.from && key !== way.due) cell.classList.add('th-start')
+          if (key === way.due) cell.classList.add('th-end')
+        })
+        $('#calendar').replaceChildren(grid)
+        $('#stepper').replaceChildren(monthStepper(state.month, (month) => {
+          state.month = month
+          state.follow = false
+          renderCalendar()
+        }))
+        $('#month-notes').replaceChildren(
+          ...monthHolidays.map((key) => h('li', {}, leaf(key, 'bad'), h('span', {}, `${short(key)}: ${nameOf(key, names)}`))),
+        )
+        $('#month-notes').hidden = !monthHolidays.length
+      }
+
+      /** A day chosen on the calendar: how it counts, and what it can be used for. */
+      function pick(key) {
+        state.picked = state.picked === key ? null : key
+        renderCalendar()
+        renderPick()
+      }
+      function renderPick() {
+        const key = state.picked
+        if (!key) return $('#pick').replaceChildren()
+        const way = state.way
+        const { holidays, workdays, names } = lists()
+        const kind = dayKind(key, holidays, workdays)
+        const between = workingDaysBetween(way.from, key, holidays, workdays)
+        const what = kind === 'holiday' ? `Nghỉ lễ: ${nameOf(key, names)}.` : kind === 'weekend' ? 'Cuối tuần, không tính.' : kind === 'moved' ? 'Ngày làm bù, có tính.' : 'Ngày làm việc.'
+        let where = ''
+        if (key === way.from) where = 'Là ngày tiếp nhận.'
+        else if (key > way.from) where = `Cách ngày tiếp nhận ${between} ngày làm việc.`
+        else where = `Trước ngày tiếp nhận ${-between} ngày làm việc.`
+        const canEnd = key > way.from && kind !== 'holiday' && kind !== 'weekend' && between <= MAX
+        $('#pick').replaceChildren(
+          h('span', { class: 'gd-grow' }, h('strong', {}, long(key)), ' ', what, ' ', where),
+          key !== way.from ? h('button', { type: 'button', class: 'gd-ghost', onclick: () => { $('#from').value = key; state.picked = null; update() } }, 'Lấy làm ngày tiếp nhận') : null,
+          canEnd && key !== way.due ? h('button', { type: 'button', class: 'gd-ghost', onclick: () => { state.picked = null; setDays(between) } }, `Đặt làm hạn (${between} ngày)`) : null,
+        )
+      }
+
+      function update() {
+        const from = $('#from').value
+        const ok = from && validDays()
+        $('#unit').textContent = validDays() && days() === 0 ? 'ngày làm việc, giải quyết trong ngày' : 'ngày làm việc'
+        $('#minus').disabled = !validDays() || days() <= 0
+        $('#plus').disabled = validDays() && days() >= MAX
+        renderPresets()
+        if (!ok) {
+          $('#due').textContent = 'Chưa tính được'
+          $('#why').textContent = from ? `Nhập số ngày làm việc từ 0 đến ${MAX}.` : 'Chọn ngày tiếp nhận.'
+          $('#left').replaceChildren()
+          return
+        }
+        const { holidays, workdays } = lists()
+        state.way = dueDetails(from, days(), holidays, workdays)
+        if (state.follow) state.month = state.way.due.slice(0, 7)
+        renderResult()
+        renderCalendar()
+        renderPick()
+      }
+
+      $('#from').value = today
+      $('#holidays').value = defaults.holidays
+      $('#workdays').value = defaults.workdays
+      $('#today').addEventListener('click', () => {
+        $('#from').value = today
+        update()
+      })
+      $('#minus').addEventListener('click', () => setDays(days() - 1))
+      $('#plus').addEventListener('click', () => setDays(days() + 1))
+      $('#reset').addEventListener('click', () => {
+        $('#holidays').value = defaults.holidays
+        $('#workdays').value = defaults.workdays
+        update()
+      })
+      for (const id of ['#from', '#days', '#holidays', '#workdays']) {
+        $(id).addEventListener('input', () => {
+          // A new input brings the calendar back to the month of the due date.
+          state.follow = true
+          update()
+        })
+      }
       update()
     </script>
   </body>

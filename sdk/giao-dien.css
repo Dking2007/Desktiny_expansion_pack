@@ -165,6 +165,12 @@ textarea {
   white-space: nowrap;
 }
 
+/* In the dark theme the accent is a light colour: a plain (main) button takes dark text to stay readable. */
+:root[data-theme='dark'] button:not([class]),
+:root[data-theme='dark'] button.primary {
+  color: var(--dk-canvas, #0b1220);
+}
+
 /* ---- Page heading ---- */
 .gd-hero {
   position: relative;
@@ -941,6 +947,140 @@ select:focus-visible {
   line-height: 1;
 }
 
+/* Văn bản hành chính: a document sheet with the heading laid out as in Nghị định 30 (agency left, national
+   title and motto right, number under the agency). Capitals here follow that format; they are not decoration. */
+.gd-doc {
+  position: relative;
+  container-type: inline-size;
+  padding: 22px 26px 24px;
+  border-radius: 3px;
+  background: var(--gd-surface);
+  box-shadow: var(--gd-paper-shadow), inset 0 0 0 1px var(--gd-border);
+}
+.gd-doc-head {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 8px 18px;
+  text-align: center;
+  font-family: var(--gd-display);
+  font-size: 12px;
+  line-height: 1.35;
+}
+.gd-doc-agency span {
+  display: block;
+}
+.gd-doc-agency strong,
+.gd-doc-nation strong {
+  display: block;
+  font-weight: 700;
+}
+/* The national title stays on one line, as the format requires: it shrinks with the sheet instead of wrapping. */
+.gd-doc-nation strong {
+  font-size: clamp(8.5px, 2.15cqi, 12px);
+  white-space: nowrap;
+}
+.gd-doc-nation strong + span {
+  display: inline-block;
+  padding-bottom: 2px;
+  border-bottom: 1px solid currentColor;
+  font-weight: 600;
+}
+.gd-doc-agency strong {
+  display: inline-block;
+  padding-bottom: 2px;
+  border-bottom: 1px solid currentColor;
+}
+.gd-doc-no {
+  margin-top: 6px;
+  font-size: 12.5px;
+  font-weight: 400;
+}
+.gd-doc-date {
+  margin-top: 6px;
+  font-style: italic;
+  font-weight: 400;
+}
+.gd-doc-title {
+  margin: 18px 0 4px;
+  font-family: var(--gd-display);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+}
+.gd-doc-summary {
+  margin: 0 0 14px;
+  font-family: var(--gd-display);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Dấu mực đỏ: text in a red double ring, slightly crooked. Generic on purpose: it shows a state ("Đã ký số",
+   "Đã tiếp nhận"), never an emblem or a real seal. */
+.gd-seal {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 104px;
+  height: 104px;
+  padding: 12px;
+  border: 3px double var(--gd-son);
+  border-radius: 50%;
+  color: var(--gd-son);
+  font-family: var(--gd-display);
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  transform: rotate(-9deg);
+  opacity: 0.88;
+}
+.gd-seal small {
+  display: block;
+  margin-top: 3px;
+  font-size: 10px;
+  font-weight: 600;
+}
+.gd-seal.tone-ok {
+  border-color: var(--gd-ok);
+  color: var(--gd-ok);
+}
+
+/* Sổ đăng ký: a ruled register; the number column sits behind a red margin line. */
+.gd-register {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.gd-register th {
+  padding: 8px 10px;
+  border-bottom: 2px solid var(--gd-ink);
+  font-family: var(--gd-display);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+.gd-register td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--gd-border);
+  vertical-align: top;
+}
+.gd-register td:first-child,
+.gd-register th:first-child {
+  width: 1%;
+  padding-right: 14px;
+  border-right: 1.5px solid color-mix(in srgb, var(--gd-son) 55%, transparent);
+  font-family: var(--gd-display);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+.gd-register tbody tr:hover td {
+  background: var(--gd-surface-2);
+}
+
 @media (max-width: 520px) {
   body {
     padding: 12px;
@@ -968,6 +1108,17 @@ select:focus-visible {
   }
   .gd-amount {
     font-size: 34px;
+  }
+  .gd-doc {
+    padding: 16px 14px;
+  }
+  .gd-doc-head {
+    grid-template-columns: 1fr;
+  }
+  .gd-seal {
+    width: 84px;
+    height: 84px;
+    font-size: 10px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

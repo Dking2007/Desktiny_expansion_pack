@@ -6,33 +6,425 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Tra cứu hồ sơ</title>
+    <script>
+      document.documentElement.dataset.theme = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    </script>
+    <link rel="stylesheet" href="../ui/chung.css" />
+    <link rel="stylesheet" href="../ui/giao-dien.css" />
     <link rel="stylesheet" href="cong.css" />
+    <style>
+      .cg-lookup {
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+        align-items: start;
+        gap: 12px;
+        margin-bottom: 22px;
+        padding: 18px;
+        border: 1px solid var(--gd-border);
+        border-radius: 12px;
+        background: var(--gd-surface);
+      }
+      .cg-lookup .cg-btn {
+        margin-top: 27px;
+      }
+      .cg-lookup input[name='ma'] {
+        font-family: var(--gd-display);
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .cg-lookup input[name='ma']::placeholder {
+        text-transform: none;
+        letter-spacing: 0;
+        font-weight: 400;
+      }
+      .cg-lookup input[name='ma_bi_mat'] {
+        font-family: var(--gd-display);
+        font-weight: 600;
+        letter-spacing: 0.2em;
+      }
+
+      /* ---- The dossier's status sheet: the paper object of this page ---- */
+      .cg-status .gd-doc-title {
+        margin-top: 20px;
+      }
+      .cg-status-top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px 18px;
+        margin: 6px 0 4px;
+        padding: 12px 0 16px;
+        border-bottom: 1px solid var(--gd-border);
+      }
+      .cg-ids {
+        display: grid;
+        gap: 8px;
+        margin: 0;
+      }
+      .cg-ids dt {
+        color: var(--gd-muted);
+        font-size: 13.5px;
+      }
+      .cg-ids dd {
+        margin: 0;
+      }
+      .cg-ids .cg-code {
+        font-size: clamp(22px, 6vw, 30px);
+        line-height: 1.15;
+      }
+      .cg-ids .small {
+        font-size: 18px;
+      }
+      .cg-status .gd-seal {
+        width: 116px;
+        height: 116px;
+        font-size: 12.5px;
+        animation: cg-stamp 0.35s ease-out backwards;
+      }
+      .cg-status .gd-seal.tone-warn {
+        border-color: var(--gd-warn);
+        color: var(--gd-warn);
+      }
+      @keyframes cg-stamp {
+        from {
+          opacity: 0;
+          transform: rotate(-9deg) scale(1.35);
+        }
+      }
+
+      /* The four stages, top to bottom */
+      .cg-track {
+        position: relative;
+        display: grid;
+        margin: 18px 0 4px;
+        padding: 0;
+        list-style: none;
+      }
+      .cg-track li {
+        position: relative;
+        display: grid;
+        grid-template-columns: 30px 1fr;
+        gap: 2px 14px;
+        padding-bottom: 18px;
+      }
+      .cg-track li::before {
+        content: '';
+        position: absolute;
+        top: 30px;
+        bottom: 0;
+        left: 14px;
+        width: 2px;
+        background: var(--gd-border);
+      }
+      .cg-track li:last-child {
+        padding-bottom: 0;
+      }
+      .cg-track li:last-child::before {
+        display: none;
+      }
+      .cg-track li.done::before {
+        background: var(--gd-accent);
+      }
+      .cg-dot {
+        position: relative;
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border: 2px solid var(--gd-border);
+        border-radius: 50%;
+        background: var(--gd-surface);
+        color: var(--gd-muted);
+        font-family: var(--gd-display);
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .done .cg-dot {
+        border-color: var(--gd-accent);
+        background: var(--gd-accent);
+        color: var(--gd-surface);
+      }
+      .now .cg-dot {
+        border-color: var(--gd-accent);
+        color: var(--gd-accent-ink);
+        box-shadow: 0 0 0 4px var(--gd-accent-soft);
+      }
+      .warn .cg-dot {
+        border-color: var(--gd-warn);
+        color: var(--gd-warn);
+        box-shadow: 0 0 0 4px var(--gd-warn-soft);
+      }
+      .bad .cg-dot {
+        border-color: var(--gd-son);
+        color: var(--gd-son);
+        box-shadow: 0 0 0 4px var(--gd-son-soft);
+      }
+      .ok .cg-dot {
+        border-color: var(--gd-ok);
+        background: var(--gd-ok);
+        color: var(--gd-surface);
+      }
+      .cg-stage {
+        display: grid;
+        gap: 1px;
+        padding-top: 3px;
+      }
+      .cg-stage strong {
+        font-family: var(--gd-display);
+        font-size: 16px;
+      }
+      .todo .cg-stage strong {
+        color: var(--gd-muted);
+        font-weight: 600;
+      }
+      .cg-stage span {
+        color: var(--gd-muted);
+        font-size: 14px;
+      }
+      .cg-stage time {
+        font-variant-numeric: tabular-nums;
+      }
+      .cg-appoint {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px dashed var(--gd-border);
+      }
+      .cg-appoint strong {
+        display: block;
+        font-family: var(--gd-display);
+        color: var(--gd-son);
+      }
+      .cg-log {
+        margin-top: 14px;
+      }
+      .cg-log summary {
+        color: var(--gd-muted);
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .cg-log ol {
+        display: grid;
+        gap: 4px;
+        margin: 8px 0 0;
+        padding: 0;
+        list-style: none;
+        font-size: 14px;
+      }
+      .cg-log li {
+        display: grid;
+        grid-template-columns: 136px 1fr;
+        gap: 10px;
+      }
+      .cg-log time {
+        color: var(--gd-muted);
+        font-variant-numeric: tabular-nums;
+      }
+      .cg-help {
+        display: grid;
+        gap: 6px;
+        margin-top: 18px;
+        color: var(--gd-muted);
+        font-size: 14.5px;
+      }
+      .cg-help p {
+        margin: 0;
+      }
+      @media (max-width: 600px) {
+        .cg-lookup {
+          grid-template-columns: 1fr;
+          padding: 14px;
+        }
+        .cg-lookup .cg-btn {
+          margin-top: 0;
+        }
+        .cg-status-top {
+          position: relative;
+        }
+        /* Stamped over the short lines at the foot of the codes, as on paper. */
+        .cg-status .gd-seal {
+          position: absolute;
+          right: 0;
+          bottom: 12px;
+          width: 92px;
+          height: 92px;
+          font-size: 11px;
+        }
+        .cg-log li {
+          grid-template-columns: 1fr;
+          gap: 0;
+        }
+      }
+    </style>
   </head>
   <body>
-    <header><h1>Tra cứu tình trạng hồ sơ</h1><nav><a href="nop.html">Nộp hồ sơ</a><a href="tra-cuu.html">Tra cứu</a></nav></header>
-    <form id="form">
-      <label>Mã tra cứu <input name="ma" required placeholder="TN-2611-ABC123" /></label>
-      <label>Mã bí mật <input name="ma_bi_mat" required inputmode="numeric" /></label>
-      <button type="submit">Tra cứu</button>
-    </form>
-    <div id="out" aria-live="polite"></div>
-    <script>
-      const out = document.getElementById('out')
-      document.getElementById('form').addEventListener('submit', async (event) => {
+    <header class="cg-top">
+      <div class="cg-top-in">
+        <a class="cg-brand" href="nop.html"><strong id="agency">Bộ phận Một cửa</strong><span>Dịch vụ công trực tuyến</span></a>
+        <nav class="cg-nav" aria-label="Trang"><a href="nop.html">Nộp hồ sơ</a><a href="tra-cuu.html" aria-current="page">Tra cứu</a></nav>
+      </div>
+    </header>
+    <main>
+      <div class="cg-intro">
+        <h1>Tra cứu hồ sơ</h1>
+        <p>Nhập hai mã in trên phiếu nhận hồ sơ để xem hồ sơ đang ở bước nào.</p>
+      </div>
+      <form id="form" class="cg-lookup" novalidate>
+        <label class="cg-field">Mã tra cứu
+          <input name="ma" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="40" placeholder="Ví dụ TN-2611-A1B2C3" aria-describedby="e-ma" required />
+          <span class="cg-error" id="e-ma"></span>
+        </label>
+        <label class="cg-field">Mã bí mật
+          <input name="ma_bi_mat" inputmode="numeric" autocomplete="off" maxlength="7" placeholder="6 chữ số" aria-describedby="e-ma_bi_mat" required />
+          <span class="cg-error" id="e-ma_bi_mat"></span>
+        </label>
+        <button type="submit" class="cg-btn" id="go">Tra cứu</button>
+      </form>
+      <div id="out" aria-live="polite"></div>
+      <div class="cg-help" id="help">
+        <p>Quên mã bí mật? Hãy gọi hoặc đến Bộ phận Một cửa, mang theo căn cước; cán bộ sẽ tra giúp bạn.</p>
+        <p>Trang này chỉ cho biết tình trạng hồ sơ, không hiện thông tin cá nhân của bạn.</p>
+      </div>
+    </main>
+
+    <script type="module">
+      import { $, ask, daysUntil, dmy, docHead, followScheme, h, icon, leaf, longDay, seal, stampText } from './giay.js'
+
+      followScheme()
+      const form = $('#form')
+      const params = new URLSearchParams(location.search)
+      if (params.get('ma')) {
+        form.elements.ma.value = params.get('ma').toUpperCase()
+        form.elements.ma_bi_mat.focus()
+      }
+
+      function setError(name, message) {
+        $(`#e-${name}`).replaceChildren(...(message ? [icon('alert', 14), message] : []))
+        form.elements[name].setAttribute('aria-invalid', message ? 'true' : 'false')
+      }
+      const RULES = {
+        ma: (v) => (!v ? 'Nhập mã tra cứu.' : /^[A-Z0-9-]{4,40}$/.test(v) ? '' : 'Mã tra cứu chỉ gồm chữ, số và dấu gạch ngang, ví dụ TN-2611-A1B2C3.'),
+        ma_bi_mat: (v) => (!v ? 'Nhập mã bí mật.' : /^\d{6}$/.test(v) ? '' : 'Mã bí mật gồm 6 chữ số.'),
+      }
+      const read = () => ({ ma: form.elements.ma.value.trim().toUpperCase(), ma_bi_mat: form.elements.ma_bi_mat.value.replace(/\s/g, '') })
+      for (const name of Object.keys(RULES)) {
+        form.elements[name].addEventListener('input', () => form.elements[name].getAttribute('aria-invalid') === 'true' && setError(name, RULES[name](read()[name])))
+      }
+
+      // What each status means for the citizen: the stamp, and where it sits on the four stages.
+      const STAMP = {
+        received: ['Đã nhận trực tuyến', ''],
+        processing: ['Đang giải quyết', ''],
+        needs_revision: ['Cần bổ sung', 'warn'],
+        approved: ['Đã có kết quả', 'ok'],
+        rejected: ['Không giải quyết', ''],
+        cancelled: ['Đã huỷ', ''],
+      }
+      const NOTE = {
+        received: ['', 'clock', 'Hồ sơ đang chờ cán bộ tiếp nhận. Cán bộ sẽ gọi cho bạn để hẹn đối chiếu giấy tờ.'],
+        processing: ['', 'clock', 'Cán bộ đang giải quyết hồ sơ. Bạn chưa cần làm gì thêm.'],
+        needs_revision: ['tone-warn', 'alert', 'Hồ sơ cần bổ sung giấy tờ. Cán bộ sẽ gọi báo những gì còn thiếu; bạn cũng có thể đến Bộ phận Một cửa để được hướng dẫn.'],
+        approved: ['tone-ok', 'check', 'Đã có kết quả. Mời bạn đến Bộ phận Một cửa nhận, mang theo căn cước và phiếu nhận hồ sơ.'],
+        rejected: ['tone-bad', 'alert', 'Hồ sơ không được giải quyết. Mời bạn đến Bộ phận Một cửa để nghe giải thích lý do bằng văn bản.'],
+        cancelled: ['tone-bad', 'alert', 'Hồ sơ đã huỷ. Nếu bạn vẫn cần làm thủ tục, hãy nộp hồ sơ mới.'],
+      }
+
+      function stages(data) {
+        const status = data.trang_thai_ma
+        const log = data.lich_su || []
+        const first = (keys) => log.find((item) => keys.includes(item.ma))?.luc
+        const filed = first(['received'])
+        const taken = first(['processing', 'needs_revision', 'approved', 'rejected'])
+        const revision = [...log].reverse().find((item) => item.ma === 'needs_revision')?.luc
+        const ended = first(['approved', 'rejected', 'cancelled'])
+        const when = (value, text) => (value ? [text ? `${text} ` : '', h('time', { datetime: value }, stampText(value))] : null)
+        const after = { received: 1, processing: 2, needs_revision: 2, approved: 4, rejected: 4, cancelled: 4 }[status] ?? 1
+        const final = { approved: ['Có kết quả', 'ok'], rejected: ['Không giải quyết', 'bad'], cancelled: ['Đã huỷ', 'bad'] }[status]
+        const list = [
+          { title: 'Đã nộp', sub: when(filed, 'Lúc') },
+          { title: 'Đã tiếp nhận', sub: taken ? [when(taken, 'Lúc'), data.ma_ho_so ? `, mã hồ sơ ${data.ma_ho_so}` : ''] : 'Chờ cán bộ xem hồ sơ' },
+          {
+            title: status === 'needs_revision' ? 'Cần bổ sung giấy tờ' : 'Đang giải quyết',
+            sub: status === 'needs_revision' ? when(revision, 'Báo lúc') : after === 2 && data.buoc ? `Đang ở bước: ${data.buoc}` : null,
+            tone: status === 'needs_revision' ? 'warn' : '',
+          },
+          { title: final ? final[0] : 'Có kết quả', sub: final ? when(ended, 'Lúc') : 'Kết quả hiện ở đây khi có', tone: final?.[1] },
+        ]
+        return list.map((item, index) => {
+          const state = index < after ? 'done' : index === after ? 'now' : 'todo'
+          const cls = index === 3 && final ? item.tone : index === 2 && item.tone && state === 'now' ? item.tone : state
+          const mark = cls === 'done' || cls === 'ok' ? icon('check', 15) : cls === 'bad' ? '×' : cls === 'warn' ? '!' : index + 1
+          const spoken = { done: 'đã xong', ok: 'đã xong', now: 'đang ở bước này', warn: 'đang ở bước này', bad: 'đã dừng', todo: 'chưa tới' }[cls]
+          return h('li', { class: cls, 'aria-current': cls === 'now' || cls === 'warn' ? 'step' : null },
+            h('span', { class: 'cg-dot', 'aria-hidden': 'true' }, mark),
+            h('span', { class: 'cg-stage' }, h('strong', {}, item.title, h('span', { class: 'sr-only' }, `, ${spoken}`)), item.sub ? h('span', {}, item.sub) : null))
+        })
+      }
+
+      function sheet(data) {
+        const status = data.trang_thai_ma
+        const [stampText_, stampTone] = STAMP[status] || [data.trang_thai, '']
+        const last = data.lich_su?.at(-1)?.luc
+        const [noteTone, noteIcon, noteText] = NOTE[status] || ['', 'clock', data.trang_thai]
+        const open = !['approved', 'rejected', 'cancelled'].includes(status)
+        const late = data.hen_tra && daysUntil(data.hen_tra) < 0
+        $('#agency').textContent = data.co_quan
+        return h('article', { class: 'gd-doc cg-status', 'aria-labelledby': 's-title' },
+          docHead({ agency: data.co_quan || 'Bộ phận Một cửa', date: new Date() }),
+          h('h2', { class: 'gd-doc-title', id: 's-title', tabindex: '-1' }, 'TÌNH TRẠNG HỒ SƠ'),
+          h('p', { class: 'gd-doc-summary' }, data.thu_tuc),
+          h('div', { class: 'cg-status-top' },
+            h('dl', { class: 'cg-ids' },
+              h('div', {}, h('dt', {}, 'Mã tra cứu'), h('dd', { class: 'cg-code' }, data.ma_tra_cuu)),
+              data.ma_ho_so ? h('div', {}, h('dt', {}, 'Mã hồ sơ tại cơ quan'), h('dd', { class: 'cg-code small' }, data.ma_ho_so)) : null,
+              h('div', {}, h('dt', {}, 'Ngày nộp'), h('dd', {}, longDay(data.ngay_nop)))),
+            seal(stampText_, last ? dmy(last) : '', stampTone)),
+          h('ol', { class: 'cg-track', 'aria-label': `Tiến trình hồ sơ: ${data.trang_thai}` }, stages(data)),
+          h('p', { class: `gd-note ${noteTone}` }, icon(noteIcon, 15), noteText),
+          open && data.hen_tra
+            ? h('div', { class: 'cg-appoint' }, leaf(data.hen_tra, 'bad'),
+                h('div', {}, h('span', { class: 'gd-sub' }, late ? 'Đã qua ngày hẹn dự kiến' : 'Ngày hẹn trả kết quả dự kiến'),
+                  h('strong', {}, longDay(data.hen_tra)),
+                  h('span', { class: 'gd-sub' }, late ? 'Cán bộ sẽ liên hệ báo ngày trả mới.' : 'Tính theo ngày làm việc; cán bộ có thể hẹn lại khi tiếp nhận.')))
+            : null,
+          data.lich_su?.length
+            ? h('details', { class: 'cg-log' }, h('summary', {}, `Nhật ký hồ sơ (${data.lich_su.length} lần cập nhật)`),
+                h('ol', {}, data.lich_su.map((item) => h('li', {}, h('time', { datetime: item.luc }, stampText(item.luc)), h('span', {}, item.trang_thai)))))
+            : null)
+      }
+
+      form.addEventListener('submit', async (event) => {
         event.preventDefault()
-        const query = new URLSearchParams(new FormData(event.target))
-        const response = await fetch('api/tra-cuu?' + query)
-        const data = await response.json()
-        out.replaceChildren()
-        const card = document.createElement('div')
-        card.className = 'card'
-        const line = (text, cls) => { const p = document.createElement('p'); p.textContent = text; if (cls) p.className = cls; card.append(p) }
-        if (!response.ok) { line(data.message, 'bad'); return out.append(card) }
-        line(data.thu_tuc + ' — nộp ngày ' + data.ngay_nop)
-        line(data.trang_thai, 'code')
-        if (data.ma_ho_so) line('Mã hồ sơ: ' + data.ma_ho_so, 'muted')
-        for (const step of data.lich_su) line(step.luc.slice(0, 16).replace('T', ' ') + ' — ' + step.trang_thai, 'muted')
-        out.append(card)
+        const values = read()
+        let first = null
+        for (const name of Object.keys(RULES)) {
+          const message = RULES[name](values[name])
+          setError(name, message)
+          if (message && !first) first = name
+        }
+        if (first) return form.elements[first].focus()
+        const button = $('#go')
+        button.disabled = true
+        button.textContent = 'Đang tra…'
+        $('#out').setAttribute('aria-busy', 'true')
+        try {
+          const data = await ask('api/tra-cuu?' + new URLSearchParams(values))
+          $('#out').replaceChildren(sheet(data))
+          history.replaceState(null, '', `?ma=${encodeURIComponent(values.ma)}`)
+          $('#s-title').focus({ preventScroll: true })
+          $('#out').scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+        } catch (error) {
+          $('#out').replaceChildren(h('p', { class: 'gd-note tone-bad', role: 'alert' }, icon('alert', 15),
+            error.status === 404 ? 'Không tìm thấy hồ sơ với hai mã này. Kiểm tra lại từng ký tự trên phiếu nhận hồ sơ.' : error.message))
+        } finally {
+          button.disabled = false
+          button.textContent = 'Tra cứu'
+          $('#out').setAttribute('aria-busy', 'false')
+        }
       })
     </script>
   </body>

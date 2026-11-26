@@ -59,6 +59,26 @@ Biểu mẫu có sẵn các trường mà plugin dùng. Đổi mã trường th�
 | **Tính hạn theo ngày làm việc** `tinh-han` | đóng gói | Tính hạn bỏ cuối tuần và ngày lễ, có tính ngày làm bù | Trang *Tính hạn giải quyết*; khung *Hạn giải quyết* trên hồ sơ |
 | **Đọc giấy tờ, điền sẵn** `doc-giay-to` | đóng gói | Đọc lớp chữ của tài liệu đã nộp (văn bản, PDF có chữ) hoặc nội dung dán vào; nhận ra họ tên, ngày sinh, số định danh, quê quán, nơi thường trú, MST, điện thoại | Nút *Đọc giấy tờ* trên hồ sơ: cán bộ xem, sửa, xác nhận rồi mới ghi vào hồ sơ |
 
+### Giao diện các trang
+
+Các trang dùng bộ giao diện chung `sdk/giao-dien.css` và `sdk/bieu-do.js`, có phông chữ của Desktiny đi kèm. Mỗi trang
+có một vật thể giấy làm điểm nhấn: sổ đăng ký văn bản, văn bản trình bày theo thể thức Nghị định 30, phiếu tiếp nhận,
+tờ lịch; dấu mực đỏ chỉ cho biết trạng thái (đã ký số, đã cấp số, đã tiếp nhận), không mô phỏng con dấu thật.
+
+| Trang | Thấy và làm được gì |
+|---|---|
+| *Sổ văn bản* | Sổ đăng ký kẻ dòng theo năm và từng sổ, dải 12 tháng bấm để lọc, tìm ngay khi gõ, số mới nhất được đánh dấu, số đã huỷ gạch đỏ kèm lý do; xuất bảng để sao chép |
+| *Cấp số văn bản* | Chọn sổ (thấy số tiếp theo), xem trước phần đầu văn bản với số sắp cấp; cấp xong số hiện lớn và đóng dấu “Đã cấp số” |
+| Quản trị *Sổ văn bản* | Mỗi sổ một thẻ: ký hiệu, số tiếp theo, cách đánh số, số đã cấp và đã huỷ; sửa có xem trước; huỷ số có lý do |
+| *Văn bản chờ ký*, *Ký số* | Danh sách theo hạn ký, xem văn bản, nhập PIN, ký xong đóng dấu “Đã ký số” và hiện mã xác thực từng tệp |
+| Trang công khai *Xác thực chữ ký số* | Nhập hoặc quét mã, xem phiếu xác nhận kèm dấu hợp lệ / không hợp lệ; có thể chọn tệp của mình để so dấu vân SHA-256 ngay trên máy |
+| Trang công khai *Nộp hồ sơ* | Bốn bước có kiểm tra từng trường; nộp xong in phiếu tiếp nhận có mã tra cứu, mã bí mật, ngày hẹn trả và giấy tờ cần mang |
+| Trang công khai *Tra cứu* | Nhập mã, xem tình trạng theo dòng thời gian, dấu trạng thái hiện tại và việc cần làm tiếp |
+| Khung *Nộp trực tuyến*, Quản trị *Tiếp nhận* | Người nộp, kênh, tiến độ và ngày hẹn; số liệu hôm nay và 7 ngày, biểu đồ 14 ngày và theo thủ tục, sổ tiếp nhận có lọc và sắp “cần xử lý trước” |
+| *Tính hạn giải quyết* | Ngày nhận, số ngày làm việc (có mức thường gặp), hạn trả trên tờ lịch; lịch tháng đánh dấu ngày được tính, cuối tuần, ngày lễ; bấm một ngày để giải thích |
+| Khung *Hạn giải quyết* | Hạn trên tờ lịch nhỏ, đếm ngược và thanh ngày đã dùng, đỏ khi quá hạn |
+| *Đọc giấy tờ* | Chọn tệp của hồ sơ, kéo thả hoặc dán chữ; giấy tờ hiện cạnh từng trường kèm độ chắc chắn và giá trị hồ sơ đang có; sửa, chọn trường rồi ghi vào hồ sơ có hỏi lại |
+
 ## Cài đặt
 
 Cài theo [hướng dẫn chung](../../README.md#cài-vào-desktiny), với các điểm riêng sau:

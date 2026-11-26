@@ -7,31 +7,174 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Hạn giải quyết</title>
     <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <style>
+      body {
+        padding: 12px 14px 14px;
+      }
+      .hs-top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .hs-top .gd-leaf {
+        width: 54px;
+        box-shadow: var(--gd-paper-shadow), inset 0 0 0 1px var(--gd-border);
+      }
+      .hs-top .gd-leaf b {
+        font-size: 11px;
+      }
+      .hs-top .gd-leaf span {
+        padding: 5px 0 6px;
+        font-size: 25px;
+      }
+      .hs-label {
+        color: var(--gd-muted);
+        font-size: 12.5px;
+        font-weight: 600;
+      }
+      .hs-date {
+        margin: 0 0 4px;
+        font-family: var(--gd-display);
+        font-size: 17px;
+        font-weight: 700;
+        line-height: 1.25;
+        font-variant-numeric: tabular-nums;
+      }
+      .hs-date.is-late {
+        color: var(--gd-son);
+      }
+      .hs-use {
+        margin-top: 12px;
+      }
+      .hs-use-head {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 2px 10px;
+        margin-bottom: 5px;
+        font-size: 12.5px;
+      }
+      .hs-use-head b {
+        font-variant-numeric: tabular-nums;
+      }
+      .hs-use-head span {
+        color: var(--gd-muted);
+      }
+      /* One segment per working day allowed: filled as days are used, red past the due date. */
+      .hs-bar {
+        display: flex;
+        gap: 3px;
+        height: 8px;
+      }
+      .hs-bar i {
+        flex: 1;
+        border-radius: 2px;
+        background: var(--gd-surface-2);
+        box-shadow: inset 0 0 0 1px var(--gd-border);
+      }
+      .hs-bar i.used {
+        background: var(--gd-accent);
+        box-shadow: none;
+      }
+      .hs-bar.tone-warn i.used {
+        background: var(--gd-warn);
+      }
+      .hs-bar.tone-bad i.used,
+      .hs-bar i.over {
+        background: var(--gd-son);
+        box-shadow: none;
+      }
+      .hs-bar.is-continuous i {
+        flex: none;
+        border-radius: 999px;
+      }
+      .hs-bar.is-continuous {
+        overflow: hidden;
+        border-radius: 999px;
+        background: var(--gd-surface-2);
+        box-shadow: inset 0 0 0 1px var(--gd-border);
+      }
+      .hs-foot {
+        margin: 8px 0 0;
+        color: var(--gd-muted);
+        font-size: 12px;
+      }
+    </style>
   </head>
   <body>
-    <div id="out" class="muted">Đang tính…</div>
+    <main id="app" aria-busy="true"></main>
     <script type="module">
-      import { connect } from './desktiny-plugin-sdk.js'
+      import { $, desktiny, h } from './mo-rong.js'
+      import { chip, icon, leaf, localDay, skeleton } from './bieu-do.js'
       import { addWorkingDays, iso, parseDay, timeLimitFor, workingDaysBetween } from './ngay-lam-viec.js'
-      const desktiny = connect()
-      const out = document.getElementById('out')
-      const line = (text, cls = '') => Object.assign(document.createElement('div'), { textContent: text, className: cls })
+
+      const WEEKDAYS = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy']
+      const SEGMENTS = 30
+      const short = (key) => key.split('-').reverse().join('/')
+      const long = (key) => {
+        const [y, m, d] = key.split('-').map(Number)
+        return `${WEEKDAYS[new Date(y, m - 1, d).getDay()]}, ${short(key)}`
+      }
+
+      function bar(used, allowed, tone) {
+        const label = allowed === 0 ? `Giải quyết trong ngày, đã dùng ${used} ngày làm việc` : `Đã dùng ${used} trên ${allowed} ngày làm việc`
+        const slots = Math.max(1, allowed)
+        if (slots > SEGMENTS) {
+          const share = Math.min(1, used / slots)
+          return h('div', { class: `hs-bar is-continuous tone-${tone}`, role: 'img', 'aria-label': label }, h('i', { class: 'used', style: `width:${share * 100}%` }))
+        }
+        const over = Math.max(0, used - slots)
+        const cells = Array.from({ length: slots }, (_, i) => h('i', { class: i < used ? 'used' : '' }))
+        // Days past the due date are added as red segments (at most a few, so the bar keeps its scale).
+        for (let i = 0; i < Math.min(over, 5); i++) cells.push(h('i', { class: 'over' }))
+        return h('div', { class: `hs-bar tone-${tone}`, role: 'img', 'aria-label': label }, cells)
+      }
+
+      function render(dossier) {
+        const today = localDay()
+        const received = iso(parseDay(dossier.created_at))
+        const limit = timeLimitFor(`${dossier.form?.name ?? ''} ${dossier.title}`, dossier.payload)
+        const due = dossier.due_at ? iso(parseDay(dossier.due_at)) : iso(addWorkingDays(received, limit))
+        const allowed = dossier.due_at ? Math.max(0, workingDaysBetween(received, due)) : limit
+        const closed = ['approved', 'rejected', 'cancelled'].includes(dossier.status)
+        const left = workingDaysBetween(today, due)
+        const used = Math.max(0, workingDaysBetween(received, today))
+        const late = !closed && today > due
+        const tone = closed ? 'muted' : late ? 'bad' : left <= 1 ? 'warn' : 'accent'
+        const status = closed
+          ? chip('Hồ sơ đã kết thúc', 'ok', 'check')
+          : late
+            ? chip(`Quá hạn ${Math.max(1, -left)} ngày làm việc`, 'bad', 'alert')
+            : today === due
+              ? chip('Hết hạn hôm nay', 'warn', 'clock')
+              : chip(`Còn ${left} ngày làm việc`, left <= 1 ? 'warn' : 'accent', 'clock')
+        $('#app').replaceChildren(
+          h('div', { class: 'hs-top' },
+            leaf(due, late ? 'bad' : closed ? 'muted' : left <= 1 ? 'warn' : 'muted'),
+            h('div', { class: 'gd-grow' },
+              h('div', { class: 'hs-label' }, 'Hạn trả kết quả'),
+              h('p', { class: `hs-date${late ? ' is-late' : ''}` }, long(due)),
+              status)),
+          closed
+            ? null
+            : h('div', { class: 'hs-use' },
+                h('div', { class: 'hs-use-head' },
+                  h('b', {}, allowed === 0 ? 'Giải quyết trong ngày' : `Đã dùng ${used}/${allowed} ngày`),
+                  h('span', {}, `Nhận ${short(received)}`)),
+                bar(used, allowed, tone)),
+          h('p', { class: 'hs-foot' }, dossier.due_at ? 'Theo hạn đặt trên hồ sơ, không tính ngày nghỉ.' : `Thời hạn ${limit === 0 ? 'trong ngày' : limit + ' ngày làm việc'} theo thủ tục, không tính ngày nghỉ.`),
+        )
+        $('#app').removeAttribute('aria-busy')
+      }
+
+      $('#app').replaceChildren(skeleton(3, 14))
       try {
         const context = await desktiny.context
-        const dossier = await desktiny.api(`/cases/${context.record.case_id}`)
-        const received = parseDay(dossier.created_at)
-        const limit = timeLimitFor(`${dossier.form?.name ?? ''} ${dossier.title}`, dossier.payload)
-        const due = dossier.due_at ? parseDay(dossier.due_at) : addWorkingDays(received, limit)
-        const closed = ['approved', 'rejected', 'cancelled'].includes(dossier.status)
-        const left = workingDaysBetween(iso(new Date()), iso(due))
-        const tone = closed ? 'muted' : left < 0 ? 'bad' : left <= 1 ? 'bad' : 'ok'
-        out.replaceChildren(
-          line(`Hạn: ${due.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' })}`, 'big'),
-          line(dossier.due_at ? 'Theo hạn đặt trên hồ sơ.' : `Tiếp nhận ${received.toLocaleDateString('vi-VN', { timeZone: 'UTC' })}, thời hạn ${limit === 0 ? 'trong ngày' : limit + ' ngày làm việc'}.`, 'muted'),
-          line(closed ? 'Hồ sơ đã kết thúc.' : left < 0 ? `Quá hạn ${-left} ngày làm việc.` : left === 0 ? 'Hết hạn hôm nay.' : `Còn ${left} ngày làm việc.`, tone),
-        )
+        render(await desktiny.api(`/cases/${context.record.case_id}`))
       } catch (error) {
-        out.textContent = error.message
+        $('#app').removeAttribute('aria-busy')
+        $('#app').replaceChildren(h('p', { class: 'gd-note tone-bad', role: 'alert' }, icon('alert', 15), error.message || 'Không tính được hạn.'))
       }
     </script>
   </body>

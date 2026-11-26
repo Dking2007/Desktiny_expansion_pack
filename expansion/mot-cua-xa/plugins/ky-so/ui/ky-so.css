@@ -1,0 +1,239 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/* SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors */
+/* Ký số's own pieces, on top of giao-dien.css: the document to sign, its file list, the PIN field, the steps and
+   the stamp landing once signed. */
+
+input,
+select,
+textarea,
+button {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+.gd-note > svg {
+  flex: none;
+  margin-top: 2px;
+}
+button.gd-ghost,
+button.ks-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+button.ks-small {
+  padding: 5px 10px;
+  font-size: 13px;
+}
+.ks-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+/* The document to sign: a sheet with the dossier's code, its title and the files, and room for the stamp. */
+.ks-sheet {
+  min-height: 180px;
+}
+.ks-sheet-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--gd-border);
+  color: var(--gd-muted);
+  font-family: var(--gd-display);
+  font-size: 12.5px;
+}
+.ks-sheet-top b {
+  color: var(--gd-ink);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.ks-sheet h2 {
+  margin: 14px 0 4px;
+  font-size: 17px;
+  line-height: 1.35;
+}
+.ks-sheet blockquote {
+  margin: 8px 0 0;
+  padding: 2px 0 2px 12px;
+  border-left: 3px solid var(--gd-border);
+  color: var(--gd-muted);
+  font-style: italic;
+}
+.ks-files {
+  display: grid;
+  gap: 4px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.ks-files li > label,
+.ks-files li > div {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 400;
+}
+.ks-files li > label {
+  cursor: pointer;
+}
+.ks-files li > label:hover {
+  background: var(--gd-surface-2);
+}
+.ks-files input {
+  margin: 0;
+  accent-color: var(--gd-accent);
+}
+.ks-files .gd-svg-icon {
+  color: var(--gd-muted);
+}
+.ks-files .ks-file-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ks-files small {
+  display: block;
+  color: var(--gd-muted);
+  font-size: 12.5px;
+}
+.ks-stamp-spot {
+  position: absolute;
+  right: 20px;
+  bottom: 16px;
+}
+
+/* The PIN: one large field, digits hidden. */
+.ks-pin {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+}
+.ks-pin-box {
+  position: relative;
+  display: block;
+}
+.ks-pin-box .gd-svg-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gd-muted);
+}
+.ks-pin input {
+  width: 100%;
+  max-width: 260px;
+  padding: 10px 12px 10px 38px;
+  font-family: var(--gd-display);
+  font-size: 20px;
+  letter-spacing: 0.3em;
+  font-variant-numeric: tabular-nums;
+}
+.ks-pin input::placeholder {
+  font-family: var(--gd-font);
+  font-size: 14px;
+  letter-spacing: 0;
+}
+
+/* Steps of signing: a real sequence. */
+.ks-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+  counter-reset: buoc;
+  color: var(--gd-muted);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.ks-steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  counter-increment: buoc;
+}
+.ks-steps li::before {
+  content: counter(buoc);
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid var(--gd-border);
+  border-radius: 50%;
+  font-family: var(--gd-display);
+  font-size: 12px;
+}
+.ks-steps li[aria-current='step'] {
+  color: var(--gd-ink);
+}
+.ks-steps li[aria-current='step']::before {
+  border-color: var(--gd-accent);
+  background: var(--gd-accent);
+  color: var(--gd-surface);
+}
+.ks-steps li.is-done::before {
+  content: '✓';
+  border-color: var(--gd-ok);
+  background: transparent;
+  color: var(--gd-ok);
+}
+
+/* Verification codes after signing. */
+.ks-codes {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ks-codes li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--gd-border);
+  border-radius: 8px;
+}
+.ks-code {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  user-select: all;
+}
+
+/* Stamp landing: one short motion that answers a signature. giao-dien.css turns it off for reduced motion. */
+.ks-landing {
+  animation: ks-stamp 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+}
+@keyframes ks-stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.7) rotate(-22deg);
+  }
+  to {
+    opacity: 0.88;
+    transform: scale(1) rotate(-9deg);
+  }
+}
+
+@media (max-width: 520px) {
+  /* No room beside the text on a phone: the stamp sits under it instead of over it. */
+  .ks-stamp-spot {
+    position: static;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .ks-stamp-spot:not(:empty) {
+    margin-top: 6px;
+  }
+}

@@ -2,7 +2,7 @@
   "schema": "desktiny-plugin/1",
   "id": "vn.mo-rong.tiep-nhan",
   "name": "Tiếp nhận hồ sơ trực tuyến",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "Apache-2.0",
   "authors": ["Desktiny Expansion Pack contributors"],
   "description": "Trang công khai cho người dân, doanh nghiệp nộp yêu cầu theo thủ tục và tra cứu tình trạng bằng mã tra cứu và mã bí mật, không cần tài khoản; nhận cả hồ sơ từ hệ thống ngoài (ki-ốt, cổng khác) bằng khoá. Mỗi yêu cầu thành sự kiện để quy trình tạo hồ sơ; tình trạng hồ sơ được cập nhật lại cho người nộp.",
@@ -37,7 +37,7 @@
     "required": []
   },
   "ui": [
-    { "slot": "case.side", "title": "Nộp trực tuyến", "url": "/ui/ho-so.html", "height": 150 },
-    { "slot": "admin.page", "title": "Hồ sơ nộp trực tuyến", "url": "/ui/quan-tri.html", "height": 700 }
+    { "slot": "case.side", "title": "Nộp trực tuyến", "url": "/ui/ho-so.html", "height": 330 },
+    { "slot": "admin.page", "title": "Hồ sơ nộp trực tuyến", "url": "/ui/quan-tri.html", "height": 1000 }
   ]
 }

@@ -6,54 +6,764 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Nộp hồ sơ trực tuyến</title>
+    <script>
+      document.documentElement.dataset.theme = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    </script>
+    <link rel="stylesheet" href="../ui/chung.css" />
+    <link rel="stylesheet" href="../ui/giao-dien.css" />
     <link rel="stylesheet" href="cong.css" />
+    <style>
+      /* ---- Steps: a real sequence, so numbered ---- */
+      .cg-steps {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+        margin: 0 0 18px;
+        padding: 0;
+        list-style: none;
+        counter-reset: step;
+      }
+      .cg-steps li {
+        position: relative;
+        display: grid;
+        justify-items: center;
+        gap: 4px;
+        color: var(--gd-muted);
+        font-size: 13px;
+        font-weight: 600;
+        text-align: center;
+      }
+      .cg-steps li::after {
+        content: '';
+        position: absolute;
+        top: 15px;
+        left: calc(50% + 20px);
+        right: calc(-50% + 20px);
+        height: 2px;
+        border-radius: 2px;
+        background: var(--gd-border);
+      }
+      .cg-steps li:last-child::after {
+        display: none;
+      }
+      .cg-steps li.done::after {
+        background: var(--gd-accent);
+      }
+      .cg-steps button {
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 2px solid var(--gd-border);
+        border-radius: 50%;
+        background: var(--gd-surface);
+        color: var(--gd-muted);
+        font-family: var(--gd-display);
+        font-size: 14px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .cg-steps button:disabled {
+        opacity: 1;
+        cursor: default;
+      }
+      .cg-steps li.done button {
+        border-color: var(--gd-accent);
+        background: var(--gd-accent);
+        color: var(--gd-surface);
+      }
+      .cg-steps li[aria-current='step'] {
+        color: var(--gd-ink);
+      }
+      .cg-steps li[aria-current='step'] button {
+        border-color: var(--gd-accent);
+        color: var(--gd-accent-ink);
+        box-shadow: 0 0 0 4px var(--gd-accent-soft);
+      }
+
+      /* ---- The form sheet ---- */
+      .cg-sheet {
+        padding: 20px;
+        border: 1px solid var(--gd-border);
+        border-radius: 12px;
+        background: var(--gd-surface);
+      }
+      fieldset {
+        display: grid;
+        gap: 16px;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+      legend {
+        margin-bottom: 4px;
+        padding: 0;
+        font-family: var(--gd-display);
+        font-size: 19px;
+        font-weight: 700;
+      }
+      .cg-lead {
+        margin: -8px 0 0;
+        color: var(--gd-muted);
+        font-size: 15px;
+      }
+      .cg-nav-row {
+        display: flex;
+        flex-wrap: wrap-reverse;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 22px;
+        padding-top: 16px;
+        border-top: 1px solid var(--gd-border);
+      }
+      .cg-nav-row .cg-btn:last-child {
+        margin-left: auto;
+      }
+
+      /* ---- Procedure cards (radio buttons) ---- */
+      .cg-procs {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
+        gap: 10px;
+      }
+      .cg-proc {
+        position: relative;
+        display: grid;
+        align-content: start;
+        gap: 8px;
+        padding: 14px 16px 14px 46px;
+        border: 1px solid var(--gd-border);
+        border-radius: 12px;
+        background: var(--gd-surface);
+        font-weight: 400;
+        cursor: pointer;
+      }
+      .cg-proc:hover {
+        border-color: color-mix(in srgb, var(--gd-accent) 45%, var(--gd-border));
+      }
+      .cg-proc input {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        width: 20px;
+        height: 20px;
+        margin: 0;
+        accent-color: var(--gd-accent);
+      }
+      .cg-proc:has(input:checked) {
+        border-color: var(--gd-accent);
+        background: color-mix(in srgb, var(--gd-accent-soft) 55%, var(--gd-surface));
+        box-shadow: inset 0 0 0 1px var(--gd-accent);
+      }
+      .cg-proc:has(input:focus-visible) {
+        outline: 2px solid var(--gd-accent);
+        outline-offset: 2px;
+      }
+      .cg-proc-name {
+        font-family: var(--gd-display);
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.3;
+      }
+      .cg-proc-time {
+        display: inline-flex;
+        align-items: flex-start;
+        gap: 6px;
+        color: var(--gd-accent-ink);
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .cg-proc-time svg {
+        flex: none;
+        margin-top: 3px;
+      }
+      .cg-proc ul,
+      .cg-check {
+        display: grid;
+        gap: 3px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        color: var(--gd-muted);
+        font-size: 14px;
+      }
+      .cg-proc li {
+        position: relative;
+        padding-left: 14px;
+      }
+      .cg-proc li::before {
+        content: '';
+        position: absolute;
+        top: 0.7em;
+        left: 2px;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--gd-border);
+      }
+
+      /* ---- Papers to prepare ---- */
+      .cg-prep {
+        display: grid;
+        gap: 8px;
+        padding: 14px 16px;
+        border: 1px dashed color-mix(in srgb, var(--gd-ink) 25%, var(--gd-border));
+        border-radius: 12px;
+      }
+      .cg-prep h3 {
+        margin: 0;
+        font-size: 16px;
+      }
+      .cg-prep label {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: 15px;
+        font-weight: 400;
+        cursor: pointer;
+      }
+      .cg-prep input {
+        flex: none;
+        width: 20px;
+        height: 20px;
+        margin: 2px 0 0;
+        accent-color: var(--gd-accent);
+      }
+      .cg-count {
+        justify-self: end;
+        color: var(--gd-muted);
+        font-size: 13px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ---- Review ---- */
+      .cg-review {
+        display: grid;
+        margin: 0;
+        border-top: 1px solid var(--gd-border);
+      }
+      .cg-review > div {
+        display: grid;
+        grid-template-columns: minmax(110px, 34%) 1fr auto;
+        align-items: start;
+        gap: 4px 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--gd-border);
+      }
+      .cg-review dt {
+        color: var(--gd-muted);
+        font-size: 14px;
+      }
+      .cg-review dd {
+        margin: 0;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+        white-space: pre-line;
+      }
+      .cg-review .cg-btn {
+        min-height: 32px;
+        padding: 4px 10px;
+        font-size: 13.5px;
+      }
+      .cg-challenge {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 120px;
+        align-items: end;
+        gap: 12px;
+        padding: 14px 16px;
+        border-radius: 12px;
+        background: var(--gd-surface-2);
+      }
+      .cg-challenge .cg-field {
+        grid-column: 1 / -1;
+      }
+      .cg-challenge .cg-field input {
+        max-width: 140px;
+      }
+      .cg-question {
+        font-family: var(--gd-display);
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      /* ---- The receipt: the one paper object, printed once the request is in ---- */
+      .cg-slot {
+        height: 8px;
+        margin: 4px 6px 0;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--gd-ink) 70%, var(--gd-canvas));
+      }
+      .cg-receipt {
+        margin: -3px 14px 18px;
+        animation: cg-print 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+      }
+      @keyframes cg-print {
+        from {
+          clip-path: inset(0 0 100% 0);
+          transform: translateY(-24px);
+        }
+        to {
+          clip-path: inset(0 0 0 0);
+          transform: none;
+        }
+      }
+      .cg-receipt .gd-doc-title {
+        margin-top: 22px;
+      }
+      .cg-codes {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 16px;
+        margin-top: 18px;
+      }
+      .cg-codes-main {
+        display: grid;
+        gap: 14px;
+        min-width: 0;
+      }
+      .cg-codebox {
+        display: grid;
+        gap: 2px;
+      }
+      .cg-codebox > span {
+        color: var(--gd-muted);
+        font-size: 14px;
+      }
+      .cg-codebox div {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 12px;
+      }
+      .cg-codebox strong.big {
+        font-size: clamp(28px, 7.5vw, 40px);
+        line-height: 1.1;
+      }
+      .cg-codebox strong.mid {
+        font-size: clamp(22px, 5.5vw, 28px);
+        letter-spacing: 0.18em;
+      }
+      .cg-receipt .gd-seal {
+        margin-right: 6px;
+        animation: cg-stamp 0.35s 0.75s ease-out backwards;
+      }
+      @keyframes cg-stamp {
+        from {
+          opacity: 0;
+          transform: rotate(-9deg) scale(1.35);
+        }
+      }
+      .cg-appoint {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .cg-appoint .gd-leaf {
+        width: 56px;
+      }
+      .cg-appoint .gd-leaf span {
+        font-size: 24px;
+      }
+      .cg-appoint strong {
+        display: block;
+        font-family: var(--gd-display);
+        font-size: 18px;
+        color: var(--gd-son);
+      }
+      .cg-receipt h3 {
+        margin: 18px 0 8px;
+        font-size: 16px;
+      }
+      .cg-check {
+        color: var(--gd-ink);
+        font-size: 15px;
+      }
+      .cg-check li {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+      }
+      .cg-check li::before {
+        content: '';
+        flex: none;
+        width: 14px;
+        height: 14px;
+        margin-top: 4px;
+        border: 1.5px solid color-mix(in srgb, var(--gd-ink) 45%, transparent);
+        border-radius: 3px;
+      }
+      .cg-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        margin-top: 20px;
+      }
+      @media (max-width: 520px) {
+        main {
+          padding-top: 16px;
+        }
+        .cg-sheet {
+          padding: 16px 14px;
+        }
+        .cg-steps li {
+          font-size: 12px;
+        }
+        .cg-review > div {
+          grid-template-columns: 1fr auto;
+        }
+        .cg-review dd {
+          grid-column: 1 / -1;
+          grid-row: 2;
+        }
+        .cg-receipt {
+          margin-inline: 6px;
+          padding-inline: 16px;
+        }
+        .cg-receipt .gd-slip-tear {
+          margin-inline: -16px;
+        }
+        .cg-nav-row .cg-btn {
+          flex: 1;
+        }
+        .cg-codes {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .cg-codes .gd-seal {
+          justify-self: end;
+          margin-top: -8px;
+        }
+      }
+      @media print {
+        .cg-slot {
+          display: none;
+        }
+        .cg-receipt {
+          margin: 0;
+        }
+      }
+    </style>
   </head>
   <body>
-    <header><h1 id="agency">Nộp hồ sơ trực tuyến</h1><nav><a href="nop.html">Nộp hồ sơ</a><a href="tra-cuu.html">Tra cứu</a></nav></header>
-    <form id="form">
-      <label>Thủ tục <select name="thu_tuc" id="procedures" required></select></label>
-      <label>Họ và tên <input name="ho_ten" required maxlength="120" autocomplete="name" /></label>
-      <label>Số định danh cá nhân (CCCD, 12 số) <input name="so_cccd" required pattern="\d{12}" inputmode="numeric" /></label>
-      <label>Số điện thoại <input name="so_dien_thoai" required inputmode="tel" autocomplete="tel" /></label>
-      <label>Địa chỉ <input name="dia_chi" maxlength="300" autocomplete="street-address" /></label>
-      <label>Nội dung yêu cầu <textarea name="noi_dung" rows="4" maxlength="2000"></textarea></label>
-      <label><span id="question">Câu hỏi kiểm tra</span> <input name="tra_loi" required inputmode="numeric" /></label>
-      <p class="muted">Giấy tờ bản chính mang theo khi đến nhận kết quả. Thông tin chỉ dùng để giải quyết thủ tục.</p>
-      <button type="submit">Nộp hồ sơ</button>
-      <p id="status" aria-live="polite"></p>
-    </form>
-    <div id="done" class="card" hidden></div>
-    <script>
+    <header class="cg-top">
+      <div class="cg-top-in">
+        <a class="cg-brand" href="nop.html"><strong id="agency">Bộ phận Một cửa</strong><span>Dịch vụ công trực tuyến</span></a>
+        <nav class="cg-nav" aria-label="Trang"><a href="nop.html" aria-current="page">Nộp hồ sơ</a><a href="tra-cuu.html">Tra cứu</a></nav>
+      </div>
+    </header>
+    <main>
+      <div id="intro" class="cg-intro">
+        <h1>Nộp hồ sơ trực tuyến</h1>
+        <p>Không cần tài khoản. Nộp xong, bạn nhận phiếu có mã tra cứu để theo dõi hồ sơ và ngày hẹn trả kết quả.</p>
+      </div>
+      <ol class="cg-steps" id="steps" aria-label="Các bước nộp hồ sơ"></ol>
+      <form id="form" class="cg-sheet" novalidate>
+        <fieldset data-step="0">
+          <legend>Bạn cần làm thủ tục gì?</legend>
+          <p class="cg-lead">Chọn một thủ tục. Mỗi thủ tục ghi thời gian giải quyết thường gặp và giấy tờ cần mang theo.</p>
+          <div class="cg-procs" id="procs" role="radiogroup" aria-label="Thủ tục" aria-describedby="e-thu_tuc"></div>
+          <p class="cg-error" id="e-thu_tuc" role="alert"></p>
+        </fieldset>
+
+        <fieldset data-step="1" hidden>
+          <legend>Thông tin người nộp</legend>
+          <p class="cg-lead">Cán bộ dùng các thông tin này để liên hệ và đối chiếu khi bạn đến nhận kết quả.</p>
+          <label class="cg-field">Họ và tên
+            <input name="ho_ten" maxlength="120" autocomplete="name" aria-describedby="e-ho_ten" required />
+            <span class="cg-error" id="e-ho_ten"></span>
+          </label>
+          <label class="cg-field">Số định danh cá nhân
+            <small id="h-so_cccd">12 chữ số in trên thẻ căn cước</small>
+            <input name="so_cccd" inputmode="numeric" maxlength="14" autocomplete="off" aria-describedby="h-so_cccd e-so_cccd" required />
+            <span class="cg-error" id="e-so_cccd"></span>
+          </label>
+          <label class="cg-field">Số điện thoại
+            <small id="h-so_dien_thoai">Cán bộ gọi số này để hẹn ngày đối chiếu giấy tờ</small>
+            <input name="so_dien_thoai" type="tel" inputmode="tel" maxlength="16" autocomplete="tel" aria-describedby="h-so_dien_thoai e-so_dien_thoai" required />
+            <span class="cg-error" id="e-so_dien_thoai"></span>
+          </label>
+          <label class="cg-field">Địa chỉ <small>(không bắt buộc)</small>
+            <input name="dia_chi" maxlength="300" autocomplete="street-address" />
+          </label>
+        </fieldset>
+
+        <fieldset data-step="2" hidden>
+          <legend>Nội dung yêu cầu</legend>
+          <label class="cg-field">Bạn đề nghị việc gì? <small>(không bắt buộc)</small>
+            <small id="h-noi_dung">Ví dụ: Đăng ký khai sinh cho con, sinh ngày 20/11/2026 tại Trạm y tế xã.</small>
+            <textarea name="noi_dung" rows="4" maxlength="2000" aria-describedby="h-noi_dung c-noi_dung"></textarea>
+            <span class="cg-count" id="c-noi_dung" aria-live="polite">0/2000 ký tự</span>
+          </label>
+          <section class="cg-prep" id="prep" aria-labelledby="prep-title"></section>
+        </fieldset>
+
+        <fieldset data-step="3" hidden>
+          <legend>Xem lại và nộp</legend>
+          <p class="cg-lead">Kiểm tra lại thông tin. Bấm “Sửa” nếu cần thay đổi.</p>
+          <dl class="cg-review" id="review"></dl>
+          <div class="cg-challenge">
+            <label class="cg-field">Câu hỏi kiểm tra, để biết bạn không phải máy tự động
+              <span class="cg-question" id="question">Đang tải câu hỏi…</span>
+              <input name="tra_loi" inputmode="numeric" maxlength="3" autocomplete="off" aria-describedby="e-tra_loi" required />
+              <span class="cg-error" id="e-tra_loi"></span>
+            </label>
+          </div>
+          <p class="cg-lead" style="margin: 0">Thông tin chỉ dùng để giải quyết thủ tục này.</p>
+        </fieldset>
+
+        <p class="gd-note tone-bad" id="status" role="alert"></p>
+        <div class="cg-nav-row">
+          <button type="button" class="cg-btn ghost" id="back" hidden>Quay lại</button>
+          <button type="submit" class="cg-btn" id="next">Tiếp tục</button>
+        </div>
+      </form>
+      <section id="done" hidden aria-labelledby="r-title"></section>
+    </main>
+
+    <script type="module">
+      import { $, ask, copy, docHead, followScheme, h, icon, leaf, longDay, seal, stampText } from './giay.js'
+
+      followScheme()
+      const STEPS = ['Thủ tục', 'Người nộp', 'Nội dung', 'Xem lại']
+      const form = $('#form')
+      let step = 0
+      let reached = 0
+      let info = { co_quan: 'Bộ phận Một cửa', thu_tuc: [], huong_dan: {} }
       let challenge = null
-      const $ = (id) => document.getElementById(id)
-      async function info() {
-        const data = await (await fetch('api/thong-tin')).json()
-        $('agency').textContent = data.co_quan + ' — nộp hồ sơ trực tuyến'
-        $('procedures').replaceChildren(...data.thu_tuc.map((p) => new Option(p, p)))
-        challenge = data.cau_hoi
-        $('question').textContent = 'Câu hỏi kiểm tra: ' + challenge.noi_dung
-      }
-      $('form').addEventListener('submit', async (event) => {
-        event.preventDefault()
-        const body = Object.fromEntries(new FormData(event.target))
-        body.cau_hoi_id = challenge?.id
-        const response = await fetch('api/nop', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-        const data = await response.json()
-        if (!response.ok) {
-          $('status').className = 'bad'
-          $('status').textContent = data.message
-          return info()
+
+      // ---- Loading the procedures and a fresh check question ----
+      async function load() {
+        try {
+          info = await ask('api/thong-tin')
+        } catch (error) {
+          $('#procs').replaceChildren(h('p', { class: 'gd-note tone-bad' }, icon('alert', 15), error.message))
+          return
         }
-        $('form').hidden = true
-        const done = $('done')
-        done.hidden = false
-        const line = (text, cls) => { const p = document.createElement('p'); p.textContent = text; if (cls) p.className = cls; done.append(p) }
-        line('Đã nộp hồ sơ “' + data.thu_tuc + '”. Ghi lại hai mã dưới đây để tra cứu:', 'ok')
-        line('Mã tra cứu: ' + data.ma_tra_cuu, 'code')
-        line('Mã bí mật: ' + data.ma_bi_mat, 'code')
-        line('Không đưa mã bí mật cho người khác. Tra cứu tại trang “Tra cứu”.', 'muted')
+        challenge = info.cau_hoi
+        $('#question').textContent = challenge.noi_dung
+        $('#agency').textContent = info.co_quan
+        document.title = `Nộp hồ sơ trực tuyến – ${info.co_quan}`
+        const chosen = new URLSearchParams(location.search).get('thu_tuc')
+        $('#procs').replaceChildren(...info.thu_tuc.map((name, index) => procedureCard(name, index, name === chosen)))
+      }
+      async function newQuestion() {
+        try {
+          const fresh = await ask('api/thong-tin')
+          challenge = fresh.cau_hoi
+          $('#question').textContent = challenge.noi_dung
+        } catch (error) {
+          $('#question').textContent = error.message
+        }
+        form.elements.tra_loi.value = ''
+      }
+
+      function procedureCard(name, index, checked) {
+        const guide = info.huong_dan?.[name]
+        return h('label', { class: 'cg-proc' },
+          h('input', { type: 'radio', name: 'thu_tuc', value: name, checked, 'aria-describedby': guide ? `p-${index}` : null,
+            onchange: () => setError('thu_tuc', '') }),
+          h('span', { class: 'cg-proc-name' }, name),
+          guide
+            ? h('span', { id: `p-${index}`, style: 'display:grid;gap:8px' },
+                h('span', { class: 'cg-proc-time' }, icon('clock', 15), guide.thoi_han),
+                h('span', { class: 'gd-sub' }, 'Mang theo khi đến:'),
+                h('ul', {}, guide.giay_to.map((paper) => h('li', {}, paper))))
+            : h('span', { class: 'gd-sub' }, 'Cán bộ sẽ hướng dẫn giấy tờ khi liên hệ.'))
+      }
+
+      // ---- Steps ----
+      function renderSteps() {
+        $('#steps').replaceChildren(...STEPS.map((label, index) =>
+          h('li', { class: index < step || index < reached ? 'done' : '', 'aria-current': index === step ? 'step' : null },
+            h('button', { type: 'button', disabled: index > reached || index === step,
+              'aria-label': `Bước ${index + 1}: ${label}${index < reached ? ', đã xong' : ''}`, onclick: () => go(index) },
+              index < reached && index !== step ? icon('check', 15) : index + 1),
+            h('span', { 'aria-hidden': 'true' }, label))))
+      }
+      function go(next) {
+        step = next
+        reached = Math.max(reached, step)
+        for (const set of form.querySelectorAll('fieldset')) set.hidden = Number(set.dataset.step) !== step
+        $('#back').hidden = step === 0
+        $('#next').textContent = step === STEPS.length - 1 ? 'Nộp hồ sơ' : 'Tiếp tục'
+        $('#status').textContent = ''
+        if (step === 2) renderPrep()
+        if (step === 3) renderReview()
+        renderSteps()
+        const legend = form.querySelector(`fieldset[data-step="${step}"] legend`)
+        legend.setAttribute('tabindex', '-1')
+        legend.focus({ preventScroll: true })
+        if (form.getBoundingClientRect().top < 0) $('#steps').scrollIntoView({ block: 'start' })
+      }
+      $('#back').addEventListener('click', () => go(step - 1))
+
+      // ---- Checking what was typed, in plain words ----
+      const value = (name) => String(form.elements[name]?.value ?? '')
+      const digits = (text) => text.replace(/[\s.]/g, '')
+      function setError(name, message) {
+        $(`#e-${name}`).replaceChildren(...(message ? [icon('alert', 14), message] : []))
+        const field = form.elements[name]
+        if (field && !(field instanceof RadioNodeList)) field.setAttribute('aria-invalid', message ? 'true' : 'false')
+      }
+      const RULES = {
+        thu_tuc: () => (form.querySelector('input[name="thu_tuc"]:checked') ? '' : 'Chọn một thủ tục để tiếp tục.'),
+        ho_ten: () => (value('ho_ten').trim().split(/\s+/).join(' ').length >= 3 ? '' : 'Nhập đầy đủ họ và tên.'),
+        so_cccd: () => {
+          const id = digits(value('so_cccd'))
+          if (!id) return 'Nhập số định danh cá nhân.'
+          if (!/^\d+$/.test(id)) return 'Số định danh chỉ gồm chữ số.'
+          return id.length === 12 ? '' : `Số định danh gồm đúng 12 chữ số; bạn đã nhập ${id.length} số.`
+        },
+        so_dien_thoai: () => {
+          const phone = digits(value('so_dien_thoai'))
+          if (!phone) return 'Nhập số điện thoại để cán bộ liên hệ.'
+          return /^(0|\+84)\d{9,10}$/.test(phone) ? '' : 'Số điện thoại chưa đúng, ví dụ 0912 345 678.'
+        },
+        tra_loi: () => (/^\d+$/.test(value('tra_loi').trim()) ? '' : 'Nhập câu trả lời bằng chữ số.'),
+      }
+      const FIELDS = [['thu_tuc'], ['ho_ten', 'so_cccd', 'so_dien_thoai'], [], ['tra_loi']]
+      function check(index) {
+        let first = null
+        for (const name of FIELDS[index]) {
+          const message = RULES[name]()
+          setError(name, message)
+          if (message && !first) first = name
+        }
+        if (first) (first === 'thu_tuc' ? form.querySelector('input[name="thu_tuc"]') : form.elements[first])?.focus()
+        return !first
+      }
+      // Fields are checked on "Tiếp tục" (not on leaving them: a message appearing then would move the button away
+      // from the pointer); once marked wrong, a field is checked again as the person types.
+      for (const name of ['ho_ten', 'so_cccd', 'so_dien_thoai', 'tra_loi']) {
+        const field = form.elements[name]
+        field.addEventListener('input', () => field.getAttribute('aria-invalid') === 'true' && setError(name, RULES[name]()))
+      }
+      form.elements.noi_dung.addEventListener('input', () => ($('#c-noi_dung').textContent = `${value('noi_dung').length}/2000 ký tự`))
+
+      // ---- Papers to prepare (a checklist for the person; nothing is uploaded) ----
+      const chosen = () => form.querySelector('input[name="thu_tuc"]:checked')?.value || ''
+      const ticked = new Set()
+      function renderPrep() {
+        const papers = info.huong_dan?.[chosen()]?.giay_to || []
+        $('#prep').replaceChildren(...[
+          h('h3', { id: 'prep-title' }, 'Giấy tờ cần chuẩn bị'),
+          papers.length
+            ? [h('span', { class: 'gd-sub' }, 'Đánh dấu những gì bạn đã có. Danh sách chỉ để bạn tự kiểm, không gửi đi.'),
+               papers.map((paper) => h('label', {},
+                 h('input', { type: 'checkbox', checked: ticked.has(paper), onchange: (event) => (event.target.checked ? ticked.add(paper) : ticked.delete(paper)) }),
+                 h('span', {}, paper)))]
+            : h('span', { class: 'gd-sub' }, 'Cán bộ sẽ báo những giấy tờ cần mang khi gọi cho bạn.'),
+          h('p', { class: 'gd-note', style: 'margin:4px 0 0' }, icon('file', 15),
+            'Bạn không cần tải giấy tờ lên. Hãy mang bản chính để cán bộ đối chiếu khi đến nhận kết quả.'),
+        ].flat(Infinity))
+      }
+
+      // ---- Review ----
+      function renderReview() {
+        const row = (label, text, target) => h('div', {},
+          h('dt', {}, label), h('dd', {}, text || '—'),
+          h('button', { type: 'button', class: 'cg-btn ghost', 'aria-label': `Sửa ${label.toLowerCase()}`, onclick: () => go(target) }, icon('edit', 14), 'Sửa'))
+        $('#review').replaceChildren(
+          row('Thủ tục', chosen(), 0),
+          row('Họ và tên', value('ho_ten').trim(), 1),
+          row('Số định danh', digits(value('so_cccd')), 1),
+          row('Số điện thoại', digits(value('so_dien_thoai')), 1),
+          row('Địa chỉ', value('dia_chi').trim(), 1),
+          row('Nội dung', value('noi_dung').trim(), 2))
+      }
+
+      // ---- Submitting ----
+      const FIELD_OF = [[/thủ tục/i, 'thu_tuc', 0], [/CCCD|định danh/i, 'so_cccd', 1], [/điện thoại/i, 'so_dien_thoai', 1], [/họ và tên/i, 'ho_ten', 1]]
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault()
+        if (!check(step)) return
+        if (step < STEPS.length - 1) return go(step + 1)
+        const button = $('#next')
+        button.disabled = true
+        button.textContent = 'Đang nộp…'
+        const body = {
+          thu_tuc: chosen(), ho_ten: value('ho_ten').trim(), so_cccd: digits(value('so_cccd')), so_dien_thoai: digits(value('so_dien_thoai')),
+          dia_chi: value('dia_chi').trim(), noi_dung: value('noi_dung').trim(), cau_hoi_id: challenge?.id, tra_loi: value('tra_loi').trim(),
+        }
+        try {
+          const data = await ask('api/nop', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+          receipt(data, body)
+        } catch (error) {
+          button.disabled = false
+          button.textContent = 'Nộp hồ sơ'
+          // A question is used once, right or wrong: always ask a new one.
+          await newQuestion()
+          if (error.code === 'challenge_failed') {
+            setError('tra_loi', 'Câu trả lời chưa đúng. Đây là câu hỏi mới, mời bạn trả lời lại.')
+            return form.elements.tra_loi.focus()
+          }
+          const field = error.status === 422 && FIELD_OF.find(([pattern]) => pattern.test(error.message))
+          if (field) {
+            go(field[2])
+            setError(field[1], error.message)
+            return field[1] === 'thu_tuc' ? form.querySelector('input[name="thu_tuc"]')?.focus() : form.elements[field[1]].focus()
+          }
+          $('#status').replaceChildren(icon('alert', 15), error.message)
+        }
       })
-      info()
+
+      // ---- The receipt ----
+      function codeBox(label, code, shown, size, name) {
+        const text = h('strong', { class: `cg-code ${size}` }, shown)
+        return h('div', { class: 'cg-codebox' },
+          h('span', {}, label),
+          h('div', {}, text,
+            h('button', { type: 'button', class: 'cg-btn ghost small cg-noprint', 'aria-label': `Sao chép ${name}`,
+              onclick: () => copy(code, text, (message) => ($('#copied').textContent = message)) }, icon('copy', 15), 'Sao chép')))
+      }
+      function receipt(data, body) {
+        const papers = data.giay_to?.length ? data.giay_to : []
+        const due = data.hen_tra
+        const phone = body.so_dien_thoai.replace(/^(\+84|0)(\d{3})(\d{3})(\d+)$/, '$1$2 $3 $4')
+        $('#intro').hidden = true
+        $('#steps').hidden = true
+        form.hidden = true
+        const done = $('#done')
+        done.hidden = false
+        done.replaceChildren(
+          h('p', { class: 'gd-note tone-ok cg-noprint', style: 'margin:0 0 14px' }, icon('check', 15),
+            'Đã nộp hồ sơ. Hãy chụp màn hình hoặc in phiếu này; bạn cần hai mã bên dưới để tra cứu.'),
+          h('div', { class: 'cg-slot', 'aria-hidden': 'true' }),
+          h('article', { class: 'gd-slip cg-receipt' },
+            docHead({ agency: info.co_quan, date: data.ngay_nop }),
+            h('h2', { class: 'gd-doc-title', id: 'r-title', tabindex: '-1' }, 'PHIẾU NHẬN HỒ SƠ TRỰC TUYẾN'),
+            h('p', { class: 'gd-doc-summary' }, data.thu_tuc),
+            h('div', { class: 'cg-codes' },
+              h('div', { class: 'cg-codes-main' },
+                codeBox('Mã tra cứu', data.ma_tra_cuu, data.ma_tra_cuu, 'big', 'mã tra cứu'),
+                codeBox('Mã bí mật', data.ma_bi_mat, data.ma_bi_mat.replace(/(\d{3})(\d{3})/, '$1 $2'), 'mid', 'mã bí mật')),
+              seal('Đã nhận trực tuyến', stampText(data.ngay_nop))),
+            h('p', { class: 'gd-sub', style: 'margin:12px 0 0' }, icon('lock', 13), ' Cần cả hai mã khi tra cứu. Không đưa mã bí mật cho người khác.'),
+            h('div', { class: 'gd-slip-tear', 'aria-hidden': 'true' }),
+            due
+              ? h('div', { class: 'cg-appoint' }, leaf(due, 'bad'),
+                  h('div', {}, h('span', { class: 'gd-sub' }, 'Ngày hẹn trả kết quả dự kiến'), h('strong', {}, longDay(due)),
+                    h('span', { class: 'gd-sub' }, `Cán bộ sẽ gọi số ${phone} để xác nhận trước khi bạn đến.`)))
+              : h('div', { class: 'cg-appoint' }, h('span', { class: 'gd-leaf', 'aria-hidden': 'true' }, h('b', {}, 'Hẹn'), h('span', {}, icon('calendar', 20))),
+                  h('div', {}, h('strong', { style: 'color:inherit' }, 'Cán bộ sẽ gọi điện hẹn ngày'), h('span', { class: 'gd-sub' }, `Qua số ${phone}, sau khi xem hồ sơ của bạn.`))),
+            h('h3', {}, 'Mang theo khi đến nhận kết quả'),
+            h('ul', { class: 'cg-check' },
+              papers.map((paper) => h('li', {}, paper)),
+              h('li', {}, 'Phiếu này, hoặc mã tra cứu')),
+            h('div', { class: 'cg-actions cg-noprint' },
+              h('button', { type: 'button', class: 'cg-btn', onclick: () => window.print() }, icon('print', 17), 'In phiếu'),
+              h('a', { class: 'cg-btn ghost', href: `tra-cuu.html?ma=${encodeURIComponent(data.ma_tra_cuu)}` }, 'Theo dõi hồ sơ'),
+              h('a', { class: 'cg-btn ghost', href: 'nop.html' }, 'Nộp hồ sơ khác'))),
+          h('p', { class: 'cg-live cg-noprint', id: 'copied', 'aria-live': 'polite' }))
+        window.scrollTo({ top: 0 })
+        $('#r-title').focus({ preventScroll: true })
+      }
+
+      renderSteps()
+      load()
     </script>
   </body>
 </html>

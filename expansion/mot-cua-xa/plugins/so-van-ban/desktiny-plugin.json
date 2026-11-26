@@ -2,7 +2,7 @@
   "schema": "desktiny-plugin/1",
   "id": "vn.mo-rong.so-van-ban",
   "name": "Sổ văn bản",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "Apache-2.0",
   "authors": ["Desktiny Expansion Pack contributors"],
   "description": "Sổ văn bản đi theo từng loại (quyết định, công văn, thông báo, giấy xác nhận…), cấp số liên tục theo năm, không nhảy số, không cấp trùng; số bị huỷ vẫn giữ trong sổ. Cấp số từ bước quy trình hoặc nút trên hồ sơ, ghi số và ngày vào hồ sơ.",
@@ -32,14 +32,16 @@
   "settings_schema": {
     "type": "object",
     "properties": {
-      "ky_hieu_co_quan": { "type": "string", "title": "Ký hiệu cơ quan ban hành", "default": "UBND" }
+      "ky_hieu_co_quan": { "type": "string", "title": "Ký hiệu cơ quan ban hành", "default": "UBND" },
+      "ten_co_quan": { "type": "string", "title": "Tên cơ quan ban hành (đầu văn bản xem trước), ví dụ Ủy ban nhân dân xã Hòa Bình" },
+      "dia_danh": { "type": "string", "title": "Địa danh ghi trước ngày tháng, ví dụ Hòa Bình" }
     },
     "required": []
   },
   "ui": [
     { "slot": "page", "title": "Sổ văn bản", "url": "/ui/so.html", "height": 700 },
-    { "slot": "case.tab", "title": "Số văn bản", "url": "/ui/ho-so.html", "height": 300 },
-    { "slot": "case.action", "title": "Cấp số văn bản", "url": "/ui/cap-so.html", "height": 320 },
+    { "slot": "case.tab", "title": "Số văn bản", "url": "/ui/ho-so.html", "height": 360 },
+    { "slot": "case.action", "title": "Cấp số văn bản", "url": "/ui/cap-so.html", "height": 560 },
     { "slot": "admin.page", "title": "Cấu hình sổ văn bản", "url": "/ui/quan-tri.html", "height": 700 }
   ]
 }

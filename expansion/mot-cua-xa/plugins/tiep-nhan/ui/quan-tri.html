@@ -7,25 +7,419 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Hồ sơ nộp trực tuyến</title>
     <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <style>
+      input,
+      select,
+      button {
+        box-sizing: border-box;
+        max-width: 100%;
+      }
+      .gd-note > svg {
+        flex: none;
+        margin-top: 2px;
+      }
+      .gd-bar-track,
+      .gd-bar-fill {
+        display: block;
+      }
+      .qt-hero-main {
+        display: grid;
+        gap: 2px;
+        min-width: 0;
+      }
+      button.gd-ghost {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      /* Requests per day: plain columns on a baseline, today darker. */
+      .qt-cols {
+        display: block;
+        width: 100%;
+        height: auto;
+        overflow: visible;
+      }
+      .qt-cols rect {
+        fill: color-mix(in srgb, var(--gd-accent) 55%, var(--gd-surface));
+      }
+      .qt-cols rect.today {
+        fill: var(--gd-accent);
+      }
+      .qt-cols line {
+        stroke: var(--gd-border);
+      }
+      .qt-cols text {
+        fill: var(--gd-muted);
+        font-size: 10px;
+        font-family: var(--gd-font);
+        font-variant-numeric: tabular-nums;
+      }
+      .qt-cols text.value {
+        fill: var(--gd-ink);
+        font-weight: 700;
+      }
+      /* Register toolbar */
+      .qt-tools {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 10px;
+        padding: 0 16px 12px;
+      }
+      .qt-search {
+        position: relative;
+        flex: 1 1 240px;
+      }
+      .qt-search input {
+        width: 100%;
+        padding-left: 32px;
+      }
+      .qt-search svg {
+        position: absolute;
+        top: 50%;
+        left: 10px;
+        transform: translateY(-50%);
+        color: var(--gd-muted);
+      }
+      .qt-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 0 16px 12px;
+      }
+      .qt-filters button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 11px;
+        border: 1px solid var(--gd-border);
+        border-radius: 999px;
+        background: var(--gd-surface);
+        color: var(--gd-ink);
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .qt-filters button[aria-pressed='true'] {
+        border-color: var(--gd-accent);
+        background: var(--gd-accent-soft);
+        color: var(--gd-accent-ink);
+      }
+      .qt-filters b {
+        color: var(--gd-muted);
+        font-variant-numeric: tabular-nums;
+      }
+      .qt-filters button[aria-pressed='true'] b {
+        color: inherit;
+      }
+      .qt-code {
+        font-family: var(--gd-display);
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      .gd-register td {
+        vertical-align: middle;
+      }
+      .gd-register tr.late td:first-child {
+        color: var(--gd-son);
+      }
+      .qt-due {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+      }
+      .qt-due .gd-sub {
+        display: block;
+      }
+      .qt-due .late {
+        color: var(--gd-son);
+        font-weight: 700;
+      }
+      .qt-state {
+        display: grid;
+        justify-items: start;
+        gap: 4px;
+      }
+      .qt-link {
+        padding: 0;
+        border: 0;
+        background: none;
+        color: var(--gd-accent-ink);
+        font-size: 12.5px;
+        font-weight: 600;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+      .qt-more {
+        display: flex;
+        justify-content: center;
+        padding: 12px 16px 16px;
+      }
+      .qt-setup input {
+        width: 100%;
+        font-family: ui-monospace, monospace;
+        font-size: 13px;
+      }
+      .qt-setup ol {
+        margin: 10px 0 0;
+        padding-left: 20px;
+      }
+      .qt-setup code {
+        padding: 1px 5px;
+        border-radius: 5px;
+        background: var(--gd-surface-2);
+        font-size: 12.5px;
+      }
+      details.gd-panel > summary {
+        padding: 14px 16px;
+        font-family: var(--gd-display);
+        font-weight: 600;
+        cursor: pointer;
+      }
+      @media (max-width: 640px) {
+        .gd-register thead {
+          display: none;
+        }
+        .gd-register,
+        .gd-register tbody,
+        .gd-register tr,
+        .gd-register td {
+          display: block;
+          width: auto;
+        }
+        .gd-register tr {
+          display: grid;
+          grid-template-columns: auto 1fr;
+          gap: 4px 10px;
+          padding: 10px 2px;
+          border-bottom: 1px solid var(--gd-border);
+        }
+        .gd-register td {
+          padding: 0;
+          border: 0;
+        }
+        .gd-register td:first-child {
+          grid-row: span 5;
+          width: auto;
+          padding-right: 10px;
+        }
+      }
+    </style>
   </head>
   <body>
-    <h1>Hồ sơ nộp trực tuyến</h1>
-    <p class="muted">Trang nộp công khai: <code id="link"></code>. Để tạo hồ sơ tự động, tạo luồng bắt đầu bằng sự kiện “Có yêu cầu nộp trực tuyến” với bước “Tạo hồ sơ”, trường <code>ma_tra_cuu</code> = <code>{trigger.ma_tra_cuu}</code>.</p>
-    <label>Trạng thái <select id="status"><option value="">Tất cả</option></select></label>
-    <table>
-      <thead><tr><th>Mã tra cứu</th><th>Thủ tục</th><th>Người nộp</th><th>Điện thoại</th><th>Nguồn</th><th>Tình trạng</th><th>Hồ sơ</th><th>Ngày nộp</th></tr></thead>
-      <tbody id="rows"></tbody>
-    </table>
+    <header class="gd-hero">
+      <div class="qt-hero-main">
+        <h1>Hồ sơ nộp trực tuyến</h1>
+        <p>Yêu cầu người dân gửi qua trang công khai và từ hệ thống ngoài, cùng tình trạng hiện tại.</p>
+      </div>
+      <button type="button" class="gd-ghost" id="reload"></button>
+    </header>
+    <div id="stats" class="gd-stats" aria-busy="true"></div>
+    <div class="gd-cols" id="charts"></div>
+    <section class="gd-panel" aria-labelledby="reg-title">
+      <div class="gd-panel-head"><h2 id="reg-title"></h2><span class="gd-sub" id="shown" aria-live="polite"></span></div>
+      <div class="qt-tools">
+        <label class="qt-search"><span class="sr-only">Tìm hồ sơ</span><input id="q" type="search" placeholder="Tìm theo mã, họ tên, số điện thoại, thủ tục" autocomplete="off" /></label>
+        <div class="gd-seg" role="group" aria-label="Sắp xếp">
+          <button type="button" data-sort="new" aria-pressed="true">Mới nhất</button>
+          <button type="button" data-sort="urgent" aria-pressed="false">Cần xử lý trước</button>
+        </div>
+      </div>
+      <div class="qt-filters" id="filters" role="group" aria-label="Lọc theo tình trạng"></div>
+      <div class="gd-scroll" id="register"></div>
+    </section>
+    <details class="gd-panel qt-setup">
+      <summary>Trang công khai và cách nối với quy trình</summary>
+      <div class="gd-panel-body">
+        <label>Địa chỉ trang nộp hồ sơ cho người dân <input id="link" readonly /></label>
+        <ol>
+          <li>Đưa trang nộp và trang tra cứu (<code>/cong/tra-cuu.html</code>) ra Internet qua reverse proxy.</li>
+          <li>Tạo luồng bắt đầu bằng sự kiện “Có yêu cầu nộp trực tuyến”, thêm bước “Tạo hồ sơ” theo biểu mẫu thủ tục.</li>
+          <li>Trong bước đó, đặt trường <code>ma_tra_cuu</code> = <code>{trigger.ma_tra_cuu}</code> để tình trạng hồ sơ được báo lại cho người nộp.</li>
+        </ol>
+      </div>
+    </details>
+
     <script type="module">
-      import { $, h, server } from './mo-rong.js'
-      $('#link').textContent = new URL('/cong/nop.html', document.baseURI).href
-      let first = true
-      async function load() {
-        const data = await server(`/api/quan-tri?trang_thai=${$('#status').value}`)
-        if (first) { $('#status').append(...Object.entries(data.statuses).map(([k, v]) => h('option', { value: k }, v))); first = false }
-        $('#rows').replaceChildren(...data.items.map((r) => h('tr', {}, h('td', {}, r.code), h('td', {}, r.procedure), h('td', {}, r.full_name), h('td', {}, r.phone), h('td', {}, r.source), h('td', {}, r.status_label), h('td', {}, r.case_code || '—'), h('td', {}, r.created_at.slice(0, 10)))))
+      import { $, desktiny, h, server } from './mo-rong.js'
+      import { bars, chip, empty, icon, leaf, s, skeleton, stat } from './bieu-do.js'
+
+      const TONE = { received: 'info', processing: 'accent', needs_revision: 'warn', approved: 'ok', rejected: 'bad', cancelled: 'muted' }
+      const OPEN = new Set(['received', 'processing', 'needs_revision'])
+      const PAGE = 40
+      let data = null
+      let filter = ''
+      let sort = 'new'
+      let limit = PAGE
+
+      $('#reload').append(icon('refresh', 15), 'Làm mới')
+      // The kit has no magnifier icon: drawn here in the same line style.
+      $('.qt-search').append(s('svg', { width: 15, height: 15, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 1.9, 'stroke-linecap': 'round', 'aria-hidden': 'true' },
+        s('circle', { cx: 11, cy: 11, r: 7 }), s('path', { d: 'M20 20l-4-4' })))
+      $('#reg-title').append(icon('file', 17), 'Sổ tiếp nhận trực tuyến')
+      $('#link').value = new URL('/cong/nop.html', document.baseURI).href
+      $('#link').addEventListener('focus', (event) => event.target.select())
+
+      // ---- Dates: the server's day (Vietnam time) is the reference ----
+      const toDay = (value) => {
+        const [y, m, d] = String(value).slice(0, 10).split('-').map(Number)
+        return Date.UTC(y, m - 1, d)
       }
-      $('#status').addEventListener('change', load)
+      const between = (a, b) => Math.round((toDay(b) - toDay(a)) / 86400000)
+      const pad = (n) => String(n).padStart(2, '0')
+      const dm = (value) => `${String(value).slice(8, 10)}/${String(value).slice(5, 7)}`
+      const shiftDay = (value, n) => {
+        const date = new Date(toDay(value) + n * 86400000)
+        return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`
+      }
+
+      /** What needs attention on a request, for its row and for ordering. */
+      function urgency(r, today) {
+        const open = OPEN.has(r.status)
+        if (open && r.expected && r.expected < today) return { rank: 0, late: between(r.expected, today) }
+        if (r.status === 'received' && between(r.created_at, today) >= 1) return { rank: 1, waiting: between(r.created_at, today) }
+        if (open && r.expected === today) return { rank: 2, today: true }
+        if (r.status === 'needs_revision') return { rank: 3 }
+        return { rank: open ? 4 : 9 }
+      }
+
+      // ---- Figures ----
+      function renderStats(items, today) {
+        const weekStart = shiftDay(today, -6)
+        const filedToday = items.filter((r) => r.created_at.slice(0, 10) === today).length
+        const yesterday = items.filter((r) => r.created_at.slice(0, 10) === shiftDay(today, -1)).length
+        const week = items.filter((r) => r.created_at.slice(0, 10) >= weekStart).length
+        const waiting = items.filter((r) => r.status === 'received')
+        const oldest = waiting.length ? Math.max(...waiting.map((r) => between(r.created_at, today))) : 0
+        const revision = items.filter((r) => r.status === 'needs_revision').length
+        const late = items.filter((r) => urgency(r, today).late).length
+        $('#stats').replaceChildren(
+          stat({ label: 'Nộp hôm nay', value: filedToday, hint: `Hôm qua ${yesterday}`, icon: 'calendar' }),
+          stat({ label: '7 ngày qua', value: week, hint: `Trung bình ${(week / 7).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} hồ sơ/ngày`, icon: 'trend' }),
+          stat({ label: 'Chờ tiếp nhận', value: waiting.length, hint: waiting.length ? (oldest ? `Lâu nhất ${oldest} ngày` : 'Đều nộp hôm nay') : 'Không có hồ sơ chờ', tone: oldest >= 1 ? 'warn' : 'accent', icon: 'clock' }),
+          stat({ label: 'Cần bổ sung', value: revision, hint: 'Đang chờ người nộp', tone: revision ? 'warn' : 'accent', icon: 'alert' }),
+          stat({ label: 'Quá hẹn dự kiến', value: late, hint: late ? 'Chưa có kết quả' : 'Không có hồ sơ quá hẹn', tone: late ? 'bad' : 'ok', icon: 'bell' }))
+        $('#stats').setAttribute('aria-busy', 'false')
+      }
+
+      function columns(items, today) {
+        const days = Array.from({ length: 14 }, (_, i) => shiftDay(today, i - 13))
+        const counts = days.map((day) => items.filter((r) => r.created_at.slice(0, 10) === day).length)
+        const top = Math.max(1, ...counts)
+        const width = 420
+        const height = 132
+        const base = 108
+        const step = width / days.length
+        return s('svg', { class: 'qt-cols', viewBox: `0 0 ${width} ${height}`, role: 'img',
+          'aria-label': `Số hồ sơ nộp mỗi ngày, 14 ngày gần đây: ${days.map((d, i) => `${dm(d)} ${counts[i]}`).join(', ')}` },
+          s('line', { x1: 0, x2: width, y1: base + 0.5, y2: base + 0.5 }),
+          days.flatMap((day, i) => {
+            const tall = Math.round((counts[i] / top) * 86)
+            const x = i * step + step * 0.18
+            return [
+              counts[i] ? s('rect', { x, y: base - tall, width: step * 0.64, height: tall, rx: 3, class: day === today ? 'today' : null }) : null,
+              counts[i] ? s('text', { x: x + step * 0.32, y: base - tall - 4, 'text-anchor': 'middle', class: 'value' }, document.createTextNode(counts[i])) : null,
+              s('text', { x: x + step * 0.32, y: base + 15, 'text-anchor': 'middle' }, document.createTextNode(day === today ? 'Nay' : String(Number(day.slice(8, 10))))),
+            ]
+          }))
+      }
+
+      function renderCharts(items, today) {
+        const byProcedure = new Map()
+        for (const r of items) byProcedure.set(r.procedure, (byProcedure.get(r.procedure) || 0) + 1)
+        const ranked = [...byProcedure].sort((a, b) => b[1] - a[1]).slice(0, 6)
+        const panel = (title, iconName, body) => h('section', { class: 'gd-panel' },
+          h('div', { class: 'gd-panel-head' }, h('h2', {}, icon(iconName, 17), title)), h('div', { class: 'gd-panel-body' }, body))
+        $('#charts').replaceChildren(
+          panel('Hồ sơ nộp 14 ngày gần đây', 'trend', items.length ? columns(items, today) : empty('Chưa có hồ sơ nộp trực tuyến', 'Gửi địa chỉ trang nộp cho người dân để bắt đầu.', 'file')),
+          panel('Theo thủ tục', 'file', ranked.length ? bars(ranked.map(([label, value]) => ({ label, value }))) : h('p', { class: 'gd-sub' }, 'Chưa có số liệu.')))
+      }
+
+      // ---- The register ----
+      function renderFilters(items) {
+        const count = (key) => items.filter((r) => r.status === key).length
+        const options = [['', 'Tất cả', items.length], ...Object.entries(data.statuses).map(([key, label]) => [key, label, count(key)])]
+        $('#filters').replaceChildren(...options.filter(([key, , n]) => !key || n).map(([key, label, n]) =>
+          h('button', { type: 'button', 'aria-pressed': filter === key ? 'true' : 'false', onclick: () => { filter = key; limit = PAGE; renderFilters(items); renderRegister() } },
+            key ? h('i', { class: `gd-dot tone-${TONE[key]}`, 'aria-hidden': 'true' }) : null, label, h('b', {}, n))))
+      }
+
+      function dueCell(r, info, today) {
+        if (!r.expected) return h('span', { class: 'gd-sub' }, OPEN.has(r.status) ? 'Chưa có hẹn' : '—')
+        const open = OPEN.has(r.status)
+        const left = between(today, r.expected)
+        const text = !open ? 'Đã xong' : info.late ? `Quá ${info.late} ngày` : left === 0 ? 'Hôm nay' : `Còn ${left} ngày`
+        return h('div', { class: 'qt-due' }, leaf(r.expected, info.late ? 'bad' : 'muted'),
+          h('span', {}, h('span', { class: 'num' }, `${dm(r.expected)}/${r.expected.slice(0, 4)}`), h('span', { class: `gd-sub${info.late ? ' late' : ''}` }, text)))
+      }
+
+      function renderRegister() {
+        const today = data.today
+        const words = $('#q').value.trim().toLocaleLowerCase('vi').split(/\s+/).filter(Boolean)
+        let rows = data.items
+          .filter((r) => !filter || r.status === filter)
+          .filter((r) => words.every((w) => `${r.code} ${r.full_name} ${r.phone} ${r.procedure} ${r.case_code || ''}`.toLocaleLowerCase('vi').includes(w)))
+          .map((r) => ({ r, info: urgency(r, today) }))
+        if (sort === 'urgent') rows.sort((a, b) => a.info.rank - b.info.rank || (a.r.expected || '9').localeCompare(b.r.expected || '9') || a.r.created_at.localeCompare(b.r.created_at))
+        $('#shown').textContent = rows.length === data.items.length ? `${rows.length} hồ sơ` : `${rows.length} trên ${data.items.length} hồ sơ`
+        if (!rows.length) {
+          return $('#register').replaceChildren(data.items.length
+            ? empty('Không có hồ sơ khớp', 'Thử bỏ bớt từ tìm kiếm hoặc chọn “Tất cả”.', 'file')
+            : empty('Chưa có hồ sơ nộp trực tuyến', 'Hồ sơ người dân nộp qua trang công khai sẽ hiện ở đây.', 'file'))
+        }
+        const visible = rows.slice(0, limit)
+        $('#register').replaceChildren(
+          h('table', { class: 'gd-register' },
+            h('thead', {}, h('tr', {}, ['STT', 'Mã tra cứu', 'Người nộp', 'Thủ tục', 'Tình trạng', 'Hẹn trả dự kiến'].map((t) => h('th', { scope: 'col' }, t)))),
+            h('tbody', {}, visible.map(({ r, info }, index) =>
+              h('tr', { class: info.late ? 'late' : '' },
+                h('td', {}, index + 1),
+                h('td', {}, h('div', { class: 'qt-code' }, r.code), h('div', { class: 'gd-sub' }, `${r.created_at.slice(11, 16)}, ${dm(r.created_at)}`)),
+                h('td', {}, h('div', { style: 'font-weight:600' }, r.full_name), h('div', { class: 'gd-sub num' }, r.phone)),
+                h('td', {}, h('div', {}, r.procedure), h('div', { class: 'gd-sub' }, `Qua ${r.source}`)),
+                h('td', {}, h('div', { class: 'qt-state' },
+                  chip(r.status_label, TONE[r.status] || 'muted'),
+                  info.waiting ? chip(`Chờ ${info.waiting} ngày`, 'warn', 'clock') : null,
+                  r.case_id
+                    ? h('button', { type: 'button', class: 'qt-link', 'aria-label': `Mở hồ sơ ${r.case_code || ''} của ${r.full_name}`, onclick: () => desktiny.navigate(`/cases/${r.case_id}`) }, `Mở hồ sơ ${r.case_code || ''}`.trim())
+                    : h('span', { class: 'gd-sub' }, 'Chưa tạo hồ sơ'))),
+                h('td', {}, dueCell(r, info, today)))))),
+          rows.length > limit
+            ? h('div', { class: 'qt-more' }, h('button', { type: 'button', class: 'gd-ghost', onclick: () => { limit += PAGE; renderRegister() } }, `Xem thêm ${Math.min(PAGE, rows.length - limit)} hồ sơ`))
+            : '')
+      }
+
+      async function load() {
+        $('#reload').disabled = true
+        if (!data) {
+          $('#stats').replaceChildren(skeleton(2, 18))
+          $('#register').replaceChildren(h('div', { style: 'padding:4px 16px 16px' }, skeleton(5, 16)))
+        }
+        try {
+          data = await server('/api/quan-tri')
+          renderStats(data.items, data.today)
+          renderCharts(data.items, data.today)
+          renderFilters(data.items)
+          renderRegister()
+        } catch (error) {
+          $('#stats').replaceChildren()
+          $('#register').replaceChildren(h('p', { class: 'gd-note tone-bad', role: 'alert', style: 'margin:0 16px 16px' }, icon('alert', 15), error.message))
+        } finally {
+          $('#reload').disabled = false
+        }
+      }
+      $('#reload').addEventListener('click', load)
+      $('#q').addEventListener('input', () => { limit = PAGE; data && renderRegister() })
+      for (const button of document.querySelectorAll('[data-sort]')) {
+        button.addEventListener('click', () => {
+          sort = button.dataset.sort
+          for (const other of document.querySelectorAll('[data-sort]')) other.setAttribute('aria-pressed', other === button ? 'true' : 'false')
+          data && renderRegister()
+        })
+      }
       load()
     </script>
   </body>

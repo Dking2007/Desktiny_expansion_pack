@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS entries (
 );
 """
 DEFAULT_BOOKS = [("QD", "Quyết định", "QĐ"), ("CV", "Công văn", ""), ("TB", "Thông báo", "TB"), ("GXN", "Giấy xác nhận", "GXN")]
-DEFAULTS = {"ky_hieu_co_quan": "UBND"}
+DEFAULTS = {"ky_hieu_co_quan": "UBND", "ten_co_quan": "", "dia_danh": ""}
 
 
 def build(settings: Settings | None = None, store: Store | None = None, now=lambda: datetime.now(VN)) -> App:
@@ -74,8 +74,27 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
             )  # fmt: skip
             return dict(tx.execute("SELECT * FROM entries WHERE key = ?", (key,)).fetchone())
 
-    def books():
-        return db.all("SELECT * FROM books ORDER BY name")
+    def books(with_next: bool = False):
+        rows = db.all("SELECT * FROM books ORDER BY name")
+        if not with_next:
+            return rows
+        # What the next number of each register's current series will be (a preview: the number itself is only
+        # taken when it is issued), and how many numbers that series holds.
+        year = now().year
+        for book in rows:
+            series = year if book["yearly"] else 0
+            last = db.one("SELECT MAX(number) AS last, COUNT(*) AS total, SUM(state = 'cancelled') AS cancelled "
+                          "FROM entries WHERE book = ? AND year = ?", book["code"], series)  # fmt: skip
+            book["next_number"] = (last["last"] or book["start_number"] - 1) + 1
+            book["next_full_number"] = full_number(book["next_number"], book)
+            book["issued"], book["cancelled"] = last["total"] or 0, last["cancelled"] or 0
+        return rows
+
+    def agency() -> dict:
+        """The issuing agency as the document heading shows it (read only; set in the plugin's settings)."""
+        values = app.org_settings(DEFAULTS)
+        return {"symbol": str(values.get("ky_hieu_co_quan") or "").strip(), "name": str(values.get("ten_co_quan") or "").strip(),
+                "place": str(values.get("dia_danh") or "").strip()}  # fmt: skip
 
     # ---- Flow step ------------------------------------------------------------------------------
 
@@ -99,7 +118,7 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
     @app.route("GET", "/api/ho-so/{case_id}", viewer=True)
     def of_case(request):
         case = app.as_viewer(request).case(request.params["case_id"])
-        return {"case": {"id": case["id"], "title": case["title"]}, "books": books(),
+        return {"case": {"id": case["id"], "title": case["title"]}, "books": books(with_next=True), "agency": agency(),
                 "entries": db.all("SELECT * FROM entries WHERE case_id = ? ORDER BY issued_at", case["id"])}  # fmt: skip
 
     @app.route("POST", "/api/ho-so/{case_id}/cap-so", viewer=True)
@@ -145,7 +164,8 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
 
     @app.route("GET", "/api/so", viewer=True)
     def registers(request):
-        return {"books": books(), "entries": listing(request)}
+        managers = (request.viewer.get("context") or {}).get("slot") == "admin.page"
+        return {"books": books(with_next=managers), "agency": agency(), "entries": listing(request)}
 
     @app.route("GET", "/api/xuat", viewer=True)
     def export(request):
