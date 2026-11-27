@@ -21,6 +21,7 @@ sys.path.insert(0, str(HERE.parents[3] / "lib"))
 
 from desktiny_plugin import PluginError  # noqa: E402
 from mo_rong import App, HttpError, Response, Settings, Store  # noqa: E402
+from mo_rong.vn import csv_cells  # noqa: E402
 
 VN = timezone(timedelta(hours=7))
 SCHEMA = """
@@ -173,9 +174,9 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
         writer = csv.writer(out)
         writer.writerow(["Sổ", "Số, ký hiệu", "Ngày", "Trích yếu", "Người cấp", "Trạng thái", "Lý do huỷ"])
         for entry in listing(request):
-            writer.writerow([entry["book"], entry["full_number"], entry["issued_at"][:10], entry["summary"],
-                             entry["issued_by"], "Đã huỷ" if entry["state"] == "cancelled" else "Đã cấp",
-                             entry["cancel_reason"] or ""])  # fmt: skip
+            writer.writerow(csv_cells([entry["book"], entry["full_number"], entry["issued_at"][:10], entry["summary"],
+                                       entry["issued_by"], "Đã huỷ" if entry["state"] == "cancelled" else "Đã cấp",
+                                       entry["cancel_reason"] or ""]))  # fmt: skip
         return Response(200, ("﻿" + out.getvalue()).encode(), "text/csv; charset=utf-8")
 
     @app.route("POST", "/api/quan-tri/so", admin=True)

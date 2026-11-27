@@ -93,3 +93,11 @@ def test_the_dossier_and_managers_see_the_next_number_and_the_agency_heading_peo
     call(app, "POST", "/api/quan-tri/so", {"code": "HD", "name": "Hợp đồng", "symbol": "HĐ", "start_number": 40, "yearly": False}, "phien-qt")
     contract = next(b for b in call(app, "GET", "/api/so", session="phien-qt").data["books"] if b["code"] == "HD")
     assert (contract["next_number"], contract["next_full_number"], contract["yearly"]) == (40, "40/HĐ-UBND", 0)
+
+
+def test_a_csv_export_never_holds_a_formula(make_app, desktiny):
+    app = make_app("so-van-ban")
+    desktiny.cases["hs-f"] = {"id": "hs-f", "title": "Hồ sơ", "payload": {}}
+    call(app, "POST", "/api/ho-so/hs-f/cap-so", {"so": "QD", "trich_yeu": "=1+1"}, "phien-an")
+    export = call(app, "GET", "/api/xuat", session="phien-qt").body.decode()
+    assert ",'=1+1," in export

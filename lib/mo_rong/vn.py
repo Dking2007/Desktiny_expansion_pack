@@ -12,6 +12,11 @@ class InputError(ValueError):
     """A value a person typed that cannot be read; its message is shown to them."""
 
 
+def csv_cells(row: list) -> list:
+    """A spreadsheet runs a cell that starts with = + - @ as a formula: a leading ' keeps typed text as text."""
+    return ["'" + v if isinstance(v, str) and v and v[0] in "=+-@\t\r" else v for v in row]
+
+
 def month_of(value: str | None = None) -> str:
     """"2026-11" from "2026-11", "11/2026" or today."""
     if not value:
