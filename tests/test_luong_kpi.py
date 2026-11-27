@@ -9,8 +9,15 @@ TABLE = luong.brackets(luong.DEFAULTS["bac_thue"])
 def test_income_tax_is_progressive():
     assert luong.income_tax(0, TABLE) == 0
     assert luong.income_tax(5_000_000, TABLE) == 250_000
-    assert luong.income_tax(10_000_000, TABLE) == 750_000  # 5% of 5M + 10% of 5M
-    assert luong.income_tax(100_000_000, TABLE) == 18_150_000 + 7_000_000  # 18,15 triệu tới 80 triệu, 35% phần trên
+    assert luong.income_tax(10_000_000, TABLE) == 500_000  # 5% của 10 triệu
+    assert luong.income_tax(40_000_000, TABLE) == 4_500_000  # 0,5 + 2 + 2 triệu
+    assert luong.income_tax(100_000_000, TABLE) == 500_000 + 2_000_000 + 6_000_000 + 12_000_000  # tới 100 triệu
+    assert luong.income_tax(110_000_000, TABLE) == 20_500_000 + 3_500_000  # 35% phần trên 100 triệu
+
+
+def test_defaults_follow_the_2026_rules():
+    assert luong.DEFAULTS["luong_co_so"] == 2_530_000  # Nghị định 161/2026/NĐ-CP
+    assert len(TABLE) == 5  # Luật 109/2025/QH15, biểu 5 bậc
 
 
 def test_a_payslip_takes_days_insurance_and_deductions_into_account():
@@ -18,11 +25,11 @@ def test_a_payslip_takes_days_insurance_and_deductions_into_account():
     grade = {"name": "Chuyên viên", "coefficient": 10.0, "allowance": 1_600_000}
     profile = {"extra_allowance": 0, "dependents": 1, "standard_days": 22}
     full = luong.payslip(profile, grade, config, None)
-    assert full["gross"] == 25_000_000 and full["insurance"] == 2_625_000
-    assert full["taxable"] == 25_000_000 - 2_625_000 - 15_500_000 - 6_200_000
+    assert full["gross"] == 26_900_000 and full["insurance"] == 2_824_500
+    assert full["taxable"] == 26_900_000 - 2_824_500 - 15_500_000 - 6_200_000
     assert full["net"] == full["gross"] - full["insurance"] - full["tax"]
     half = luong.payslip(profile, grade, config, 11)
-    assert half["gross"] == 12_500_000 and half["tax"] == 0
+    assert half["gross"] == 13_450_000 and half["tax"] == 0
 
 
 def test_a_payroll_flow_waits_until_the_month_is_locked_and_payslips_stay_private(make_app, desktiny):
@@ -70,7 +77,7 @@ def test_grades_and_tax_table_for_the_pages():
         "Hoàn thành xuất sắc", "Hoàn thành xuất sắc", "Hoàn thành tốt", "Hoàn thành", "Không hoàn thành"]  # fmt: skip
     assert luong.grade_scale()[0] == {"min": 90, "name": "Hoàn thành xuất sắc"}
     table = luong.tax_table(luong.DEFAULTS["bac_thue"])
-    assert table[0] == {"upper": 5_000_000, "rate": 5} and table[-1] == {"upper": None, "rate": 35}
+    assert table[0] == {"upper": 10_000_000, "rate": 5} and table[-1] == {"upper": None, "rate": 35}
     assert luong.tax_table("không hợp lệ") == []
 
 
@@ -94,7 +101,7 @@ def test_a_payslip_page_shows_only_ones_own_locked_months(make_app):
     assert call(app, "GET", "/api/phieu-luong?thang=2026-12", session="phien-an").data["period_state"] is None
     overview = call(app, "GET", "/api/quan-tri?thang=2026-11", session="phien-qt").data
     assert [p["month"] for p in overview["history"]] == ["2026-09", "2026-10", "2026-11"]
-    assert overview["history"][-1]["state"] == "computed" and overview["base_salary"] == 2_340_000
+    assert overview["history"][-1]["state"] == "computed" and overview["base_salary"] == 2_530_000
     assert overview["kpi"] == {"count": 0, "average": None, "grades": {}}
     assert call(app, "GET", "/api/quan-tri?thang=2026-10", session="phien-an").status == 403
 

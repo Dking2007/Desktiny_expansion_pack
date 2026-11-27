@@ -39,12 +39,12 @@
   "settings_schema": {
     "type": "object",
     "properties": {
-      "luong_co_so": { "type": "number", "title": "Mức lương cơ sở (đồng)", "default": 2340000 },
+      "luong_co_so": { "type": "number", "title": "Mức lương cơ sở (đồng)", "default": 2530000 },
       "ty_le_bao_hiem": { "type": "number", "title": "Tỉ lệ bảo hiểm người lao động đóng (%)", "default": 10.5 },
       "tran_bao_hiem_lan": { "type": "number", "title": "Trần lương đóng bảo hiểm (số lần lương cơ sở)", "default": 20 },
       "giam_tru_ban_than": { "type": "number", "title": "Giảm trừ bản thân (đồng/tháng)", "default": 15500000 },
       "giam_tru_phu_thuoc": { "type": "number", "title": "Giảm trừ mỗi người phụ thuộc (đồng/tháng)", "default": 6200000 },
-      "bac_thue": { "type": "string", "title": "Biểu thuế lũy tiến tháng", "description": "Cận trên:thuế suất %, bậc cuối 0:%. Ví dụ 5000000:5,10000000:10,…,0:35" },
+      "bac_thue": { "type": "string", "title": "Biểu thuế lũy tiến tháng", "description": "Cận trên:thuế suất %, bậc cuối 0:%. Mặc định 10000000:5,30000000:10,60000000:20,100000000:30,0:35", "default": "10000000:5,30000000:10,60000000:20,100000000:30,0:35" },
       "url_cham_cong": { "type": "string", "title": "Địa chỉ máy chủ plugin Chấm công", "description": "Để trống thì tính đủ công." },
       "khoa_cham_cong": { "type": "string", "title": "Khoá chia sẻ công (như ở plugin Chấm công)", "secret": true }
     },
