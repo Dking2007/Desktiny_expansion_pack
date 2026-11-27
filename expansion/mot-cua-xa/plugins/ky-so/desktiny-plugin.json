@@ -5,7 +5,7 @@
   "version": "1.1.0",
   "license": "Apache-2.0",
   "authors": ["Desktiny Expansion Pack contributors"],
-  "description": "Ký tài liệu của hồ sơ bằng mã PIN cá nhân và gắn phiếu xác nhận ký số (PDF) vào hồ sơ, từ bước quy trình chạy lâu (chờ người ký) hoặc nút trên hồ sơ. Ai cũng kiểm được mã xác thực. Chữ ký là mô phỏng bằng khoá của cơ quan; thay bằng chứng thư số khi triển khai thật.",
+  "description": "Ký tài liệu của hồ sơ bằng mã PIN cá nhân và gắn phiếu xác nhận ký số (Word) vào hồ sơ, từ bước quy trình chạy lâu (chờ người ký) hoặc nút trên hồ sơ. Ai cũng kiểm được mã xác thực. Chữ ký là mô phỏng bằng khoá của cơ quan; thay bằng chứng thư số khi triển khai thật.",
   "base_url": "http://localhost:9204",
   "requires": { "desktiny": ">=2" },
   "permissions": ["cases.read", "files.read", "cases.attach", "notifications.send"],

@@ -54,7 +54,7 @@ Biểu mẫu có sẵn các trường mà plugin dùng. Đổi mã trường th�
 | Plugin | Dạng | Làm gì | Gắn vào Desktiny |
 |---|---|---|---|
 | **Sổ văn bản** `so-van-ban` | kết nối | Sổ theo loại văn bản, số liên tục theo năm, không nhảy số, không trùng; số đã huỷ vẫn giữ trong sổ | Bước **Cấp số văn bản**; nút *Cấp số văn bản* trên hồ sơ (ghi số và ngày vào hồ sơ); tab *Số văn bản*; trang *Sổ văn bản* |
-| **Ký số văn bản** `ky-so` | kết nối | Ký tài liệu của hồ sơ bằng mã PIN cá nhân, gắn phiếu xác nhận (PDF) có mã; trang công khai để kiểm mã | Bước chạy lâu **Ký số văn bản** (chờ người ký); trang *Văn bản chờ ký*; nút *Ký số* |
+| **Ký số văn bản** `ky-so` | kết nối | Ký tài liệu của hồ sơ bằng mã PIN cá nhân, gắn phiếu xác nhận (Word) có mã; trang công khai để kiểm mã | Bước chạy lâu **Ký số văn bản** (chờ người ký); trang *Văn bản chờ ký*; nút *Ký số* |
 | **Tiếp nhận trực tuyến** `tiep-nhan` | kết nối | Trang công khai để nộp yêu cầu và tra cứu tình trạng bằng mã tra cứu và mã bí mật (không cần tài khoản); nhận hồ sơ từ hệ thống ngoài bằng khoá | Sự kiện **có yêu cầu nộp trực tuyến** để luồng tạo hồ sơ; cập nhật tình trạng theo sự kiện của hồ sơ; khung trên hồ sơ |
 | **Tính hạn theo ngày làm việc** `tinh-han` | đóng gói | Tính hạn bỏ cuối tuần và ngày lễ, có tính ngày làm bù | Trang *Tính hạn giải quyết*; khung *Hạn giải quyết* trên hồ sơ |
 | **Đọc giấy tờ, điền sẵn** `doc-giay-to` | đóng gói | Đọc lớp chữ của tài liệu đã nộp (văn bản, PDF có chữ) hoặc nội dung dán vào; nhận ra họ tên, ngày sinh, số định danh, quê quán, nơi thường trú, MST, điện thoại | Nút *Đọc giấy tờ* trên hồ sơ: cán bộ xem, sửa, xác nhận rồi mới ghi vào hồ sơ |
