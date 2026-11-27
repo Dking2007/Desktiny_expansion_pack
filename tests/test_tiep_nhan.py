@@ -91,3 +91,17 @@ def test_the_citizen_gets_a_guide_and_an_expected_date_and_the_lookup_still_show
     assert admin["today"] == "2026-11-27" and admin["items"][0]["expected"] == "2026-11-30"
     assert admin["items"][0]["case_code"] == "HS-000008" and "updated_at" in admin["items"][0]
     assert call(app, "GET", "/api/quan-tri?trang_thai=received", session="phien-qt").data["items"] == []
+
+
+def test_lookups_are_limited_per_address_and_per_code(make_app):
+    app = make_app("tiep-nhan")
+    _, check = answer(app)
+    filed = call(app, "POST", "/cong/api/nop", {**PERSON, **check}).data
+    code, secret = filed["ma_tra_cuu"], filed["ma_bi_mat"]
+    other = "000000" if secret != "000000" else "000001"
+    for n in range(10):  # ten wrong secrets from ten addresses
+        assert app.handle("GET", f"/cong/api/tra-cuu?ma={code}&ma_bi_mat={other}", client_ip=f"10.0.0.{n}").status == 404
+    right = app.handle("GET", f"/cong/api/tra-cuu?ma={code}&ma_bi_mat={secret}", client_ip="10.0.1.1")
+    assert right.status == 429 and right.data["error"] == "too_many"
+    statuses = {app.handle("GET", "/cong/api/tra-cuu?ma=TN-0000-AAAAAA&ma_bi_mat=1", client_ip="10.9.9.9").status for _ in range(30)}
+    assert statuses == {404, 429}
