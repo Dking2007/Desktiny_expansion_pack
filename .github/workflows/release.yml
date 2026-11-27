@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
+name: release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13" }
+      - name: Đóng gói mã nguồn và các gói cài
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p out
+          git archive --format=tar.gz --prefix="desktiny-expansion-pack-${VERSION}/" -o "out/desktiny-expansion-pack-${VERSION}.tar.gz" "${GITHUB_REF_NAME}"
+          python scripts/dong_goi.py
+          tar -czf "out/desktiny-expansion-pack-goi-cai-${VERSION}.tar.gz" dist
+          (cd out && sha256sum *.tar.gz > SHA256SUMS)
+      - name: Lấy ghi chú từ CHANGELOG.md
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk -v v="[${VERSION}]" 'index($0,"## "v)==1{f=1;next} f&&/^## /{exit} f' CHANGELOG.md > RELEASE_NOTES.md
+          printf '\n---\nTệp chính: `desktiny-expansion-pack-goi-cai-%s.tar.gz` chứa các gói `.zip` để cài vào Desktiny (giải nén rồi tải từng `.zip` lên trang quản trị); kèm mã nguồn và `SHA256SUMS`. Mục "Source code (zip)" do GitHub tự thêm, không phải bản phân phối chính thức.\n' "${VERSION}" >> RELEASE_NOTES.md
+          test -s RELEASE_NOTES.md
+      - name: Tạo GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          gh release create "${GITHUB_REF_NAME}" "out/desktiny-expansion-pack-${VERSION}.tar.gz" "out/desktiny-expansion-pack-goi-cai-${VERSION}.tar.gz" out/SHA256SUMS \
+            --title "Desktiny Expansion Pack ${GITHUB_REF_NAME}" --notes-file RELEASE_NOTES.md
