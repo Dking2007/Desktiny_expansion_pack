@@ -3,7 +3,7 @@
 """Install everything into a real Desktiny (its own test fixture: Workspace + Core, in memory) and run flows that go
 through the plugins' servers. Needs a Desktiny checkout: DESKTINY_DIR=/path/to/Desktiny (skipped otherwise).
 
-    DESKTINY_DIR=.. python -m pytest tests/desktiny   (this folder sits inside Desktiny)
+    DESKTINY_DIR=/path/to/Desktiny python -m pytest tests/desktiny   (DESKTINY_DIR points at a Desktiny checkout)
 """
 
 from __future__ import annotations

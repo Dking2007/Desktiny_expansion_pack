@@ -5,6 +5,13 @@ SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
 
 # Desktiny Expansion Pack
 
+Bộ mở rộng cho [Desktiny](https://github.com/Dking2007/DXOS_Desktiny) (sản phẩm chính). Repo này:
+https://github.com/Dking2007/Desktiny_expansion_pack.
+
+| Expansion Pack | Desktiny tối thiểu | Đã chạy thử |
+|---|---|---|
+| 1.1.0 | 3.1.0 | 27/11/2026: cài 3 gói + 9 plugin vào Desktiny `main` (`c4ccb9f`) và chạy, kiểm sức khỏe 7 máy chủ plugin đạt |
+
 **Các bản mở rộng của Desktiny.** Một bản mở rộng đưa Desktiny vào một nghiệp vụ cụ thể (nhân sự, một cửa, kế toán,
 trường học…) mà **không sửa mã của Desktiny**. Nó gồm một **gói giao diện** (màu sắc, từ ngữ, quy trình, biểu mẫu,
 kiến thức cho trợ lý AI) và các **plugin** thêm chức năng mới. Tất cả được cài qua trang quản trị của Desktiny bằng
@@ -25,7 +32,9 @@ Repo này có:
 4. [Cài vào Desktiny](#cài-vào-desktiny)
 5. [Tự tạo bản mở rộng](#tự-tạo-bản-mở-rộng)
 6. [An toàn](#an-toàn)
-7. [Phát triển và kiểm thử](#phát-triển-và-kiểm-thử)
+7. [Giới hạn](#giới-hạn)
+8. [Phát triển và kiểm thử](#phát-triển-và-kiểm-thử)
+9. [Đóng góp](#đóng-góp)
 
 ## Bản mở rộng gồm những gì
 
@@ -456,6 +465,14 @@ Mọi bản mở rộng, kể cả bản bạn tự tạo, đều được hư�
 - Khung plugin không có hộp thoại `alert/prompt` và không tải tệp về được. Hãy dùng hộp thoại xác nhận của Desktiny
   (`desktiny.confirm`) và hiện nội dung để người dùng sao chép.
 
+## Giới hạn
+
+- **Chấm công GPS** tin vị trí do trình duyệt báo lên, nên người dùng có kỹ thuật có thể làm giả. Trình duyệt chỉ cho
+  lấy vị trí khi trang chạy trên HTTPS (trừ `localhost`).
+- **Cổng tiếp nhận trực tuyến** lưu số CCCD và số điện thoại không mã hóa, chưa có thời hạn lưu giữ. Cần bổ sung trước
+  khi dùng với dữ liệu thật.
+- **Ký số** là chữ ký mô phỏng bằng HMAC, không phải chữ ký số có giá trị pháp lý.
+
 ## Phát triển và kiểm thử
 
 ### Cấu trúc thư mục
@@ -491,6 +508,11 @@ PYTHONPATH=lib python -m desktiny_plugin.cli dev step cap_so_van_ban --secret �
 ```
 
 Lệnh thứ hai đóng vai Desktiny: ký và gửi một lời gọi bước quy trình tới máy chủ plugin đang chạy.
+
+## Đóng góp
+
+Xem [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md) và [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+Thành phần bên thứ ba (phông chữ) ở [THIRD_PARTY.md](THIRD_PARTY.md).
 
 ## Giấy phép
 
