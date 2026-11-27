@@ -84,3 +84,28 @@ def test_pages_get_the_shared_kit_and_desktinys_fonts_but_nothing_else_from_sdk(
     for path in ("/ui/phong-chu/OFL-BeVietnamPro.txt", "/ui/phong-chu/../mo-rong.js", "/ui/phong-chu/x/a.woff2",
                  "/ui/phong-chu/khong-co.woff2"):
         assert app.static(path) is None, path
+
+
+def test_a_negative_or_oversized_content_length_is_refused_before_reading():
+    import http.client
+    import socket
+
+    from mo_rong import server as kit_server
+
+    app, _ = kit()
+    server = app.server(0, "127.0.0.1")
+    assert server.RequestHandlerClass.timeout == 30  # a stalled client cannot hold a thread forever
+    for length in ("-1", "abc", str(kit_server.MAX_BODY + 1)):
+        thread = threading.Thread(target=server.handle_request, daemon=True)
+        thread.start()
+        conn = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+        conn.putrequest("POST", "/so")
+        conn.putheader("Content-Length", length)
+        conn.endheaders()
+        try:
+            assert conn.getresponse().status == 413
+        except (ConnectionError, socket.timeout):  # pragma: no cover
+            raise AssertionError(f"Content-Length {length} was not refused") from None
+        conn.close()
+        thread.join(5)
+    server.server_close()
