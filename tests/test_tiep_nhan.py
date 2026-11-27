@@ -91,3 +91,29 @@ def test_the_citizen_gets_a_guide_and_an_expected_date_and_the_lookup_still_show
     assert admin["today"] == "2026-11-27" and admin["items"][0]["expected"] == "2026-11-30"
     assert admin["items"][0]["case_code"] == "HS-000008" and "updated_at" in admin["items"][0]
     assert call(app, "GET", "/api/quan-tri?trang_thai=received", session="phien-qt").data["items"] == []
+
+
+def test_a_request_is_kept_and_resent_when_desktiny_is_down(make_app, desktiny, monkeypatch):
+    from conftest import FakeClient
+
+    from desktiny_plugin import PluginError
+
+    app = make_app("tiep-nhan")
+    sent, down = [], [True]
+
+    def send_event(self, event_type, data=None, key=None):
+        if down[0]:
+            raise PluginError(503, "unavailable", "x")
+        sent.append((data["ma_tra_cuu"], key))
+        return {"accepted": True}
+
+    monkeypatch.setattr(FakeClient, "send_event", send_event)
+    _, check = answer(app)
+    filed = call(app, "POST", "/cong/api/nop", {**PERSON, **check})
+    assert filed.status == 200  # saved, so the citizen is not asked to file again
+    code = filed.data["ma_tra_cuu"]
+    assert app.store.all("SELECT code FROM pending") == [{"code": code}] and not sent
+    down[0] = False
+    app.flush()
+    assert sent == [(code, f"nop:{code}")] and app.store.all("SELECT code FROM pending") == []
+    assert app.store.one("SELECT COUNT(*) AS n FROM requests")["n"] == 1

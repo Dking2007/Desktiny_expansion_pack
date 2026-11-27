@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS requests (
   updated_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS history (id INTEGER PRIMARY KEY, code TEXT NOT NULL, status TEXT NOT NULL, note TEXT, at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS pending (code TEXT PRIMARY KEY);
 CREATE TABLE IF NOT EXISTS challenges (id TEXT PRIMARY KEY, answer INTEGER NOT NULL, created REAL NOT NULL);
 """
 DEFAULTS = {
@@ -126,6 +127,18 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
     def stamp() -> str:
         return now().isoformat(timespec="seconds")
 
+    def deliver(code: str):
+        """Tell Desktiny about a saved request; the key makes a repeat harmless. Leaves `pending` only on success."""
+        r = db.one("SELECT * FROM requests WHERE code = ?", code)
+        app.desktiny.send_event("ho_so_truc_tuyen", {"ma_tra_cuu": code, "thu_tuc": r["procedure"], "ho_ten": r["full_name"],
+                                                     "so_cccd": r["id_number"], "so_dien_thoai": r["phone"], "dia_chi": r["address"],
+                                                     "noi_dung": r["content"][:1000]}, key=f"nop:{code}")  # fmt: skip
+        db.run("DELETE FROM pending WHERE code = ?", code)
+
+    def flush():
+        for row in db.all("SELECT code FROM pending"):
+            deliver(row["code"])
+
     def receive(body: dict, source: str) -> dict:
         procedure = str(body.get("thu_tuc", "")).strip()
         if procedure not in procedures():
@@ -146,9 +159,11 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
                content, source, stamp(), stamp())  # fmt: skip
         db.run("INSERT INTO history (code, status, note, at) VALUES (?, 'received', ?, ?)", code, f"Nộp qua {source}", stamp())
         if app.settings.token:
-            app.desktiny.send_event("ho_so_truc_tuyen", {"ma_tra_cuu": code, "thu_tuc": procedure, "ho_ten": name,
-                                                         "so_cccd": id_number, "so_dien_thoai": phone, "dia_chi": address,
-                                                         "noi_dung": content[:1000]}, key=f"nop:{code}")  # fmt: skip
+            db.run("INSERT INTO pending (code) VALUES (?)", code)
+            try:
+                deliver(code)
+            except (PluginError, OSError):
+                pass  # saved: the citizen is done, `flush` sends it again within a minute
         filed = stamp()
         return {"ma_tra_cuu": code, "ma_bi_mat": secret, "thu_tuc": procedure, "ngay_nop": filed,
                 "hen_tra": expected(procedure, filed), "giay_to": (GUIDE.get(procedure) or {}).get("giay_to", [])}  # fmt: skip
@@ -246,6 +261,9 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
         items = [{**r, "status_label": STATUS.get(r["status"]), "expected": expected(r["procedure"], r["created_at"])} for r in rows]
         return {"items": items, "statuses": STATUS, "today": now().date().isoformat()}
 
+    app.flush = flush
+    if app.settings.token:
+        app.every(lambda: 60, flush)
     return app
 
 
