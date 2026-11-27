@@ -33,7 +33,8 @@
   "settings_schema": {
     "type": "object",
     "properties": {
-      "khoa_ky": { "type": "string", "title": "Khoá ký của cơ quan (chuỗi ngẫu nhiên dài)", "secret": true }
+      "khoa_ky": { "type": "string", "title": "Khoá ký của cơ quan (chuỗi ngẫu nhiên dài)", "secret": true },
+      "nguoi_duoc_ky": { "type": "string", "title": "Người được ký khi bước không chỉ định người ký (mã người dùng, cách nhau bằng dấu phẩy; để trống là ai xem được hồ sơ cũng ký được)" }
     },
     "required": ["khoa_ky"]
   },

@@ -25,7 +25,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[3] / "lib"))
 
-from mo_rong import App, HttpError, Response, Settings, Store  # noqa: E402
+from mo_rong import App, HttpError, Response, Settings, Store, require_listed  # noqa: E402
 from mo_rong.vn import month_of  # noqa: E402
 
 SCHEMA = """
@@ -359,6 +359,7 @@ def build(settings: Settings | None = None, store: Store | None = None, fetch_at
 
     @app.route("POST", "/api/kpi/{case_id}", viewer=True)
     def kpi_score(request):
+        require_listed(app, request, "nguoi_cham_kpi")
         client = app.as_viewer(request)
         case = client.case(request.params["case_id"])
         if (case.get("owner") or {}).get("id") == request.viewer["user"]["id"]:

@@ -20,7 +20,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[3] / "lib"))
 
 from desktiny_plugin import PluginError  # noqa: E402
-from mo_rong import App, HttpError, Response, Settings, Store  # noqa: E402
+from mo_rong import App, HttpError, Response, Settings, Store, require_listed  # noqa: E402
 
 VN = timezone(timedelta(hours=7))
 SCHEMA = """
@@ -123,6 +123,7 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
 
     @app.route("POST", "/api/ho-so/{case_id}/cap-so", viewer=True)
     def issue_for_case(request):
+        require_listed(app, request, "nguoi_cap_so")
         client = app.as_viewer(request)
         case = client.case(request.params["case_id"])  # the viewer must be able to see the dossier
         body = request.json()

@@ -52,6 +52,13 @@ class HttpError(Exception):
         self.status, self.message, self.code = status, message, code
 
 
+def require_listed(app: "App", request: "Request", key: str):
+    """When the organisation lists user ids (comma separated) in setting `key`, only they may go on."""
+    allowed = {x.strip() for x in str(app.org_settings().get(key) or "").split(",") if x.strip()}
+    if allowed and request.viewer["user"]["id"] not in allowed:
+        raise HttpError(403, "Bạn không được phân công làm việc này.", "forbidden")
+
+
 @dataclass
 class Request:
     method: str

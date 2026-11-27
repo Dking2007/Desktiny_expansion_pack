@@ -70,3 +70,20 @@ def test_the_queue_shows_the_dossier_code_and_deadline_and_a_signature_names_eac
     assert dossier["case"]["code"] == "HS-000001"
     signatures = dossier["signatures"]
     assert [(s["file_id"], s["code"]) for s in signatures] == [("tep-2", done["codes"][0])]
+
+
+def test_signing_needs_the_assigned_people_and_never_the_dossiers_own_owner(make_app, desktiny):
+    setup(desktiny)
+    desktiny.settings["nguoi_duoc_ky"] = "u-binh"
+    app = make_app("ky-so")
+    for session, pin in (("phien-an", "135790"), ("phien-binh", "246810")):
+        call(app, "POST", "/api/pin", {"pin": pin}, session)
+    refused = call(app, "POST", "/api/ho-so/hs-1/ky", {"pin": "135790"}, "phien-an")
+    assert refused.status == 403 and refused.data["error"] == "forbidden"
+    signed(app, "/nodes/ky-so", {"call_id": "goi-9", "node_id": "ky", "subject": {"type": "case", "id": "hs-1"}, "config": {}})
+    assert call(app, "POST", "/api/cho-ky/goi-9", {"pin": "135790"}, "phien-an").status == 403
+    desktiny.cases["hs-1"]["owner"] = {"id": "u-binh"}  # the one who opened the dossier cannot sign it
+    own = call(app, "POST", "/api/ho-so/hs-1/ky", {"pin": "246810"}, "phien-binh")
+    assert own.status == 403 and own.data["error"] == "forbidden"
+    del desktiny.cases["hs-1"]["owner"]
+    assert call(app, "POST", "/api/ho-so/hs-1/ky", {"pin": "246810"}, "phien-binh").status == 200
