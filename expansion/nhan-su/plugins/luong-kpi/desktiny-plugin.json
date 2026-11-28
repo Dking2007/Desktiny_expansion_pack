@@ -46,7 +46,8 @@
       "giam_tru_phu_thuoc": { "type": "number", "title": "Giảm trừ mỗi người phụ thuộc (đồng/tháng)", "default": 6200000 },
       "bac_thue": { "type": "string", "title": "Biểu thuế lũy tiến tháng", "description": "Cận trên:thuế suất %, bậc cuối 0:%. Mặc định 10000000:5,30000000:10,60000000:20,100000000:30,0:35", "default": "10000000:5,30000000:10,60000000:20,100000000:30,0:35" },
       "url_cham_cong": { "type": "string", "title": "Địa chỉ máy chủ plugin Chấm công", "description": "Để trống thì tính đủ công." },
-      "khoa_cham_cong": { "type": "string", "title": "Khoá chia sẻ công (như ở plugin Chấm công)", "secret": true }
+      "khoa_cham_cong": { "type": "string", "title": "Khoá chia sẻ công (như ở plugin Chấm công)", "secret": true },
+      "nguoi_cham_kpi": { "type": "string", "title": "Người được chấm điểm KPI cuối cùng (mã người dùng, cách nhau bằng dấu phẩy; để trống là mọi người trừ người được đánh giá)" }
     },
     "required": []
   },

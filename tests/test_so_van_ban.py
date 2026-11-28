@@ -93,3 +93,12 @@ def test_the_dossier_and_managers_see_the_next_number_and_the_agency_heading_peo
     call(app, "POST", "/api/quan-tri/so", {"code": "HD", "name": "Hợp đồng", "symbol": "HĐ", "start_number": 40, "yearly": False}, "phien-qt")
     contract = next(b for b in call(app, "GET", "/api/so", session="phien-qt").data["books"] if b["code"] == "HD")
     assert (contract["next_number"], contract["next_full_number"], contract["yearly"]) == (40, "40/HĐ-UBND", 0)
+
+
+def test_only_the_assigned_people_may_issue_a_number_when_a_list_is_set(make_app, desktiny):
+    desktiny.settings = {"nguoi_cap_so": "u-binh, u-admin"}
+    app = make_app("so-van-ban")
+    desktiny.cases["hs-9"] = {"id": "hs-9", "title": "Quyết định", "payload": {}}
+    refused = call(app, "POST", "/api/ho-so/hs-9/cap-so", {"so": "QD"}, "phien-an")
+    assert refused.status == 403 and refused.data["error"] == "forbidden"
+    assert call(app, "POST", "/api/ho-so/hs-9/cap-so", {"so": "QD"}, "phien-binh").status == 200

@@ -117,3 +117,14 @@ def test_the_kpi_tab_gets_the_grade_scale_and_admin_sees_the_spread(make_app, de
     assert call(app, "POST", "/api/kpi/hs-2", {"scores": scores}, "phien-binh").data["written"] == []  # no such fields
     kpi = call(app, "GET", "/api/quan-tri", session="phien-qt").data["kpi"]
     assert kpi == {"count": 1, "average": 60.0, "grades": {"Hoàn thành": 1}}
+
+
+def test_only_the_assigned_people_may_set_the_final_kpi_score_when_a_list_is_set(make_app, desktiny):
+    desktiny.settings = {"nguoi_cham_kpi": "u-admin"}
+    app = make_app("luong-kpi")
+    desktiny.cases["hs-3"] = {"id": "hs-3", "title": "KPI", "owner": {"id": "u-an"}, "payload": {}}
+    criteria = call(app, "GET", "/api/kpi/hs-3", session="phien-binh").data["criteria"]
+    scores = {str(c["id"]): 80 for c in criteria}
+    refused = call(app, "POST", "/api/kpi/hs-3", {"scores": scores}, "phien-binh")
+    assert refused.status == 403 and refused.data["error"] == "forbidden"
+    assert call(app, "POST", "/api/kpi/hs-3", {"scores": scores}, "phien-qt").status == 200

@@ -26,7 +26,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[3] / "lib"))
 
-from mo_rong import App, HttpError, Response, Settings, Store  # noqa: E402
+from mo_rong import App, HttpError, Response, Settings, Store, require_listed  # noqa: E402
 from mo_rong.pdf import one_page  # noqa: E402
 
 VN = timezone(timedelta(hours=7))
@@ -88,6 +88,8 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
 
     def sign_files(client, case: dict, file_ids: list[str] | None, user: dict, *, node_id=None, call_id=None) -> dict:
         """Sign the chosen files (all when None) and attach one receipt; `client` reads and attaches."""
+        if (case.get("owner") or {}).get("id") == user["id"]:
+            raise HttpError(403, "Người lập hồ sơ không tự ký hồ sơ của mình.", "forbidden")
         files = [f for f in client.case_files(case["id"]) if file_ids is None or f["id"] in file_ids]
         files = [f for f in files if not f["name"].startswith("xac-nhan-ky-so")]
         if not files:
@@ -189,6 +191,8 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
             raise HttpError(404, "Không có yêu cầu ký này, hoặc bạn không phải người ký.")
         body = request.json()
         user = request.viewer["user"]
+        if not row["signer_id"]:  # a named signer is the check; otherwise the organisation's list
+            require_listed(app, request, "nguoi_duoc_ky")
         check_pin(user["id"], str(body.get("pin", "")))
         if body.get("tu_choi"):
             reason = str(body.get("ly_do") or "Người ký từ chối.")[:300]
@@ -221,6 +225,7 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
         client = app.as_viewer(request)
         case = client.case(request.params["case_id"])
         body = request.json()
+        require_listed(app, request, "nguoi_duoc_ky")
         check_pin(request.viewer["user"]["id"], str(body.get("pin", "")))
         return sign_files(client, case, body.get("file_ids"), request.viewer["user"])
 
