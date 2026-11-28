@@ -162,3 +162,16 @@ def test_the_same_name_in_two_expansions_stops_the_build(tmp_path, monkeypatch):
     write_pack(root / "expansion/hai/packs/chung")
     with pytest.raises(SystemExit, match="trùng.*chung"):
         dong_goi.build(out=tmp_path / "dist")
+
+
+def test_a_settings_title_desktiny_would_refuse_stops_the_build(tmp_path, monkeypatch):
+    """Desktiny refuses a title over 80 characters; the build used to pass it (Ký số, 28/11/2026)."""
+    root = fake_root(tmp_path, monkeypatch)
+    folder = root / "expansion/thu/plugins/dai"
+    folder.mkdir(parents=True)
+    manifest = {"schema": "desktiny-plugin/1", "id": "vn.thu.dai", "name": "Dài", "version": "1.0.0", "license": "Apache-2.0",
+                "base_url": "http://localhost:9299", "settings_schema": {"type": "object", "properties": {
+                    "khoa": {"type": "string", "title": "Khoá ký của cơ quan dùng để ký phiếu xác nhận của mọi văn bản được ký số trong hệ thống"}}}}  # fmt: skip
+    (folder / "desktiny-plugin.json").write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
+    with pytest.raises(SystemExit, match="settings_schema › khoa: title"):
+        dong_goi.build(out=tmp_path / "dist")

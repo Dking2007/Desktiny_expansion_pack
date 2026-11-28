@@ -39,6 +39,8 @@ Bản phát hành đầu tiên của Desktiny Expansion Pack. Cần Desktiny 3.1
 ### Fixed
 - Test cài thật chạy trọn một hồ sơ khai sinh của gói Một cửa: quy trình kết thúc bằng thông báo, hồ sơ phải đóng sau khi
   duyệt (B1, cần Desktiny có bản sửa “nhánh quy trình hết bước thì hồ sơ kết thúc”).
+- Bước đóng gói kiểm độ dài tiêu đề, mô tả và cấu trúc ô cấu hình như Desktiny (chép `desktiny-plugin` mới vào
+  `lib/desktiny_plugin`), nên manifest qua bước đóng gói không còn bị từ chối khi cài.
 - Địa chỉ `/cong/` của cổng tiếp nhận chuyển tới trang nộp hồ sơ thay vì báo 404.
 - Máy chủ plugin từ chối `Content-Length` âm.
 - Tra cứu hồ sơ trên cổng trực tuyến có giới hạn tần suất.
