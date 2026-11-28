@@ -37,6 +37,8 @@ Bản phát hành đầu tiên của Desktiny Expansion Pack. Cần Desktiny 3.1
 - Máy chủ plugin trả mọi lỗi dạng JSON; lỗi ngoài dự kiến được ghi nhật ký, không lộ chi tiết.
 
 ### Fixed
+- Ký số: khung đặt mã PIN hiện lúc mở trang không tự đặt focus khi người dùng chưa bấm vào khung (trình duyệt chặn và in cảnh
+  báo trên console).
 - Khung của plugin co lại vừa nội dung: chép SDK khung mới của Desktiny vào `sdk/` (bản cũ đo `scrollHeight` của `<html>`, giá
   trị không bao giờ nhỏ hơn khung, nên khung chỉ giãn mà không co).
 - Sổ tiếp nhận trực tuyến ghi “Chưa trình hồ sơ” (thay cho “Chưa tạo hồ sơ”) khi luồng đã tạo bản nháp nhưng chưa trình:
