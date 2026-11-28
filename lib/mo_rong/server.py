@@ -258,12 +258,17 @@ class App:
         app = self
 
         class Handler(BaseHTTPRequestHandler):
+            timeout = 30  # a stalled client must not hold a thread for ever
+
             def log_message(self, *args):
                 pass
 
             def _any(self):
-                size = int(self.headers.get("Content-Length") or 0)
-                if size > MAX_BODY:
+                try:
+                    size = int(self.headers.get("Content-Length") or 0)
+                except ValueError:
+                    size = -1
+                if not 0 <= size <= MAX_BODY:
                     self.send_error(413)
                     return
                 body = self.rfile.read(size) if size else b""
