@@ -138,13 +138,24 @@ customisations); Python 3.11+ for packaging; Docker for connected plugin servers
 
 Screenshots from the demo with fake sample data (provenance: [`docs/images/README.md`](docs/images/README.md)).
 
-| ![Desktiny home page after installing the commune one-stop pack](docs/images/mot-cua-trang-chu.png) | ![Desktiny before and after installing a theme pack](docs/images/goi-giao-dien.png) |
-|---|---|
-| A one-stop officer opens a home page with changed wording, colours and a to-do block | An administrator installs a pack and the theme, wording and workflows change with it |
+<p align="center">
+<img src="docs/images/goi-truoc-sau.png" width="100%" alt="Default look and the look after installing the one-stop pack"><br>
+<sub>The same Desktiny before and after installing the “commune one-stop” pack</sub>
+</p>
+
+<table>
+  <tr>
+    <td width="33%"><img src="docs/images/goi-mot-cua.png" width="100%" alt="Desktiny home page with the Commune one-stop pack"><br><sub>Commune one-stop</sub></td>
+    <td width="33%"><img src="docs/images/goi-nhan-su.png" width="100%" alt="Desktiny home page with the Company HR pack"><br><sub>Company HR</sub></td>
+    <td width="33%"><img src="docs/images/goi-van-thu.png" width="100%" alt="Desktiny home page with the Records office pack"><br><sub>Records office</sub></td>
+  </tr>
+</table>
+
 | ![Document register plugin](docs/images/plugin-so-van-ban.png) | ![Timekeeping plugin](docs/images/plugin-cham-cong.png) |
+|---|---|
 | A records clerk issues outgoing document numbers in sequence, with no gaps | An employee checks in using their phone's location |
 | ![Sensor plugin](docs/images/plugin-cam-bien.png) | ![History archive plugin](docs/images/plugin-luu-tru.png) |
-| The person in charge sees which reading is over its threshold | An administrator verifies the hash chain of archived cases |
+| The person in charge sees the device and each threshold breach | An administrator verifies the hash chain of archived cases |
 
 <p align="center">
 <img src="docs/images/cong-nop-dien-thoai.png" alt="Online submission portal on a phone" width="220"><br>
@@ -153,7 +164,7 @@ A citizen submits an application from their phone.
 
 ![Switching line of work by installing a pack](docs/media/gif-doi-nghiep-vu.gif)
 
-*An administrator installs a pack and Desktiny switches to the new line of work.*
+*An administrator picks a theme pack; the whole app turns into one-stop, then HR.*
 
 ![A citizen submits, an officer receives](docs/media/gif-cong-dan-nop.gif)
 
@@ -180,6 +191,11 @@ the samples are made up; regulations, deadlines and amounts are illustrations on
 <p align="center">
 <img src="docs/images/luong-cam-bien-dong.svg" width="100%" alt="Animated two-part diagram (Vietnamese labels). Operations: device lo-say-1 sends POST /api/so-do with X-Device-Key to the Sensor plugin on port 9208; the plugin keeps only a SHA-256 hash of the key, stores readings in SQLite and compares them with the threshold nhiet_do greater than 80. Sample readings 65, 70, 92, 95, 93, 66, 64: 92 opens an incident and sends exactly one event, later readings over the threshold send nothing more, 66 closes the incident. The event is queued in SQLite before sending; while Desktiny is down the plugin retries every minute with the same Idempotency-Key. Desktiny receives canh_bao_cam_bien, an automation creates a draft incident case, the flow owner submits it, the Fix step goes to the person in nguoi_phu_trach and the head of unit confirms. Data governance: when a case is approved or closed, Desktiny sends HMAC-signed case.approved and case.closed events to the Case history archive plugin on port 9209; the plugin reads the case with cases.read, masks national ID, phone and email, and appends one line to archive/YYYY-MM.jsonl whose prev field is the sha256 of the previous line">
 <br><sub>Animated diagram, labels in Vietnamese: a sensor reading over the threshold becomes one queued event, then an incident case for the responsible person; a closed case becomes one masked, hash-chained archive line.</sub>
+</p>
+
+<p align="center">
+<img src="docs/media/gif-canh-bao-cam-bien.gif" width="90%" alt="A sensor crossing its threshold creates an incident case"><br>
+<sub>*A device sends a reading above the threshold; the plugin logs an incident and a flow creates an incident case for the person in charge (fake sample data).*</sub>
 </p>
 
 The readings in the chart are samples, in the style of `scripts/gia_lap_cam_bien.py`. With Desktiny 3.1.0, the flow
