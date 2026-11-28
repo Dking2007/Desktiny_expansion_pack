@@ -52,13 +52,13 @@ CREATE TABLE IF NOT EXISTS kpi (
 );
 """
 DEFAULTS = {
-    "luong_co_so": 2_340_000,
+    "luong_co_so": 2_530_000,
     "ty_le_bao_hiem": 10.5,
     "tran_bao_hiem_lan": 20,
     "giam_tru_ban_than": 15_500_000,
     "giam_tru_phu_thuoc": 6_200_000,
     # Upper bound of each monthly bracket : rate %; the last bracket has no bound.
-    "bac_thue": "5000000:5,10000000:10,18000000:15,32000000:20,52000000:25,80000000:30,0:35",
+    "bac_thue": "10000000:5,30000000:10,60000000:20,100000000:30,0:35",
     "url_cham_cong": "",
 }
 DEFAULT_CRITERIA = [("Khối lượng công việc", 40), ("Chất lượng, tiến độ", 40), ("Tinh thần, kỷ luật", 20)]

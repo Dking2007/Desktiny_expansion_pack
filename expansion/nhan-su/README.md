@@ -99,6 +99,8 @@ Dựng trên trình thiết kế quy trình của Desktiny sau khi cài:
 
 - **Lương**: mức lương cơ sở, tỉ lệ bảo hiểm, giảm trừ gia cảnh và biểu thuế mặc định chỉ để thử. Bộ phận nhân sự đặt
   lại theo quy định hiện hành ở **Cấu hình**.
+  Giá trị mặc định theo quy định 2026: lương cơ sở 2.530.000 đồng từ 01/7/2026 (Nghị định 161/2026/NĐ-CP), biểu thuế TNCN
+  5 bậc (Luật Thuế thu nhập cá nhân số 109/2025/QH15), giảm trừ 15,5 triệu và 6,2 triệu đồng.
 - **Quy chế** trong `packs/nhan-su/knowledge/` là văn bản mẫu. Thay bằng quy chế của đơn vị để trợ lý AI trả lời đúng.
 - **Tên, logo, màu** trong `packs/nhan-su/desktiny-pack.json` và `packs/nhan-su/assets/`.
 - Khung plugin không có hộp thoại `alert/prompt` và không tải tệp về được (giới hạn sandbox của Desktiny), nên bảng công
