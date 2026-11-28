@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
 PYTHON ?= python3
-# This folder sits inside the Desktiny source tree.
+# Path to a Desktiny checkout (used by test-desktiny).
 DESKTINY_DIR ?= ..
 
 .PHONY: help build test test-js test-desktiny lint dist up

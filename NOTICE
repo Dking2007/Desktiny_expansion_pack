@@ -1,0 +1,18 @@
+<!--
+SPDX-License-Identifier: Apache-2.0
+SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
+-->
+
+Desktiny Expansion Pack
+Copyright 2026 Desktiny Expansion Pack contributors.
+
+The original code in this repository is licensed under the Apache License,
+Version 2.0 (see LICENSE). This notice does not relicense third-party material.
+
+Bundled fonts in sdk/phong-chu/ (Be Vietnam Pro, Source Sans 3) are licensed
+under the SIL Open Font License 1.1; see THIRD_PARTY.md and the OFL-*.txt files
+next to them. lib/desktiny_plugin/ and sdk/desktiny-plugin-sdk.js are copied
+from Desktiny (Apache-2.0).
+
+Document-signing in the "Ky so" plugin is a simulation and is not a legally
+valid digital signature.
