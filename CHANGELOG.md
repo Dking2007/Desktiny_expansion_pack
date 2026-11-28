@@ -37,6 +37,9 @@ Bản phát hành đầu tiên của Desktiny Expansion Pack. Cần Desktiny 3.1
 - Máy chủ plugin trả mọi lỗi dạng JSON; lỗi ngoài dự kiến được ghi nhật ký, không lộ chi tiết.
 
 ### Fixed
+- Sổ tiếp nhận trực tuyến ghi “Chưa trình hồ sơ” (thay cho “Chưa tạo hồ sơ”) khi luồng đã tạo bản nháp nhưng chưa trình:
+  plugin chỉ biết hồ sơ khi hồ sơ được trình. Test cài thật kiểm sổ gắn đúng hồ sơ sau khi trình (B8; cần Desktiny có bản
+  sửa “hồ sơ do luồng tạo trình được”).
 - Test cài thật chạy trọn một hồ sơ khai sinh của gói Một cửa: quy trình kết thúc bằng thông báo, hồ sơ phải đóng sau khi
   duyệt (B1, cần Desktiny có bản sửa “nhánh quy trình hết bước thì hồ sơ kết thúc”).
 - Bước đóng gói kiểm độ dài tiêu đề, mô tả và cấu trúc ô cấu hình như Desktiny (chép `desktiny-plugin` mới vào

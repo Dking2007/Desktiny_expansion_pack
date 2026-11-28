@@ -385,7 +385,7 @@
                   info.waiting ? chip(`Chờ ${info.waiting} ngày`, 'warn', 'clock') : null,
                   r.case_id
                     ? h('button', { type: 'button', class: 'qt-link', 'aria-label': `Mở hồ sơ ${r.case_code || ''} của ${r.full_name}`, onclick: () => desktiny.navigate(`/cases/${r.case_id}`) }, `Mở hồ sơ ${r.case_code || ''}`.trim())
-                    : h('span', { class: 'gd-sub' }, 'Chưa tạo hồ sơ'))),
+                    : h('span', { class: 'gd-sub', title: 'Hồ sơ được gắn vào sổ khi được trình' }, 'Chưa trình hồ sơ'))),
                 h('td', {}, dueCell(r, info, today)))))),
           rows.length > limit
             ? h('div', { class: 'qt-more' }, h('button', { type: 'button', class: 'gd-ghost', onclick: () => { limit += PAGE; renderRegister() } }, `Xem thêm ${Math.min(PAGE, rows.length - limit)} hồ sơ`))

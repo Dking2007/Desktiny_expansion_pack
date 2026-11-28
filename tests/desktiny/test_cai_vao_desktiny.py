@@ -8,6 +8,7 @@ through the plugins' servers. Needs a Desktiny checkout: DESKTINY_DIR=/path/to/D
 
 from __future__ import annotations
 
+import inspect
 import json
 import os
 import sys
@@ -29,6 +30,7 @@ import dong_goi  # noqa: E402
 import httpx  # noqa: E402
 from conftest import load  # noqa: E402  (the expansion pack's own test helpers)
 from dx_workspace import automations as desktiny_automations  # noqa: E402
+from dx_workspace import flow_actions as desktiny_flow_actions  # noqa: E402
 from dx_workspace import plugins as desktiny_plugins  # noqa: E402
 from test_workspace import drain  # noqa: E402
 from test_workspace import world as world  # noqa: E402,F401  (Desktiny's two-service fixture)
@@ -251,7 +253,8 @@ def test_flows_number_and_sign_documents_through_the_plugin_servers(world, tmp_p
     desktiny_plugins.use_transport(None)
 
 
-def test_an_online_request_starts_a_flow_that_creates_the_dossier(world, tmp_path):  # noqa: F811
+def online_request_dossier(world, tmp_path):  # noqa: F811
+    """A citizen files a request on the public page; the flow it starts creates the dossier (still a draft)."""
     world[8].plugin_allowed_hosts = "localhost"
     intake, _ = install_connected(world, "tiep-nhan", tmp_path)
     serve({9206: intake})
@@ -290,6 +293,31 @@ def test_an_online_request_starts_a_flow_that_creates_the_dossier(world, tmp_pat
     # The dossier carries the tracking code the plugin matches Desktiny's later events with (unit tests cover that).
     detail = as_(world, "director").get(f"{API}/cases/{made[0]['id']}").json()
     assert detail["payload"]["ma_tra_cuu"] == filed.data["ma_tra_cuu"]
+    return intake, director, detail
+
+
+def test_an_online_request_starts_a_flow_that_creates_the_dossier(world, tmp_path):  # noqa: F811
+    online_request_dossier(world, tmp_path)
+    desktiny_plugins.use_transport(None)
+
+
+# Desktiny before fix/ho-so-do-luong-tao (3.1.0) leaves a flow's dossier unreadable by its owner: handing it in is a 404.
+# The fix added no new name to look for, only the owner's grant in create_case.
+FLOW_DOSSIER_SUBMITTABLE = ".grant(" in inspect.getsource(desktiny_flow_actions.create_case)
+
+
+@pytest.mark.skipif(not FLOW_DOSSIER_SUBMITTABLE, reason="Desktiny này chưa có bản sửa “hồ sơ do luồng tạo trình được” (3.1.0).")
+def test_the_intake_register_links_the_dossier_once_it_is_handed_in(world, tmp_path):  # noqa: F811
+    intake, director, detail = online_request_dossier(world, tmp_path)
+    # B8: the flow's draft belongs to the flow's author and is not in the register yet (no event says it was made);
+    # once its owner hands it in, the register links it and follows it.
+    assert detail["status"] == "draft" and intake.store.one("SELECT case_id FROM requests")["case_id"] is None
+    handed = director.post(f"{API}/cases/{detail['id']}/submit", json={"expected_revision": detail["revision"]},
+                           headers={"Idempotency-Key": "truc-tuyen-trinh"})  # fmt: skip
+    assert handed.status_code == 202, handed.text
+    drain(world, rounds=40)
+    row = intake.store.one("SELECT * FROM requests")
+    assert row["case_id"] == detail["id"] and row["case_code"] and row["status"] == "processing"
     desktiny_plugins.use_transport(None)
 
 
