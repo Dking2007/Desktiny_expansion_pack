@@ -116,6 +116,8 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
     db = store or Store(app.settings.data_dir / "tiep-nhan.sqlite3", SCHEMA)
     app.store = db
     window = Window(5, 3600)
+    lookup = Window(20, 600)  # tracking lookups per client address
+    guesses = Window(10, 3600)  # lookups per existing code: the 6-digit secret must not be guessable
 
     def config() -> dict:
         return app.org_settings(DEFAULTS)
@@ -178,6 +180,9 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
     @app.route("GET", "/cong/api/tra-cuu")
     def track(request):
         row = db.one("SELECT * FROM requests WHERE code = ?", request.query.get("ma", "").strip().upper())
+        # Only real codes get a counter, so random codes cannot grow the table of counters.
+        if not lookup.allow(request.client_ip or "?") or (row and not guesses.allow(row["code"])):
+            raise HttpError(429, "Bạn tra cứu quá nhiều lần; thử lại sau.", "too_many")
         if not row or not hmac.compare_digest(row["secret"], request.query.get("ma_bi_mat", "").strip()):
             raise HttpError(404, "Mã tra cứu hoặc mã bí mật không đúng.")
         return {
