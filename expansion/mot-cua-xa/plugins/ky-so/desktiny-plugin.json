@@ -34,7 +34,7 @@
     "type": "object",
     "properties": {
       "khoa_ky": { "type": "string", "title": "Khoá ký của cơ quan (chuỗi ngẫu nhiên dài)", "secret": true },
-      "nguoi_duoc_ky": { "type": "string", "title": "Người được ký khi bước không chỉ định người ký (mã người dùng, cách nhau bằng dấu phẩy; để trống là ai xem được hồ sơ cũng ký được)" }
+      "nguoi_duoc_ky": { "type": "string", "title": "Người được ký khi bước không chỉ định người ký", "description": "Mã người dùng, cách nhau bằng dấu phẩy. Để trống thì ai xem được hồ sơ cũng ký được; người lập hồ sơ không bao giờ tự ký." }
     },
     "required": ["khoa_ky"]
   },

@@ -35,7 +35,7 @@
       "ky_hieu_co_quan": { "type": "string", "title": "Ký hiệu cơ quan ban hành", "default": "UBND" },
       "ten_co_quan": { "type": "string", "title": "Tên cơ quan ban hành (đầu văn bản xem trước), ví dụ Ủy ban nhân dân xã Hòa Bình" },
       "dia_danh": { "type": "string", "title": "Địa danh ghi trước ngày tháng, ví dụ Hòa Bình" },
-      "nguoi_cap_so": { "type": "string", "title": "Người được cấp số trên hồ sơ (mã người dùng, cách nhau bằng dấu phẩy; để trống là ai xem được hồ sơ cũng cấp được)" }
+      "nguoi_cap_so": { "type": "string", "title": "Người được cấp số trên hồ sơ", "description": "Mã người dùng, cách nhau bằng dấu phẩy. Để trống thì ai xem được hồ sơ cũng cấp được." }
     },
     "required": []
   },
