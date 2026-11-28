@@ -86,6 +86,17 @@ services:
       DESKTINY_SECRET: ${SO_VAN_BAN_DEN_SECRET:-}
     ports: ["9207:9207"]
     volumes: [so-van-ban-den:/data]
+  luu-tru-lich-su:
+    <<: *plugin
+    environment:
+      PLUGIN: luu-tru-lich-su
+      PORT: "9209"
+      DESKTINY_URL: ${DESKTINY_URL:?}
+      DESKTINY_TOKEN: ${LUU_TRU_LICH_SU_TOKEN:-}
+      DESKTINY_SECRET: ${LUU_TRU_LICH_SU_SECRET:-}
+    ports: ["9209:9209"]
+    # The monthly archive files (archive/YYYY-MM.jsonl) live here: back this volume up like any record.
+    volumes: [luu-tru-lich-su:/data]
 
 volumes:
   cham-cong:
@@ -95,3 +106,4 @@ volumes:
   nhac-han:
   tiep-nhan:
   so-van-ban-den:
+  luu-tru-lich-su:

@@ -1,0 +1,210 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lưu trữ lịch sử hồ sơ</title>
+    <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <style>
+      .search {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .search input {
+        flex: 1 1 200px;
+        min-width: 0;
+      }
+      .hash {
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 12px;
+        overflow-wrap: anywhere;
+      }
+      textarea.dump {
+        width: 100%;
+        margin-top: 10px;
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 12px;
+      }
+      details pre {
+        overflow-x: auto;
+        margin: 6px 0 0;
+        font-size: 12px;
+      }
+      .version {
+        padding: 10px 0;
+        border-bottom: 1px solid var(--gd-border);
+      }
+      .version-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="gd-hero">
+      <div>
+        <h1>Lưu trữ lịch sử hồ sơ</h1>
+        <p>Bản chép đã che số CCCD, số điện thoại, email của hồ sơ khi được duyệt hoặc kết thúc, theo tháng, nối bằng chuỗi băm.</p>
+      </div>
+      <button id="verify" type="button" class="primary">Kiểm toàn vẹn</button>
+    </header>
+    <p id="note" class="gd-note" role="status"></p>
+
+    <section id="stats" class="gd-stats" aria-label="Tổng quan"></section>
+
+    <section class="gd-panel" aria-labelledby="h-months">
+      <div class="gd-panel-head">
+        <h2 id="h-months">Các tháng lưu trữ</h2>
+        <span class="gd-sub" id="keep"></span>
+      </div>
+      <div class="gd-panel-body">
+        <div class="gd-scroll" id="months"></div>
+        <div id="export"></div>
+      </div>
+    </section>
+
+    <section class="gd-panel" aria-labelledby="h-search">
+      <div class="gd-panel-head">
+        <h2 id="h-search">Truy nguồn theo mã hồ sơ</h2>
+        <span class="gd-sub">Mỗi bản lưu trữ dẫn về hồ sơ gốc trong Desktiny.</span>
+      </div>
+      <div class="gd-panel-body">
+        <form class="search" id="search">
+          <input id="code" type="search" placeholder="Mã hồ sơ, ví dụ HS-000123" aria-label="Mã hồ sơ" required />
+          <button type="submit">Tìm</button>
+        </form>
+        <div id="found"></div>
+      </div>
+    </section>
+
+    <section class="gd-panel" aria-labelledby="h-head">
+      <div class="gd-panel-head"><h2 id="h-head">Mã đầu chuỗi</h2></div>
+      <div class="gd-panel-body">
+        <p class="hash" id="head"></p>
+        <p class="gd-sub">
+          Chuỗi băm phát hiện dòng bị sửa, xoá hay chèn, nhưng người có quyền ghi vào thư mục lưu trữ vẫn có thể viết lại toàn bộ
+          chuỗi. Ghi mã đầu chuỗi này ra nơi khác (sổ, biên bản) theo định kỳ để đối chiếu.
+        </p>
+      </div>
+    </section>
+
+    <script type="module">
+      import { $, desktiny, h, server } from './mo-rong.js'
+      import { chip, empty, icon, skeleton, stat } from './bieu-do.js'
+
+      const EVENTS = { 'case.approved': 'Được duyệt', 'case.closed': 'Kết thúc' }
+      const when = (iso) => (iso ? new Date(iso).toLocaleString('vi-VN') : '—')
+      const monthName = (m) => `Tháng ${Number(m.slice(5))}/${m.slice(0, 4)}`
+
+      function note(tone, text, iconName) {
+        $('#note').className = `gd-note tone-${tone}`
+        $('#note').replaceChildren(icon(iconName, 15), text)
+      }
+
+      async function copy(box) {
+        box.select()
+        try {
+          await navigator.clipboard.writeText(box.value)
+          note('ok', 'Đã sao chép nội dung tệp.', 'check')
+        } catch {
+          note('info', 'Đã chọn hết nội dung: bấm Ctrl+C để sao chép.', 'file')
+        }
+      }
+
+      /** Frames cannot download files, so the month file is shown to copy. */
+      async function exportMonth(month) {
+        const data = await server(`/api/quan-tri/thang/${month}`)
+        const box = h('textarea', { class: 'dump', rows: 8, readonly: true, 'aria-label': `Tệp lưu trữ ${monthName(month)}` })
+        box.value = data.text
+        $('#export').replaceChildren(
+          h('p', { class: 'gd-sub' }, `${month}.jsonl: mỗi dòng một bản lưu trữ (JSON). Sao chép rồi lưu thành tệp cùng tên.`),
+          box,
+          h('button', { type: 'button', onclick: () => copy(box) }, 'Sao chép'),
+        )
+      }
+
+      function renderMonths(data) {
+        const cold = data.months.filter((m) => m.cold)
+        $('#stats').replaceChildren(
+          stat({ label: 'Bản lưu trữ', value: data.total, hint: 'dòng trong mọi tháng', tone: 'accent', icon: 'file' }),
+          stat({ label: 'Số tháng', value: data.months.length, hint: 'tệp YYYY-MM.jsonl', tone: 'muted', icon: 'calendar' }),
+          stat({ label: 'Nên chuyển kho lạnh', value: cold.length, hint: cold.length ? 'xem bảng dưới' : 'chưa có', tone: cold.length ? 'warn' : 'ok', icon: 'lock' }),
+        )
+        $('#keep').textContent = `Giữ ${data.keep_months} tháng gần nhất; đổi ở Quản trị › Plugin › Cấu hình`
+        $('#head').textContent = data.head
+        if (!data.months.length) {
+          $('#months').replaceChildren(empty('Chưa có bản lưu trữ nào', 'Hồ sơ được duyệt hoặc kết thúc sẽ được chép vào đây.', 'file'))
+          return
+        }
+        $('#months').replaceChildren(
+          h('table', { class: 'gd-table' },
+            h('thead', {}, h('tr', {}, h('th', {}, 'Tháng'), h('th', { class: 'num' }, 'Số bản'), h('th', {}, 'Trạng thái'), h('th', {}, ''))),
+            h('tbody', {}, data.months.map((m) =>
+              h('tr', {},
+                h('td', {}, monthName(m.month)),
+                h('td', { class: 'num' }, m.lines),
+                h('td', {}, m.cold ? chip('Quá hạn giữ, nên chuyển kho lạnh', 'warn', 'lock') : chip('Đang giữ', 'ok', 'check')),
+                h('td', {}, h('button', { type: 'button', class: 'gd-ghost', onclick: () => exportMonth(m.month).catch((e) => note('bad', e.message, 'alert')) }, 'Xuất')),
+              ))),
+          ),
+        )
+      }
+
+      function renderFound(data) {
+        if (!data.items.length) {
+          $('#found').replaceChildren(empty(`Không có bản lưu trữ của ${data.code}`, 'Hồ sơ chưa được duyệt, chưa kết thúc, hoặc mã chưa đúng.', 'file'))
+          return
+        }
+        $('#found').replaceChildren(
+          ...data.items.map((item) =>
+            h('div', { class: 'version' },
+              h('div', { class: 'version-head' },
+                h('strong', {}, `${item.code} · ${item.title}`),
+                chip(EVENTS[item.event] || item.event, item.event === 'case.approved' ? 'ok' : 'muted'),
+                h('button', { type: 'button', class: 'gd-ghost', onclick: () => desktiny.navigate(`/cases/${item.case_id}`) }, 'Mở hồ sơ gốc')),
+              h('div', { class: 'gd-sub' },
+                `Phiên bản ${when(item.version)} · sự kiện lúc ${when(item.occurred_at)} · lưu lúc ${when(item.archived_at)} · ${item.month}.jsonl dòng ${item.line} · biểu mẫu ${item.form_name || item.form_id}`),
+              h('div', { class: 'hash' }, `sha256 ${item.sha256}`),
+              h('details', {}, h('summary', {}, 'Nội dung đã che'), h('pre', {}, JSON.stringify(item.payload, null, 2))),
+            )),
+        )
+      }
+
+      async function load() {
+        renderMonths(await server('/api/quan-tri'))
+      }
+
+      $('#verify').addEventListener('click', async () => {
+        const button = $('#verify')
+        button.disabled = true
+        try {
+          const r = await server('/api/quan-tri/kiem', { method: 'POST', body: {} })
+          if (r.ok) note('ok', `Toàn vẹn: ${r.lines} dòng, chuỗi băm khớp từ đầu đến cuối.`, 'check')
+          else note('bad', `Hỏng ở ${r.broken.month}.jsonl dòng ${r.broken.line}: ${r.broken.reason} (đã kiểm ${r.lines} dòng).`, 'alert')
+        } catch (error) {
+          note('bad', error.message || 'Không kiểm được.', 'alert')
+        } finally {
+          button.disabled = false
+        }
+      })
+
+      $('#search').addEventListener('submit', async (event) => {
+        event.preventDefault()
+        try {
+          renderFound(await server(`/api/quan-tri/tim?ma=${encodeURIComponent($('#code').value.trim())}`))
+        } catch (error) {
+          note('bad', error.message || 'Không tìm được.', 'alert')
+        }
+      })
+
+      $('#stats').replaceChildren(skeleton(2, 40))
+      load().catch((error) => note('bad', error.message || 'Không tải được dữ liệu.', 'alert'))
+    </script>
+  </body>
+</html>

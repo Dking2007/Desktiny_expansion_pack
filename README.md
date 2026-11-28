@@ -78,6 +78,7 @@ Plugin chỉ làm được những gì quản trị viên đã duyệt khi cài.
 | [**Nhân sự doanh nghiệp**](expansion/nhan-su/README.md) `nhan-su` | Bộ phận nhân sự của doanh nghiệp, cơ quan nhỏ | Nhân sự doanh nghiệp: 7 quy trình đơn từ, 3 luồng tự động, quy chế cho trợ lý AI | Chấm công GPS, Tiền lương và KPI, Nhắc hạn hồ sơ |
 | [**Một cửa cấp xã**](expansion/mot-cua-xa/README.md) `mot-cua-xa` | Bộ phận một cửa của UBND cấp xã | Một cửa cấp xã: 6 thủ tục hộ tịch, chứng thực, hoà giải; 3 luồng tự động | Sổ văn bản, Ký số, Tiếp nhận trực tuyến, Tính hạn, Đọc giấy tờ |
 | [**Văn thư – điều hành**](expansion/van-thu/README.md) `van-thu` | Văn thư, văn phòng của cơ quan | Văn thư – điều hành: xử lý văn bản đến, ban hành văn bản đi, nộp lưu hồ sơ; 3 luồng tự động; hướng dẫn văn thư cho trợ lý AI | Sổ văn bản đến; dùng chung Sổ văn bản, Ký số, Tính hạn của bản Một cửa |
+| [**Quản trị dữ liệu**](expansion/quan-tri-du-lieu/README.md) `quan-tri-du-lieu` (minh hoạ) | Người quản trị Desktiny | Không có | Lưu trữ lịch sử hồ sơ: chép hồ sơ đã duyệt, kết thúc (đã che CCCD, số điện thoại, email) ra tệp tháng có chuỗi băm; kiểm toàn vẹn, truy nguồn về hồ sơ gốc |
 
 Mỗi bản mẫu có README riêng: nội dung, cách cài, cấu hình, luồng gợi ý và những gì cần sửa trước khi dùng thật. Tên
 cơ quan trong bản mẫu là tên giả; quy chế, thời hạn và mức tiền chỉ để minh hoạ.

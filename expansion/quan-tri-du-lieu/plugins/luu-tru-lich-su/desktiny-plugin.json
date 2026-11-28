@@ -1,0 +1,23 @@
+{
+  "schema": "desktiny-plugin/1",
+  "id": "vn.mo-rong.luu-tru-lich-su",
+  "name": "Lưu trữ lịch sử hồ sơ",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "authors": ["Desktiny Expansion Pack contributors"],
+  "description": "Khi hồ sơ được duyệt hoặc kết thúc, chép một bản đã che số CCCD, số điện thoại, email ra tệp lưu trữ theo tháng (JSONL) có chuỗi băm sha256; trang quản trị kiểm toàn vẹn, tra theo mã hồ sơ về hồ sơ gốc, xuất tệp tháng và báo tháng nào đã quá hạn giữ.",
+  "base_url": "http://localhost:9209",
+  "requires": { "desktiny": ">=2" },
+  "permissions": ["cases.read"],
+  "events": ["case.approved", "case.closed"],
+  "events_endpoint": "/events",
+  "health_endpoint": "/health",
+  "settings_schema": {
+    "type": "object",
+    "properties": {
+      "giu_thang": { "type": "number", "title": "Giữ trong plugin bao nhiêu tháng trước khi đánh dấu chuyển kho lạnh", "default": 12 }
+    },
+    "required": []
+  },
+  "ui": [{ "slot": "admin.page", "title": "Lưu trữ lịch sử hồ sơ", "url": "/ui/quan-tri.html", "height": 900 }]
+}
