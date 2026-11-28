@@ -5,6 +5,15 @@ SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
 
 # Bản mẫu: Vận hành – giám sát thiết bị
 
+> Gói `vn.mo-rong.van-hanh` **1.0.0** · **1** plugin riêng · Cần Desktiny **3.1.0** trở lên · Giấy phép Apache-2.0
+
+<p align="center">
+  <img src="anh/thiet-bi-cam-bien.webp" alt="Quản trị Thiết bị cảm biến: thiết bị, sự cố đang mở, sự kiện chờ gửi" width="49%">
+  <img src="anh/quy-trinh-su-co.webp" alt="Quy trình Xử lý sự cố thiết bị: khắc phục rồi trưởng bộ phận xác nhận" width="49%">
+</p>
+
+<sub>Ảnh chụp từ bản chạy thử với dữ liệu mẫu: tên người, cơ quan, số liệu là giả. Plugin nhận màu của gói giao diện đang dùng nên đổi theo màu gói.</sub>
+
 Bản mở rộng mẫu nối **thiết bị ở hiện trường** (lò sấy, kho lạnh, trạm bơm…) với **quy trình xử lý của Desktiny**:
 thiết bị gửi số đo, số đo vượt ngưỡng thành sự kiện, luồng tự động tạo hồ sơ sự cố, quy trình giao cho người phụ trách.
 

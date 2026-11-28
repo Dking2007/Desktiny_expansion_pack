@@ -5,6 +5,13 @@ SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
 
 # Bản mẫu: Nhân sự doanh nghiệp
 
+> Gói `vn.mo-rong.nhan-su` **1.2.1** · **3** plugin riêng · Cần Desktiny **3.1.0** trở lên · Giấy phép Apache-2.0
+
+<p align="center">
+  <img src="anh/dang-nhap.webp" alt="Trang đăng nhập Cổng nhân sự nội bộ" width="49%">
+  <img src="anh/trang-chu.webp" alt="Trang chủ với gói Nhân sự" width="49%">
+</p>
+
 Bản mở rộng mẫu biến Desktiny thành **cổng nhân sự nội bộ** cho doanh nghiệp hoặc cơ quan nhỏ. Người lao động chấm
 công, gửi đơn từ và xem phiếu lương. Bộ phận nhân sự tính lương, chấm KPI và được nhắc trước khi hợp đồng hết hạn.
 
@@ -20,6 +27,25 @@ expansion/nhan-su/
     ├── luong-kpi/            Tiền lương và KPI     (plugin kết nối, cổng 9202)
     └── nhac-han/             Nhắc hạn hồ sơ        (plugin kết nối, cổng 9205)
 ```
+
+## Ảnh màn hình
+
+<table>
+  <tr>
+    <td width="50%" valign="top"><a href="anh/cham-cong.webp"><img src="anh/cham-cong.webp" alt="Chấm công: vào ca bằng GPS, lịch tháng, tỉ lệ đúng giờ" width="100%"></a><br><sub><b>Chấm công</b>: vào ca bằng GPS, lịch tháng, tỉ lệ đúng giờ</sub></td>
+    <td width="50%" valign="top"><a href="anh/ca-lam-dia-diem.webp"><img src="anh/ca-lam-dia-diem.webp" alt="Quản trị Ca làm và địa điểm: bảng công tháng của cả công ty" width="100%"></a><br><sub>Quản trị <b>Ca làm và địa điểm</b>: bảng công tháng của cả công ty</sub></td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><a href="anh/phieu-luong.webp"><img src="anh/phieu-luong.webp" alt="Phiếu lương của người lao động, các tháng đã chốt" width="100%"></a><br><sub><b>Phiếu lương</b> của người lao động, các tháng đã chốt</sub></td>
+    <td width="50%" valign="top"><a href="anh/bang-luong-kpi.webp"><img src="anh/bang-luong-kpi.webp" alt="Quản trị Bảng lương và KPI: kỳ lương, quỹ lương, 12 kỳ gần nhất" width="100%"></a><br><sub>Quản trị <b>Bảng lương và KPI</b>: kỳ lương, quỹ lương, 12 kỳ gần nhất</sub></td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><a href="anh/nhac-han.webp"><img src="anh/nhac-han.webp" alt="Quản trị Nhắc hạn hồ sơ: hợp đồng, giấy tờ sắp hết hạn trong 90 ngày" width="100%"></a><br><sub>Quản trị <b>Nhắc hạn hồ sơ</b>: hợp đồng, giấy tờ sắp hết hạn trong 90 ngày</sub></td>
+    <td width="50%" valign="top"><a href="anh/quy-trinh.webp"><img src="anh/quy-trinh.webp" alt="Quy trình Đề nghị điều chỉnh công trên canvas" width="100%"></a><br><sub>Quy trình <b>Đề nghị điều chỉnh công</b> trên canvas</sub></td>
+  </tr>
+</table>
+
+<sub>Ảnh chụp từ bản chạy thử với dữ liệu mẫu: tên người, cơ quan, số liệu là giả. Plugin nhận màu của gói giao diện đang dùng nên đổi theo màu gói.</sub>
 
 ## Gói giao diện `vn.mo-rong.nhan-su`
 

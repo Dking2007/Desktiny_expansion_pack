@@ -5,6 +5,14 @@ SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
 
 # Bản minh hoạ: Quản trị dữ liệu
 
+> **1** plugin riêng · Cần Desktiny **3.1.0** trở lên · Giấy phép Apache-2.0
+
+<p align="center">
+  <img src="anh/luu-tru-lich-su.webp" alt="Quản trị Lưu trữ lịch sử hồ sơ sau khi bấm Kiểm toàn vẹn" width="100%">
+</p>
+
+<sub>Ảnh chụp từ bản chạy thử với dữ liệu mẫu: tên người, cơ quan, số liệu là giả. Plugin nhận màu của gói giao diện đang dùng nên đổi theo màu gói.</sub>
+
 Bản mở rộng này **minh hoạ** ba việc của quản trị dữ liệu trên Desktiny, không phải một kho dữ liệu (data lake):
 
 - **Vòng đời dữ liệu:** hồ sơ đã duyệt hoặc đã kết thúc được chép ra khỏi dữ liệu đang dùng của Desktiny, theo tháng;

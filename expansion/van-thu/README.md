@@ -5,6 +5,13 @@ SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
 
 # Bản mẫu: Văn thư – điều hành
 
+> Gói `vn.mo-rong.van-thu` **1.1.1** · **1** plugin riêng + **3** dùng chung · Cần Desktiny **3.1.0** trở lên · Giấy phép Apache-2.0
+
+<p align="center">
+  <img src="anh/dang-nhap.webp" alt="Trang đăng nhập Điều hành và văn thư cơ quan" width="49%">
+  <img src="anh/trang-chu.webp" alt="Trang chủ với gói Văn thư" width="49%">
+</p>
+
 Bản mở rộng mẫu cho **công tác văn thư và điều hành** của cơ quan:
 - **Văn bản đến:** vào sổ, lãnh đạo cho ý kiến chỉ đạo, giao người xử lý, theo dõi hạn.
 - **Văn bản đi:** dự thảo, kiểm tra nội dung và thể thức, ký ban hành, cấp số, ký số.
@@ -29,6 +36,24 @@ Bản này **dùng chung** ba plugin của bản [Một cửa cấp xã](../mot-
 
 Khi đóng gói bản Văn thư, ba plugin này được đóng gói kèm vào `dist/van-thu/`. Cơ quan đã cài chúng từ bản Một cửa
 thì không cần cài lại.
+
+## Ảnh màn hình
+
+<table>
+  <tr>
+    <td width="50%" valign="top"><a href="anh/so-van-ban-den.webp"><img src="anh/so-van-ban-den.webp" alt="Sổ văn bản đến: số đến, cơ quan gửi, hạn xử lý, người xử lý" width="100%"></a><br><sub><b>Sổ văn bản đến</b>: số đến, cơ quan gửi, hạn xử lý, người xử lý</sub></td>
+    <td width="50%" valign="top"><a href="anh/quan-ly-so-den.webp"><img src="anh/quan-ly-so-den.webp" alt="Quản trị Sổ văn bản đến: dấu ĐẾN mẫu, cách đánh số, số liệu theo tháng" width="100%"></a><br><sub>Quản trị <b>Sổ văn bản đến</b>: dấu “ĐẾN” mẫu, cách đánh số, số liệu theo tháng</sub></td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><a href="anh/vao-so.webp"><img src="anh/vao-so.webp" alt="Vào sổ văn bản đến từ hồ sơ: xem trước dấu đến trước khi lấy số" width="100%"></a><br><sub><b>Vào sổ văn bản đến</b> từ hồ sơ: xem trước dấu đến trước khi lấy số</sub></td>
+    <td width="50%" valign="top"><a href="anh/ho-so.webp"><img src="anh/ho-so.webp" alt="Hồ sơ văn bản đến với tiến trình xử lý và dấu đến bên cạnh" width="100%"></a><br><sub>Hồ sơ văn bản đến với tiến trình xử lý và dấu đến bên cạnh</sub></td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><a href="anh/quy-trinh.webp"><img src="anh/quy-trinh.webp" alt="Quy trình Xử lý văn bản đến trên canvas" width="100%"></a><br><sub>Quy trình <b>Xử lý văn bản đến</b> trên canvas</sub></td>
+  </tr>
+</table>
+
+<sub>Ảnh chụp từ bản chạy thử với dữ liệu mẫu: tên người, cơ quan, số liệu là giả. Plugin nhận màu của gói giao diện đang dùng nên đổi theo màu gói.</sub>
 
 ## Gói giao diện `vn.mo-rong.van-thu`
 

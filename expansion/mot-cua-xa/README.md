@@ -5,6 +5,13 @@ SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
 
 # Bản mẫu: Một cửa cấp xã
 
+> Gói `vn.mo-rong.mot-cua-xa` **1.2.1** · **5** plugin riêng · Cần Desktiny **3.1.0** trở lên · Giấy phép Apache-2.0
+
+<p align="center">
+  <img src="anh/dang-nhap.webp" alt="Trang đăng nhập của cán bộ" width="49%">
+  <img src="anh/trang-chu.webp" alt="Trang chủ với gói Một cửa" width="49%">
+</p>
+
 Bản mở rộng mẫu cho **bộ phận một cửa của UBND cấp xã**. Bản này lo trọn đường đi của một hồ sơ thủ tục:
 - người dân nộp trực tuyến hoặc tại quầy;
 - cán bộ đọc giấy tờ để điền sẵn hồ sơ;
@@ -30,6 +37,32 @@ expansion/mot-cua-xa/
 
 Sổ văn bản, Ký số và Tính hạn cũng được bản [Văn thư – điều hành](../van-thu/README.md) dùng chung. Sửa các plugin
 này thì nhớ kiểm tra cả bản đó.
+
+## Ảnh màn hình
+
+<table>
+  <tr>
+    <td width="50%" valign="top"><a href="anh/cong-nop-ho-so.webp"><img src="anh/cong-nop-ho-so.webp" alt="Trang công khai Nộp hồ sơ: chọn thủ tục, xem giấy tờ cần mang" width="100%"></a><br><sub>Trang công khai <b>Nộp hồ sơ</b>: chọn thủ tục, xem giấy tờ cần mang</sub></td>
+    <td width="50%" valign="top"><a href="anh/cong-tra-cuu.webp"><img src="anh/cong-tra-cuu.webp" alt="Trang công khai Tra cứu: phiếu tiếp nhận, dòng thời gian, ngày hẹn trả" width="100%"></a><br><sub>Trang công khai <b>Tra cứu</b>: phiếu tiếp nhận, dòng thời gian, ngày hẹn trả</sub></td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><a href="anh/tiep-nhan.webp"><img src="anh/tiep-nhan.webp" alt="Quản trị Hồ sơ nộp trực tuyến: số liệu 14 ngày, theo thủ tục, sổ tiếp nhận" width="100%"></a><br><sub>Quản trị <b>Hồ sơ nộp trực tuyến</b>: số liệu 14 ngày, theo thủ tục, sổ tiếp nhận</sub></td>
+    <td width="50%" valign="top"><a href="anh/tinh-han.webp"><img src="anh/tinh-han.webp" alt="Tính hạn giải quyết theo ngày làm việc, trên tờ lịch" width="100%"></a><br><sub><b>Tính hạn giải quyết</b> theo ngày làm việc, trên tờ lịch</sub></td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><a href="anh/so-van-ban.webp"><img src="anh/so-van-ban.webp" alt="Sổ văn bản: sổ kẻ dòng theo năm, dải 12 tháng, số mới nhất được đánh dấu" width="100%"></a><br><sub><b>Sổ văn bản</b>: sổ kẻ dòng theo năm, dải 12 tháng, số mới nhất được đánh dấu</sub></td>
+    <td width="50%" valign="top"><a href="anh/cap-so.webp"><img src="anh/cap-so.webp" alt="Cấp số văn bản trên hồ sơ: chọn sổ, xem trước phần đầu văn bản" width="100%"></a><br><sub><b>Cấp số văn bản</b> trên hồ sơ: chọn sổ, xem trước phần đầu văn bản</sub></td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><a href="anh/ky-so.webp"><img src="anh/ky-so.webp" alt="Ký số trên hồ sơ: chọn tài liệu, nhập PIN, phiếu xác nhận có mã" width="100%"></a><br><sub><b>Ký số</b> trên hồ sơ: chọn tài liệu, nhập PIN, phiếu xác nhận có mã</sub></td>
+    <td width="50%" valign="top"><a href="anh/cong-xac-thuc.webp"><img src="anh/cong-xac-thuc.webp" alt="Trang công khai Xác thực chữ ký số: nhập hoặc quét mã" width="100%"></a><br><sub>Trang công khai <b>Xác thực chữ ký số</b>: nhập hoặc quét mã</sub></td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><a href="anh/quy-trinh.webp"><img src="anh/quy-trinh.webp" alt="Quy trình Đăng ký khai sinh trên canvas của Desktiny" width="100%"></a><br><sub>Quy trình <b>Đăng ký khai sinh</b> trên canvas của Desktiny</sub></td>
+  </tr>
+</table>
+
+<sub>Ảnh chụp từ bản chạy thử với dữ liệu mẫu: tên người, cơ quan, số liệu là giả. Plugin nhận màu của gói giao diện đang dùng nên đổi theo màu gói.</sub>
 
 ## Gói giao diện `vn.mo-rong.mot-cua-xa`
 

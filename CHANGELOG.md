@@ -31,6 +31,7 @@ Bản phát hành đầu tiên của Desktiny Expansion Pack. Cần Desktiny 3.1
   Đọc giấy tờ và Sổ văn bản đến.
 
 ### Changed
+- README của từng bản mở rộng có ảnh bìa (trang đăng nhập và trang chủ theo gói), dòng tóm tắt phiên bản gói, số plugin, phiên bản Desktiny cần, và bộ ảnh màn hình có chú thích (ảnh WebP trong `expansion/<bản>/anh/`, chụp từ bản chạy thử với dữ liệu mẫu).
 - Một cửa (1.2.1), Nhân sự (1.2.1), Văn thư (1.1.1): 11 quy trình có nhánh kết thúc bằng "Gửi thông báo" nay có bước Kết thúc rõ ràng, hiện trên canvas và đóng hồ sơ cả trên Desktiny 3.1.0. `dong_goi.py` cảnh báo (không chặn) quy trình có nhánh không có bước Kết thúc.
 - Gói giao diện Một cửa (1.2.0), Nhân sự (1.2.0), Văn thư (1.1.0) làm lại cho hài hoà: bảng màu đầy đủ cho cả giao diện sáng và tối (nền, chữ, viền, màu nhấn cùng một sắc, đạt tương phản WCAG AA), logo mới cùng một họ (nền bo tròn chuyển màu, hình trắng, điểm nhấn vàng), nền trang đăng nhập theo màu gói, góc bo theo tính chất từng gói; tiêu đề đăng nhập Văn thư không còn trùng tên ứng dụng. Plugin nhận màu từ Desktiny nên đổi màu theo.
 - Bộ giới hạn tần suất `Window` chuyển vào `lib/mo_rong` để các plugin dùng chung.
