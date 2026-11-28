@@ -2,3 +2,8 @@
 # SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
 *.bat text eol=crlf
 *.sh text eol=lf
+*.png binary
+*.jpg binary
+*.gif binary
+*.webp binary
+*.woff2 binary

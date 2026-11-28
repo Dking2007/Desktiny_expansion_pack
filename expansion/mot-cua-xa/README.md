@@ -3,6 +3,8 @@ SPDX-License-Identifier: Apache-2.0
 SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
 -->
 
+<img src="packs/mot-cua-xa/assets/logo.svg" width="72" align="right" alt="Logo">
+
 # Bản mẫu: Một cửa cấp xã
 
 > Gói `vn.mo-rong.mot-cua-xa` **1.2.1** · **5** plugin riêng · Cần Desktiny **3.1.0** trở lên · Giấy phép Apache-2.0
