@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
 import hashlib
+import io
+import zipfile
 from datetime import datetime, timedelta, timezone
 
 from conftest import call, signed
@@ -30,7 +32,9 @@ def test_a_flow_waits_for_the_signer_who_signs_with_a_pin_and_anyone_can_verify(
     done = call(app, "POST", "/api/cho-ky/goi-1", {"pin": "246810"}, "phien-binh")
     assert done.status == 200 and done.data["signed"] == 1, done.body
     attach = [c for c in desktiny.calls if c[0] == "attach"][0]
-    assert attach[1] == "cai-dat" and attach[3]["node_id"] == "ky" and attach[2][2].startswith(b"%PDF")
+    assert attach[1] == "cai-dat" and attach[3]["node_id"] == "ky" and attach[2][2].startswith(b"PK")
+    receipt = zipfile.ZipFile(io.BytesIO(attach[2][2])).read("word/document.xml").decode()
+    assert "PHIẾU XÁC NHẬN KÝ SỐ" in receipt and "Người ký: Trần Thị Bình" in receipt and "không phải chữ ký số" in receipt
     complete = [c for c in desktiny.calls if c[0] == "complete_call"][0]
     assert complete[2][0:2] == ("goi-1", "success") and complete[2][2]["nguoi_ky"] == "Trần Thị Bình"
     check = app.handle("GET", f"/xac-thuc/{done.data['codes'][0].lower()}")

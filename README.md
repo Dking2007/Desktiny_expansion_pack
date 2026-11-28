@@ -464,7 +464,7 @@ Mọi bản mở rộng, kể cả bản bạn tự tạo, đều được hư�
 build.bat, build.sh     nút đóng gói (gọi scripts/dong_goi.py)
 scripts/dong_goi.py     kiểm manifest rồi đóng gói vào dist/
 expansion/<bản>/        các bản mở rộng (README.md, packs/, plugins/)
-lib/mo_rong/            bộ khung máy chủ plugin: định tuyến, kiểm chữ ký, phiên người xem, SQLite, PDF, tiện ích tiếng Việt
+lib/mo_rong/            bộ khung máy chủ plugin: định tuyến, kiểm chữ ký, phiên người xem, SQLite, tệp Word, tiện ích tiếng Việt
 lib/desktiny_plugin/    bản sao SDK Python của Desktiny (packages/desktiny-plugin), cập nhật cùng Desktiny
 sdk/                    SDK khung của Desktiny, mo-rong.js (trang gọi máy chủ plugin), chung.css
 tests/                  test máy chủ plugin (Desktiny giả), test đóng gói, tests/js (Node), tests/desktiny (Desktiny thật)

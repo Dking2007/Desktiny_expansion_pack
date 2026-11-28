@@ -231,7 +231,7 @@
         $('#detail').replaceChildren(paper, h('div', { class: 'ck-done' },
           refused
             ? h('p', { class: 'gd-note' }, icon('alert', 15), 'Đã từ chối ký. Quy trình đi theo nhánh lỗi kèm lý do của bạn.')
-            : [h('p', { class: 'gd-note tone-ok' }, icon('check', 15), `Đã ký ${result.signed} tệp. Phiếu xác nhận ký số (PDF) đã gắn vào hồ sơ; quy trình đi tiếp.`),
+            : [h('p', { class: 'gd-note tone-ok' }, icon('check', 15), `Đã ký ${result.signed} tệp. Phiếu xác nhận ký số (Word) đã gắn vào hồ sơ; quy trình đi tiếp. Chữ ký là mô phỏng, chưa phải chữ ký số có giá trị pháp lý.`),
                 h('span', { class: 'gd-sub' }, 'Mã xác thực, để người nhận kiểm tra ở trang Xác thực chữ ký của cơ quan:'),
                 h('ul', { class: 'ks-codes' }, (result.files || []).map((f) => h('li', {}, h('span', { class: 'ks-file-name' }, f.name), h('span', { class: 'ks-code', 'aria-label': `Mã ${f.code}` }, grouped(f.code)))))],
           h('div', { class: 'ks-actions' },

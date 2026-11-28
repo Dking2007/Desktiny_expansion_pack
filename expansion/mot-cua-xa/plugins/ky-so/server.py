@@ -27,7 +27,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[3] / "lib"))
 
 from mo_rong import App, HttpError, Response, Settings, Store, require_listed  # noqa: E402
-from mo_rong.pdf import one_page  # noqa: E402
+from mo_rong.docx import MIME, one_page  # noqa: E402
 
 VN = timezone(timedelta(hours=7))
 # How long the flow step waits for the signer (the manifest's timeout_days): the page shows it as the deadline.
@@ -95,8 +95,8 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
         if not files:
             raise HttpError(422, "Hồ sơ không có tài liệu để ký.")
         at = now().isoformat(timespec="seconds")
-        lines, codes = [f"Ho so: {case.get('code', '')} {case['title']}", f"Nguoi ky: {user['display_name']}",
-                        f"Thoi diem ky: {at}", ""], []  # fmt: skip
+        lines, codes = [f"Hồ sơ: {case.get('code', '')} {case['title']}", f"Người ký: {user['display_name']}",
+                        f"Thời điểm ký: {at}", ""], []  # fmt: skip
         signed_files = []
         tool = signer()
         for item in files:
@@ -107,12 +107,13 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
                    digest, user["id"], user["display_name"], at, tool.sign(digest, user["id"], at), call_id)  # fmt: skip
             codes.append(code)
             signed_files.append({"name": item["name"], "code": code})
-            lines += [f"Tep: {item['name']}", f"  SHA-256: {digest}", f"  Ma xac thuc: {code}", ""]
-        lines += ["Kiem tra ma xac thuc tai trang Xac thuc chu ky cua co quan (/cong/xac-thuc.html).",
-                  "Chu ky mo phong bang khoa cua co quan; thay bang chung thu so khi trien khai that."]  # fmt: skip
-        receipt = one_page("PHIEU XAC NHAN KY SO", lines)
-        name = f"xac-nhan-ky-so-{codes[0].lower()}.pdf"
-        attached = client.attach(case["id"], name, receipt, "application/pdf", node_id=node_id, role="result",
+            lines += [f"Tệp: {item['name']}", f"  SHA-256: {digest}", f"  Mã xác thực: {code}", ""]
+        lines += ["Kiểm tra mã xác thực tại trang Xác thực chữ ký của cơ quan (/cong/xac-thuc.html).",
+                  "Chữ ký này là mô phỏng (HMAC bằng khoá của cơ quan), không phải chữ ký số có giá trị pháp lý;",
+                  "thay bằng chứng thư số khi triển khai thật."]  # fmt: skip
+        receipt = one_page("PHIẾU XÁC NHẬN KÝ SỐ", lines)
+        name = f"xac-nhan-ky-so-{codes[0].lower()}.docx"
+        attached = client.attach(case["id"], name, receipt, MIME, node_id=node_id, role="result",
                                  key=f"ky-so:{case['id']}:{codes[0]}")  # fmt: skip
         db.run(f"UPDATE signatures SET receipt_id = ? WHERE code IN ({','.join('?' * len(codes))})", attached.get("id"), *codes)
         return {"signed": len(codes), "codes": codes, "receipt": name, "at": at, "files": signed_files}
