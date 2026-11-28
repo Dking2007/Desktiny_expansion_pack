@@ -102,3 +102,10 @@ def test_only_the_assigned_people_may_issue_a_number_when_a_list_is_set(make_app
     refused = call(app, "POST", "/api/ho-so/hs-9/cap-so", {"so": "QD"}, "phien-an")
     assert refused.status == 403 and refused.data["error"] == "forbidden"
     assert call(app, "POST", "/api/ho-so/hs-9/cap-so", {"so": "QD"}, "phien-binh").status == 200
+
+def test_a_csv_export_never_holds_a_formula(make_app, desktiny):
+    app = make_app("so-van-ban")
+    desktiny.cases["hs-f"] = {"id": "hs-f", "title": "Hồ sơ", "payload": {}}
+    call(app, "POST", "/api/ho-so/hs-f/cap-so", {"so": "QD", "trich_yeu": "=1+1"}, "phien-an")
+    export = call(app, "GET", "/api/xuat", session="phien-qt").body.decode()
+    assert ",'=1+1," in export

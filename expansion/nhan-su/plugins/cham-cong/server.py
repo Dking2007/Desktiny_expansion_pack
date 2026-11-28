@@ -21,7 +21,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[3] / "lib"))
 
 from mo_rong import App, HttpError, Response, Settings, Store  # noqa: E402
-from mo_rong.vn import month_of  # noqa: E402
+from mo_rong.vn import csv_cells, month_of  # noqa: E402
 
 VN = timezone(timedelta(hours=7))
 SCHEMA = """
@@ -301,8 +301,8 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
         writer = csv.writer(out)
         writer.writerow(["Mã người dùng", "Họ tên", "Số ngày có mặt", "Số lần đi muộn", "Phút đi muộn", "Về sớm", "Số giờ"])
         for person in summary(month):
-            writer.writerow([person["user_id"], person["display_name"], person["worked_days"], person["late_count"],
-                             person["late_minutes"], person["early_count"], person["hours"]])  # fmt: skip
+            writer.writerow(csv_cells([person["user_id"], person["display_name"], person["worked_days"], person["late_count"],
+                                       person["late_minutes"], person["early_count"], person["hours"]]))  # fmt: skip
         return Response(200, ("﻿" + out.getvalue()).encode(), "text/csv; charset=utf-8",
                         {"Content-Disposition": f'attachment; filename="cham-cong-{month}.csv"'})  # fmt: skip
 

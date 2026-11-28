@@ -82,3 +82,11 @@ def test_admin_overview_shows_today_and_a_grid_of_the_month(make_app, desktiny):
     app.forget_settings()
     shared = app.handle("GET", "/share/cong?thang=2026-11", {"X-Share-Key": "bi-mat-chung"}).data["items"]
     assert {"states", "days"}.isdisjoint(shared[0]) and shared[0]["late_count"] == 1
+
+
+def test_a_csv_export_never_holds_a_formula(make_app, desktiny):
+    desktiny.users["u-an"]["display_name"] = "=HYPERLINK(1)"
+    app = make_app("cham-cong", now=lambda: datetime(2026, 11, 2, 8, 0, tzinfo=VN))
+    call(app, "POST", "/api/dia-diem", OFFICE, "phien-qt")
+    assert call(app, "POST", "/api/cham", {"kind": "in", "lat": 21.0285, "lng": 105.8542}, "phien-an").status == 200
+    assert "'=HYPERLINK(1)" in call(app, "GET", "/api/xuat?thang=2026-11", session="phien-qt").body.decode()

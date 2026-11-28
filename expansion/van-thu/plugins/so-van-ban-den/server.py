@@ -24,7 +24,7 @@ sys.path.insert(0, str(HERE.parents[3] / "lib"))
 
 from desktiny_plugin import PluginError  # noqa: E402
 from mo_rong import App, HttpError, Response, Settings, Store  # noqa: E402
-from mo_rong.vn import parse_date  # noqa: E402
+from mo_rong.vn import csv_cells, parse_date  # noqa: E402
 
 VN = timezone(timedelta(hours=7))
 SCHEMA = """
@@ -210,8 +210,9 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
                          "Hạn xử lý", "Tình trạng"])  # fmt: skip
         labels = {**STATES, "overdue": "Quá hạn", "due_soon": "Sắp đến hạn"}
         for row in listing(request):
-            writer.writerow([row["number"], row["received_at"][:10], row["sender"], row["original_number"], row["document_date"] or "",
-                             row["summary"], row["urgency"], row["due"] or "", labels.get(row["status"], row["status"])])  # fmt: skip
+            writer.writerow(csv_cells([row["number"], row["received_at"][:10], row["sender"], row["original_number"],
+                                       row["document_date"] or "", row["summary"], row["urgency"], row["due"] or "",
+                                       labels.get(row["status"], row["status"])]))  # fmt: skip
         return Response(200, ("﻿" + out.getvalue()).encode(), "text/csv; charset=utf-8")
 
     @app.route("GET", "/api/quan-tri/tong-quan", admin=True)

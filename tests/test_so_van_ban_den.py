@@ -135,3 +135,10 @@ def test_the_admin_overview_shows_the_next_number_and_the_year_by_month_and_is_f
     data = call(app, "GET", "/api/quan-tri/tong-quan", session="phien-qt").data
     assert data["year"] == 2026 and data["next_number"] == 4 and data["cancelled"] == 1 and data["bao_truoc_ngay"] == 4
     assert data["months"][2] == 2 and sum(data["months"]) == 2 and data["years"] == [2026]
+
+
+def test_a_csv_export_never_holds_a_formula(make_app, desktiny):
+    app = make_app("so-van-ban-den")
+    document(desktiny, "vb-f", noi_gui="@SUM(A1)")
+    call(app, "POST", "/api/van-ban/vb-f/vao-so", session="phien-an")
+    assert "'@SUM(A1)" in call(app, "GET", "/api/xuat", session="phien-qt").body.decode()
