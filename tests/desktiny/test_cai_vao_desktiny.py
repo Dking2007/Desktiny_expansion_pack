@@ -384,3 +384,34 @@ def test_a_sensor_past_its_threshold_becomes_an_incident_dossier_for_the_configu
     asked = as_(world, "staff").get(API + "/approval-tasks").json()["items"]
     assert [t for t in asked if t.get("case_id") == filed["id"]], asked
     desktiny_plugins.use_transport(None)
+
+
+def test_a_pack_dossier_whose_flow_ends_with_a_notice_closes_once_approved(world):  # noqa: F811
+    """B1: the packs end their processes with a notice ("Báo người nộp"), not an ending step; the dossier must still
+    close after the last approval instead of staying "đang xử lý" for good."""
+    director = as_(world, "director")
+    files = dong_goi.pack_files("mot-cua-xa")
+    assert upload(director, "/packs", "mot-cua-xa.zip", dong_goi.zipped(files)).status_code == 201
+    staff = as_(world, "staff")
+    process = next(p for p in staff.get(API + "/processes/available").json()["items"] if p["name"] == "Đăng ký khai sinh")
+    payload = {"ho_ten": "Phạm Thị Hoa", "so_cccd": "001190012345", "ho_ten_tre": "Phạm Minh An", "ngay_sinh_tre": "2026-11-20",
+               "gioi_tinh_tre": "Nam", "noi_sinh": "Trạm y tế xã", "quan_he": "Mẹ"}  # fmt: skip
+    case = staff.post(API + "/cases", json={"title": "Khai sinh cho Phạm Minh An", "form_id": process["form_id"],
+                                            "process_id": process["id"], "payload": payload},
+                      headers={"Idempotency-Key": "khai-sinh-b1"})  # fmt: skip
+    assert case.status_code == 201, case.text
+    case = case.json()
+    submitted = staff.post(f"{API}/cases/{case['id']}/submit", json={"expected_revision": case["revision"]},
+                           headers={"Idempotency-Key": "khai-sinh-b1-s"})  # fmt: skip
+    assert submitted.status_code == 202, submitted.text
+    drain(world, rounds=40)
+    for who in ("manager", "director"):  # công chức tư pháp kiểm tra (trưởng đơn vị), rồi lãnh đạo UBND ký
+        client = as_(world, who)
+        task = client.get(API + "/approval-tasks").json()["items"][0]
+        decided = client.post(f"{API}/approval-tasks/{task['id']}/decisions",
+                              json={"expected_revision": task["revision"], "decision": "approve", "reason": ""},
+                              headers={"Idempotency-Key": f"khai-sinh-b1-{who}"})  # fmt: skip
+        assert decided.status_code in (200, 202), decided.text
+        drain(world, rounds=40)
+    assert staff.get(f"{API}/cases/{case['id']}").json()["status"] == "approved"
+    assert any(title.startswith("Đã có kết quả, mời đến nhận") for title in titles(world))
