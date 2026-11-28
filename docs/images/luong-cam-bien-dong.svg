@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 790" width="1120" height="790" role="img" aria-labelledby="tt dd">
+<title id="tt">Cảm biến vượt ngưỡng thành hồ sơ sự cố; hồ sơ kết thúc vào tệp lưu trữ</title>
+<desc id="dd">Phần trên, bản mở rộng Vận hành: thiết bị lo-say-1 gửi POST /api/so-do kèm X-Device-Key tới plugin Cảm biến ở cổng 9208; plugin chỉ giữ mã băm SHA-256 của khoá, lưu số đo vào SQLite và so với ngưỡng nhiet_do lớn hơn 80. Số đo mẫu 65, 70, 92, 95, 93, 66, 64: số đo 92 mở sự cố và tạo đúng một sự kiện, các số đo vượt tiếp theo không gửi thêm, số đo 66 đóng sự cố. Sự kiện được ghi vào hàng đợi SQLite trước khi gửi; khi Desktiny tạm dừng, plugin thử lại mỗi phút với cùng Idempotency-Key. Desktiny nhận sự kiện canh_bao_cam_bien, luồng tự động tạo hồ sơ sự cố dạng nháp, chủ luồng xem lại và trình, bước Khắc phục giao cho người phụ trách, trưởng bộ phận xác nhận. Phần dưới, bản mở rộng Quản trị dữ liệu: khi hồ sơ được duyệt hoặc kết thúc, Desktiny gửi sự kiện ký HMAC tới plugin Lưu trữ lịch sử ở cổng 9209; plugin đọc hồ sơ bằng quyền cases.read, che số CCCD, số điện thoại, email, rồi ghi một dòng vào archive/YYYY-MM.jsonl; mỗi dòng có sha256 của nội dung và prev là sha256 của dòng trước.</desc>
+<style>
+svg{font-family:'Be Vietnam Pro','Segoe UI',Arial,sans-serif}
+text{fill:#0F172A;font-size:14px}
+.t{font-size:26px;font-weight:700}
+.h{font-size:16px;font-weight:700}
+.k{font-size:14px;font-weight:700;fill:#475569;letter-spacing:.5px}
+.m{fill:#475569}
+.w{fill:#fff}.wm{fill:#D6E0EC}
+.c{font-family:Consolas,'Courier New',monospace}
+.b{font-weight:700}
+.mid{text-anchor:middle}
+.band{fill:#F4F7FA;stroke:#CBD5E1;stroke-width:1.5}
+.box{fill:#fff;stroke:#94A3B8;stroke-width:1.5}
+.own{fill:#1E3A5F}
+.chip{fill:#fff;stroke:#CBD5E1}
+.db{fill:#E8F6EE;stroke:#A7DBBC}
+.l{fill:none;stroke-width:2.2}
+.rq{stroke:#2563EB}.wr{stroke:#15803D}.ev{stroke:#92600A}.fi{stroke:#5D43B5}
+.d{stroke-dasharray:6 4}
+.ring{fill:none;stroke:#F1B862;stroke-width:5}
+.cap,.ring,.nhay{opacity:0;animation:hien 12s linear infinite}
+@keyframes hien{0%,15.8%{opacity:1}16.6%,100%{opacity:0}}
+.s2{animation-delay:2s}.s3{animation-delay:4s}.s4{animation-delay:6s}.s5{animation-delay:8s}.s6{animation-delay:10s}
+.dot{stroke:#fff;stroke-width:2}
+.tinh{display:none}
+@media (prefers-reduced-motion:reduce){.dong,.cap,.ring,.nhay{display:none}.tinh{display:inline}}
+</style>
+<defs>
+<marker id="aq" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#2563EB"/></marker>
+<marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#15803D"/></marker>
+<marker id="ae" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#92600A"/></marker>
+<marker id="af" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#5D43B5"/></marker>
+<marker id="aw2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0L10,5L0,10z" fill="#94A3B8"/></marker>
+</defs>
+<rect width="1120" height="790" rx="16" fill="#F8FAFC"/>
+<text x="24" y="44" class="t">Từ số đo cảm biến tới hồ sơ sự cố, rồi vào lưu trữ</text>
+<text x="24" y="70" class="m" font-size="15">Bản mở rộng Vận hành (plugin Cảm biến) và Quản trị dữ liệu (plugin Lưu trữ lịch sử)</text>
+
+<!-- phần A -->
+<rect x="20" y="88" width="1080" height="378" rx="12" class="band"/>
+<text x="36" y="112" class="k">VẬN HÀNH · CẢM BIẾN VƯỢT NGƯỠNG</text>
+
+<rect x="36" y="128" width="170" height="100" rx="10" class="box"/>
+<text x="121" y="154" class="h mid">Thiết bị</text>
+<text x="121" y="178" class="c mid">lo-say-1</text>
+<text x="121" y="198" class="c mid">POST /api/so-do</text>
+<text x="121" y="216" class="c mid">X-Device-Key</text>
+
+<rect x="266" y="128" width="220" height="100" rx="10" class="box"/>
+<text x="376" y="154" class="h mid">Plugin Cảm biến · 9208</text>
+<text x="376" y="176" class="m mid">khoá: chỉ giữ mã SHA-256</text>
+<text x="376" y="196" class="m mid">lưu số đo vào SQLite</text>
+<text x="376" y="216" class="mid"><tspan class="m">so ngưỡng </tspan><tspan class="c">nhiet_do&gt;80</tspan></text>
+
+<rect x="546" y="128" width="170" height="100" rx="10" class="box"/>
+<text x="631" y="154" class="h mid">Hàng đợi</text>
+<text x="631" y="176" class="m mid">SQLite, ghi trước</text>
+<text x="631" y="194" class="m mid">rồi mới gửi</text>
+<rect x="580" y="204" width="20" height="14" rx="3" fill="#F1B862" stroke="#92600A"/>
+<rect x="606" y="204" width="20" height="14" rx="3" class="chip"/>
+<rect x="632" y="204" width="20" height="14" rx="3" class="chip"/>
+<rect x="658" y="204" width="20" height="14" rx="3" class="chip"/>
+
+<path d="M206,178H264" class="l rq" marker-end="url(#aq)"/>
+<path d="M486,178H544" class="l ev" marker-end="url(#ae)"/>
+<path d="M716,183H774" class="l ev" marker-end="url(#ae)"/>
+<path d="M744,190V244H633V230" class="l ev d" marker-end="url(#ae)"/>
+<text x="560" y="262" class="m">Desktiny dừng: thử lại mỗi phút,</text>
+<text x="560" y="281" class="m">cùng <tspan class="c">Idempotency-Key</tspan></text>
+<g class="nhay s3"><circle cx="745" cy="183" r="13" fill="#FDECEC" stroke="#B91C1C" stroke-width="2"/><path d="M739,177L751,189M751,177L739,189" stroke="#B91C1C" stroke-width="2.5"/></g>
+
+<!-- biểu đồ -->
+<rect x="36" y="248" width="450" height="202" rx="10" class="box"/>
+<text x="52" y="272" class="b">Số đo mẫu (°C)</text>
+<path d="M60,355H470" stroke="#B91C1C" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="466" y="349" text-anchor="end" fill="#B91C1C">ngưỡng 80</text>
+<polyline points="80,396 140,382 200,322 260,314 320,319 380,394 440,399" fill="none" stroke="#2563EB" stroke-width="2.2"/>
+<g fill="#2563EB"><circle cx="80" cy="396" r="4"/><circle cx="140" cy="382" r="4"/><circle cx="380" cy="394" r="4"/><circle cx="440" cy="399" r="4"/></g>
+<g fill="#B91C1C"><circle cx="200" cy="322" r="5"/><circle cx="260" cy="314" r="5"/><circle cx="320" cy="319" r="5"/></g>
+<g class="m"><text x="80" y="432" class="mid">65</text><text x="140" y="432" class="mid">70</text><text x="200" y="432" class="mid">92</text><text x="260" y="432" class="mid">95</text><text x="320" y="432" class="mid">93</text><text x="380" y="432" class="mid">66</text><text x="440" y="432" class="mid">64</text></g>
+<text x="172" y="310" text-anchor="end" fill="#B91C1C">mở sự cố, 1 sự kiện</text>
+<text x="282" y="300">không gửi thêm</text>
+<text x="390" y="380">đóng sự cố</text>
+
+<!-- Desktiny -->
+<rect x="760" y="120" width="330" height="334" rx="10" class="own"/>
+<text x="776" y="146" class="h w">Desktiny</text>
+<rect x="776" y="160" width="298" height="34" rx="8" class="chip"/><text x="788" y="182"><tspan class="m">sự kiện </tspan><tspan class="c">canh_bao_cam_bien</tspan></text>
+<rect x="776" y="208" width="298" height="34" rx="8" class="chip"/><text x="788" y="230">luồng tự động: bước <tspan class="b">Tạo hồ sơ</tspan></text>
+<rect x="776" y="256" width="298" height="34" rx="8" class="chip"/><text x="788" y="278">hồ sơ sự cố, nháp, điền từ sự kiện</text>
+<rect x="776" y="304" width="298" height="34" rx="8" class="chip"/><text x="788" y="326">chủ luồng xem lại, bấm <tspan class="b">Trình</tspan></text>
+<rect x="776" y="352" width="298" height="34" rx="8" class="chip"/><text x="788" y="374"><tspan class="b">Khắc phục</tspan>: <tspan class="c">nguoi_phu_trach</tspan></text>
+<rect x="776" y="400" width="298" height="34" rx="8" class="chip"/><text x="788" y="422">trưởng bộ phận xác nhận</text>
+<g stroke="#D6E0EC" stroke-width="2" marker-end="url(#aw2)"><path d="M925,194V206"/><path d="M925,242V254"/><path d="M925,290V302"/><path d="M925,338V350"/><path d="M925,386V398"/></g>
+
+<!-- phần B -->
+<rect x="20" y="480" width="1080" height="192" rx="12" class="band"/>
+<text x="36" y="504" class="k">QUẢN TRỊ DỮ LIỆU · LƯU TRỮ LỊCH SỬ</text>
+<rect x="36" y="516" width="200" height="140" rx="10" class="own"/>
+<text x="136" y="544" class="h mid w">Hồ sơ kết thúc</text>
+<text x="136" y="568" class="mid wm">Desktiny phát</text>
+<text x="136" y="592" class="mid wm c">case.approved</text>
+<text x="136" y="612" class="mid wm c">case.closed</text>
+<path d="M236,560H330" class="l ev" marker-end="url(#ae)"/>
+<text x="283" y="552" class="mid m">ký HMAC</text>
+<path d="M332,616H238" class="l rq" marker-end="url(#aq)"/>
+<text x="285" y="638" class="mid c">cases.read</text>
+<rect x="332" y="516" width="220" height="140" rx="10" class="box"/>
+<text x="442" y="544" class="h mid">Lưu trữ lịch sử · 9209</text>
+<text x="442" y="568" class="m mid">đọc hồ sơ vừa có sự kiện</text>
+<text x="442" y="592" class="m mid">che CCCD, điện thoại,</text>
+<text x="442" y="612" class="m mid">email trước khi ghi</text>
+<text x="442" y="638" class="m mid">mỗi cặp ghi một lần</text>
+<path d="M552,586H600" class="l wr" marker-end="url(#aw)"/>
+<rect x="602" y="516" width="488" height="140" rx="10" class="box"/>
+<text x="618" y="540" class="c b">archive/YYYY-MM.jsonl</text>
+<rect x="614" y="552" width="420" height="26" rx="6" class="db"/><text x="624" y="570"><tspan class="b">dòng 1</tspan> · nội dung đã che · sha256 · prev = 0…0</text>
+<rect x="614" y="586" width="420" height="26" rx="6" class="db"/><text x="624" y="604"><tspan class="b">dòng 2</tspan> · … · prev = sha256(dòng 1)</text>
+<rect x="614" y="620" width="420" height="26" rx="6" class="db" stroke-width="2"/><text x="624" y="638"><tspan class="b">dòng 3</tspan> · … · prev = sha256(dòng 2)</text>
+<path d="M1034,633C1066,633 1066,599 1036,599" class="l wr" marker-end="url(#aw)"/>
+<path d="M1034,599C1066,599 1066,565 1036,565" class="l wr" marker-end="url(#aw)"/>
+
+<!-- vòng sáng -->
+<rect x="262" y="124" width="228" height="108" rx="12" class="ring"/>
+<rect x="542" y="124" width="178" height="108" rx="12" class="ring s2"/>
+<rect x="542" y="124" width="178" height="108" rx="12" class="ring s3"/>
+<rect x="772" y="252" width="306" height="42" rx="10" class="ring s4"/>
+<rect x="772" y="348" width="306" height="42" rx="10" class="ring s5"/>
+<rect x="610" y="616" width="428" height="34" rx="8" class="ring s6"/>
+
+<!-- chấm chạy -->
+<g class="dong">
+<circle r="7" class="dot" fill="#2563EB" opacity="0"><animateMotion dur="12s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.02;.08;1" calcMode="linear" path="M206,178H266"/><animate attributeName="opacity" dur="12s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.02;.085"/></circle>
+<circle r="7" class="dot" fill="#F1B862" stroke="#92600A" opacity="0"><animateMotion dur="12s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.18;.24;1" calcMode="linear" path="M486,178H546"/><animate attributeName="opacity" dur="12s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.18;.245"/></circle>
+<circle r="7" class="dot" fill="#F1B862" stroke="#92600A" opacity="0"><animateMotion dur="12s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.34;.37;1" calcMode="linear" path="M716,183H736"/><animate attributeName="opacity" dur="12s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.34;.375"/></circle>
+<circle r="7" class="dot" fill="#F1B862" stroke="#92600A" opacity="0"><animateMotion dur="12s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.38;.46;1" calcMode="linear" path="M744,190V244H633V230"/><animate attributeName="opacity" dur="12s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.38;.465"/></circle>
+<circle r="7" class="dot" fill="#F1B862" stroke="#92600A" opacity="0"><animateMotion dur="12s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.505;.55;1" calcMode="linear" path="M716,183H776"/><animate attributeName="opacity" dur="12s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.505;.555"/></circle>
+<circle r="7" class="dot" fill="#F1B862" stroke="#92600A" opacity="0"><animateMotion dur="12s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.56;.63;1" calcMode="linear" path="M925,194V256"/><animate attributeName="opacity" dur="12s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.56;.635"/></circle>
+<circle r="7" class="dot" fill="#2563EB" opacity="0"><animateMotion dur="12s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.67;.78;1" calcMode="linear" path="M925,290V352"/><animate attributeName="opacity" dur="12s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.67;.785"/></circle>
+<circle r="7" class="dot" fill="#F1B862" stroke="#92600A" opacity="0"><animateMotion dur="12s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.84;.88;1" calcMode="linear" path="M236,560H332"/><animate attributeName="opacity" dur="12s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.84;.885"/></circle>
+<circle r="7" class="dot" fill="#2563EB" opacity="0"><animateMotion dur="12s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.89;.925;1" calcMode="linear" path="M332,616H236"/><animate attributeName="opacity" dur="12s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.89;.93"/></circle>
+<circle r="7" class="dot" fill="#15803D" opacity="0"><animateMotion dur="12s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.935;.97;1" calcMode="linear" path="M552,586H602"/><animate attributeName="opacity" dur="12s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.935;.975"/></circle>
+</g>
+
+<!-- chú thích -->
+<rect x="20" y="688" width="1080" height="44" rx="10" fill="#fff" stroke="#CBD5E1"/>
+<text x="40" y="716" class="cap"><tspan class="b">Số đo:</tspan> thiết bị gửi kèm khoá riêng; plugin lưu số đo vào SQLite và so với ngưỡng.</text>
+<text x="40" y="716" class="cap s2"><tspan class="b">Vượt ngưỡng:</tspan> số đo đầu tiên mở sự cố, đúng một sự kiện, ghi vào hàng đợi trước khi gửi.</text>
+<text x="40" y="716" class="cap s3"><tspan class="b">Desktiny tạm dừng:</tspan> sự kiện nằm lại trong hàng đợi, thử lại mỗi phút, gửi lại không thành hai sự kiện.</text>
+<text x="40" y="716" class="cap s4"><tspan class="b">Desktiny nhận sự kiện:</tspan> luồng tự động tạo hồ sơ sự cố dạng nháp, điền sẵn thiết bị, số đo, ngưỡng.</text>
+<text x="40" y="716" class="cap s5"><tspan class="b">Giao việc:</tspan> chủ luồng bấm Trình (bản sửa sau 3.1.0); bước Khắc phục hỏi đúng người phụ trách.</text>
+<text x="40" y="716" class="cap s6"><tspan class="b">Lưu trữ:</tspan> hồ sơ kết thúc, plugin đọc hồ sơ, che dữ liệu cá nhân, ghi một dòng JSONL nối sha256.</text>
+<text x="40" y="716" class="tinh"><tspan class="b">Đọc từ trái sang phải:</tspan> số đo → ngưỡng → hàng đợi → hồ sơ sự cố; hồ sơ kết thúc → tệp lưu trữ nối chuỗi.</text>
+
+<!-- chú giải -->
+<g transform="translate(20,752)">
+<path d="M0,10H34" class="l rq" marker-end="url(#aq)"/><text x="44" y="15">yêu cầu / phản hồi</text>
+<path d="M190,10H224" class="l wr" marker-end="url(#aw)"/><text x="234" y="15">ghi dữ liệu</text>
+<path d="M340,10H374" class="l ev" marker-end="url(#ae)"/><text x="384" y="15">sự kiện, tín hiệu</text>
+<path d="M520,10H554" class="l fi" marker-end="url(#af)"/><text x="564" y="15">tệp</text>
+<path d="M612,10H646" class="l ev d" marker-end="url(#ae)"/><text x="656" y="15">thử lại</text>
+<rect x="760" y="1" width="24" height="18" rx="4" class="own"/><text x="792" y="15">Desktiny</text>
+<rect x="880" y="1" width="24" height="18" rx="4" class="box"/><text x="912" y="15">plugin, thiết bị</text>
+</g>
+</svg>

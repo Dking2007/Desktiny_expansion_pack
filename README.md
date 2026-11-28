@@ -76,6 +76,13 @@ làm được những gì quản trị viên đã duyệt khi cài.
 
 ### Luồng dữ liệu
 
+<p align="center">
+<img src="docs/images/vong-doi-ban-mo-rong-dong.svg" width="100%" alt="Sơ đồ động hai phần. Phần 1, đóng gói và cài: mã nguồn expansion/ được đóng gói bằng build.bat hoặc dong_goi.py, bước này kiểm mọi manifest; ra dist/ gồm goi-*.zip, plugin-*.zip và may-chu-plugin-*.zip; quản trị viên tải lên Desktiny, xem trước, duyệt quyền, nhận token và khoá ký một lần rồi chép tay vào deploy/.env. Phần 2, đang chạy: Desktiny có gói giao diện, plugin đóng gói trong khung sandbox, outbox gửi sự kiện ký HMAC-SHA256, bước plugin_action, API plugin với token có phạm vi, luồng tự động nhận sự kiện của plugin. Máy chủ plugin chạy bằng Docker Compose, chín plugin kết nối ở cổng 9201 đến 9209, mỗi plugin một volume SQLite. Người dân nộp ở /cong/ của plugin Tiếp nhận; thiết bị gửi số đo tới /api/so-do của plugin Cảm biến kèm X-Device-Key. Sáu bước lần lượt sáng lên">
+</p>
+
+<details>
+<summary>Sơ đồ dạng chữ (Mermaid)</summary>
+
 ```mermaid
 flowchart LR
     subgraph EP["Expansion Pack: tệp .zip"]
@@ -99,9 +106,17 @@ flowchart LR
     EXT["Thiết bị, cổng nộp hồ sơ, trình duyệt người dân"] --> SV
 ```
 
-Không sửa mã Desktiny. Phạm vi của plugin là phần quyền quản trị viên đã duyệt khi cài.
+</details>
+
+Không sửa mã Desktiny. Phạm vi của plugin là phần quyền quản trị viên đã duyệt khi cài. Màu mũi tên: xanh dương là yêu
+cầu/phản hồi, nâu vàng là sự kiện, tím là tệp, nét đứt xám là thao tác tay.
 
 ### Từ mã nguồn đến Desktiny
+
+Phần 1 của sơ đồ động ở trên vẽ bước này.
+
+<details>
+<summary>Sơ đồ dạng chữ (Mermaid)</summary>
 
 ```mermaid
 flowchart LR
@@ -111,6 +126,8 @@ flowchart LR
     C --> E["may-chu-plugin.zip<br/>docker compose up"]
     E -- "token và khoá ký" --> D
 ```
+
+</details>
 
 **Yêu cầu:** Desktiny **3.1.0** trở lên (bản 3.0.0 chưa cài được plugin `.zip` và bỏ qua các tuỳ biến đăng nhập
 mới); Python 3.11+ để đóng gói; Docker cho máy chủ plugin kết nối.
@@ -155,6 +172,16 @@ Dữ liệu trong mọi ảnh và GIF là dữ liệu mẫu giả.
 Bản Vận hành và Quản trị dữ liệu chưa có logo riêng. Mỗi bản mẫu có README riêng: nội dung, cách cài, cấu hình, luồng
 gợi ý và những gì cần sửa trước khi dùng thật. Tên cơ quan trong bản mẫu là tên giả; quy chế, thời hạn và mức tiền chỉ
 để minh hoạ.
+
+### Vận hành và Quản trị dữ liệu chạy ra sao
+
+<p align="center">
+<img src="docs/images/luong-cam-bien-dong.svg" width="100%" alt="Sơ đồ động hai phần. Vận hành: thiết bị lo-say-1 gửi POST /api/so-do kèm X-Device-Key tới plugin Cảm biến cổng 9208; plugin chỉ giữ mã băm SHA-256 của khoá, lưu số đo vào SQLite, so ngưỡng nhiet_do lớn hơn 80. Số đo mẫu 65, 70, 92, 95, 93, 66, 64: số 92 mở sự cố và tạo đúng một sự kiện, số vượt tiếp theo không gửi thêm, số 66 đóng sự cố. Sự kiện ghi vào hàng đợi SQLite trước khi gửi; Desktiny tạm dừng thì thử lại mỗi phút với cùng Idempotency-Key. Desktiny nhận canh_bao_cam_bien, luồng tự động tạo hồ sơ sự cố dạng nháp, chủ luồng trình, bước Khắc phục giao người ghi trong nguoi_phu_trach, trưởng bộ phận xác nhận. Quản trị dữ liệu: hồ sơ được duyệt hoặc kết thúc, Desktiny gửi case.approved, case.closed ký HMAC tới plugin Lưu trữ lịch sử cổng 9209; plugin đọc hồ sơ bằng cases.read, che CCCD, điện thoại, email, ghi một dòng vào archive/YYYY-MM.jsonl, mỗi dòng có prev là sha256 của dòng trước">
+</p>
+
+Số đo trên biểu đồ là số mẫu, theo cách chạy của `scripts/gia_lap_cam_bien.py`. Với Desktiny 3.1.0, bước chủ luồng
+trình hồ sơ nháp còn lỗi B8 (xem [Giới hạn](#giới-hạn)). Chi tiết: [Vận hành](expansion/van-hanh/README.md),
+[Quản trị dữ liệu](expansion/quan-tri-du-lieu/README.md).
 
 ## Đóng gói
 

@@ -5,11 +5,15 @@ SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
 
 # Nguồn gốc ảnh và GIF
 
-Mọi ảnh được chụp tự động bằng Playwright từ bản demo Desktiny đã cài các bản mở rộng, ngày 28/11/2026. Dữ liệu trong
-ảnh là **dữ liệu mẫu giả**: tên người, cơ quan, số CCCD, số điện thoại và số hồ sơ đều không có thật.
+Mọi ảnh chụp được chụp tự động bằng Playwright từ bản demo Desktiny đã cài các bản mở rộng, ngày 28/11/2026. Dữ liệu
+trong ảnh là **dữ liệu mẫu giả**: tên người, cơ quan, số CCCD, số điện thoại và số hồ sơ đều không có thật. Hai sơ đồ
+`*-dong.svg` vẽ tay, chuyển động bằng CSS và SMIL, không có script, phông hay ảnh ngoài; khi người xem bật giảm chuyển
+động thì chỉ còn sơ đồ tĩnh.
 
 | Tệp | Nội dung | Dùng ở | Nguồn |
 |---|---|---|---|
+| `vong-doi-ban-mo-rong-dong.svg` | Vòng đời bản mở rộng: đóng gói, cài và duyệt quyền, Desktiny chạy cùng máy chủ plugin và nguồn bên ngoài | [README](../../README.md), [README_EN](../../README_EN.md) mục Luồng dữ liệu | Vẽ tay SVG, 2026 |
+| `luong-cam-bien-dong.svg` | Số đo vượt ngưỡng thành hồ sơ sự cố (hàng đợi, thử lại); hồ sơ kết thúc thành dòng JSONL nối sha256 | như trên, mục Các bản mẫu | Vẽ tay SVG, 2026 |
 | `mot-cua-trang-chu.png` | Trang chủ Desktiny sau khi cài gói Một cửa cấp xã | [README](../../README.md), [README_EN](../../README_EN.md) mục Giao diện | Playwright, demo, 28/11/2026 |
 | `goi-giao-dien.png` | Cùng Desktiny trước và sau khi cài gói giao diện | như trên | Playwright, demo, 28/11/2026 |
 | `plugin-so-van-ban.png` | Plugin Sổ văn bản | như trên | Playwright, demo, 28/11/2026 |
