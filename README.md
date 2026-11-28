@@ -10,7 +10,7 @@ https://github.com/Dking2007/Desktiny_expansion_pack.
 
 | Expansion Pack | Desktiny tối thiểu | Đã chạy thử |
 |---|---|---|
-| 1.1.0 | 3.1.0 | 28/11/2026: `tests/desktiny` (cài mọi gói và plugin rồi chạy luồng) đạt 5/5 với mã nguồn tag `v3.1.0`; 27/11/2026: cài thật 3 gói + 9 plugin vào Desktiny `main` (`c4ccb9f`), kiểm sức khỏe 7 máy chủ plugin đạt |
+| 1.1.0 | 3.1.0 | 28/11/2026, CI trên GitHub (job `cai-vao-desktiny`, [lần chạy 46137625759](https://github.com/Dking2007/Desktiny_expansion_pack/actions/runs/46137625759)) với Desktiny tag `v3.1.0`: 6 đạt, 2 bỏ qua (B1, B8: hai lỗi đã sửa sau 3.1.0); trên máy với Desktiny nhánh `tich-hop/olp-2026-11-28` (`610f2a3`): 8/8 đạt; 27/11/2026: cài thật 3 gói + 9 plugin vào Desktiny `main` (`c4ccb9f`), kiểm sức khỏe 7 máy chủ plugin đạt |
 
 **Các bản mở rộng của Desktiny.** Một bản mở rộng đưa Desktiny vào một nghiệp vụ cụ thể (nhân sự, một cửa, kế toán,
 trường học…) mà **không sửa mã của Desktiny**. Nó gồm một **gói giao diện** (màu sắc, từ ngữ, quy trình, biểu mẫu,
@@ -474,6 +474,11 @@ Mọi bản mở rộng, kể cả bản bạn tự tạo, đều được hư�
 - **Cổng tiếp nhận trực tuyến** lưu số CCCD và số điện thoại không mã hóa, chưa có thời hạn lưu giữ. Cần bổ sung trước
   khi dùng với dữ liệu thật.
 - **Ký số** là chữ ký mô phỏng bằng HMAC, không phải chữ ký số có giá trị pháp lý.
+- **Với Desktiny 3.1.0** còn hai lỗi phía Desktiny, đã sửa ở nhánh `tich-hop/olp-2026-11-28` (bản phát hành sau 3.1.0):
+  - Hồ sơ của các quy trình trong gói (kết thúc bằng bước thông báo, không có bước Kết thúc) kẹt ở “Đang xử lý” sau
+    bước duyệt cuối (B1).
+  - Chủ hồ sơ không trình được hồ sơ do bước **Tạo hồ sơ** của luồng tạo ra, nên sổ tiếp nhận trực tuyến không gắn được
+    hồ sơ (B8).
 
 ## Phát triển và kiểm thử
 

@@ -127,5 +127,7 @@ Cài theo [hướng dẫn chung](../../README.md#cài-vào-desktiny), với các
 - **Đọc giấy tờ** chỉ đọc được lớp chữ. Với ảnh quét, cần dùng ứng dụng quét có nhận dạng chữ rồi dán nội dung vào.
   Mọi giá trị đều cần cán bộ kiểm tra trước khi ghi.
 - **Kiến thức** trong `packs/mot-cua-xa/knowledge/` là mẫu, cần đối chiếu với văn bản hiện hành.
-- Với Desktiny hiện tại, chủ hồ sơ chưa trình được hồ sơ do bước **Tạo hồ sơ** của luồng tạo ra (Core chưa cấp quyền
-  bản ghi cho người đó). Luồng “Hồ sơ từ cổng trực tuyến” chỉ chạy trọn vẹn khi Desktiny sửa lỗi này.
+- Với Desktiny 3.1.0, chủ hồ sơ chưa trình được hồ sơ do bước **Tạo hồ sơ** của luồng tạo ra (Core chưa cấp quyền
+  bản ghi cho người đó), và hồ sơ của các thủ tục kẹt ở “Đang xử lý” sau bước ký. Cả hai đã sửa ở Desktiny nhánh
+  `tich-hop/olp-2026-11-28`: hồ sơ do luồng tạo trình được, khi trình thì sổ tiếp nhận gắn mã hồ sơ (trước đó sổ ghi
+  “Chưa trình hồ sơ”); hồ sơ đóng sau bước duyệt cuối.
