@@ -1,0 +1,12 @@
+{
+  "schema": "desktiny-pack/1",
+  "id": "vn.mo-rong.van-hanh",
+  "name": "Vận hành – giám sát thiết bị",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "authors": ["Desktiny Expansion Pack contributors"],
+  "description": "Gói cho bộ phận vận hành, kỹ thuật: quy trình Xử lý sự cố thiết bị (người phụ trách ghi nguyên nhân và biện pháp, trưởng bộ phận xác nhận) và mẫu luồng “Cảm biến vượt ngưỡng → hồ sơ sự cố”. Dùng cùng plugin Cảm biến thiết bị. Không đổi giao diện của cơ quan.",
+  "requires": { "desktiny": ">=0.2.0" },
+  "processes": ["processes/xu-ly-su-co-thiet-bi.json"],
+  "templates": ["templates/su-co-cam-bien.json"]
+}

@@ -1,0 +1,108 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cảm biến thiết bị</title>
+    <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <style>
+      body {
+        padding: 12px 14px 14px;
+      }
+      .head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .head strong {
+        font-size: 13px;
+        color: var(--gd-muted);
+        font-weight: 650;
+      }
+      .device {
+        padding: 8px 0;
+        border-top: 1px solid var(--gd-border);
+      }
+      .device:first-of-type {
+        border-top: 0;
+      }
+      .device h2 {
+        margin: 0 0 4px;
+        font-size: 13.5px;
+      }
+      .device h2 small {
+        color: var(--gd-muted);
+        font-weight: 400;
+      }
+      .metric {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto 96px;
+        align-items: center;
+        gap: 8px;
+        padding: 3px 0;
+      }
+      .metric .gd-title {
+        font-size: 12.5px;
+      }
+      .metric .value {
+        font-size: 16px;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+      }
+      .metric .gd-sub {
+        font-size: 11px;
+      }
+      .gd-empty {
+        padding: 14px 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="app" aria-busy="true"></main>
+    <script type="module">
+      import { $, h, server } from './mo-rong.js'
+      import { chip, empty, icon, skeleton, spark } from './bieu-do.js'
+
+      const NAMES = { nhiet_do: 'Nhiệt độ', do_am: 'Độ ẩm', ap_suat: 'Áp suất', dien_ap: 'Điện áp', dong_dien: 'Dòng điện', rung: 'Độ rung' }
+      const label = (key) => NAMES[key] || key.replaceAll('_', ' ')
+      const number = (v) => Number(v).toLocaleString('vi-VN', { maximumFractionDigits: 2 })
+      const clock = (iso) => new Date(iso).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })
+
+      function render(items) {
+        const root = $('#app')
+        root.removeAttribute('aria-busy')
+        const shown = items.filter((d) => d.metrics.length)
+        if (!shown.length) {
+          root.replaceChildren(empty('Chưa có số đo', items.length ? 'Thiết bị đã đăng ký nhưng chưa gửi số đo nào.' : 'Quản trị viên đăng ký thiết bị ở trang quản trị của plugin.', 'trend'))
+          return
+        }
+        const alerts = shown.reduce((n, d) => n + d.metrics.filter((m) => m.alert).length, 0)
+        root.replaceChildren(
+          h('div', { class: 'head' }, h('strong', {}, `${shown.length} thiết bị đang gửi số đo`),
+            alerts ? chip(`${alerts} vượt ngưỡng`, 'bad', 'alert') : chip('Bình thường', 'ok', 'check')),
+          ...shown.map((d) => h('section', { class: 'device', 'aria-label': d.name },
+            h('h2', {}, d.name, d.location ? h('small', {}, ` · ${d.location}`) : null),
+            d.metrics.map((m) => h('div', { class: 'metric' },
+              h('span', {}, h('div', { class: 'gd-title' }, label(m.metric)),
+                h('div', { class: 'gd-sub' }, m.limits.length ? `Ngưỡng ${m.limits.join(', ')} · ${clock(m.at)}` : clock(m.at))),
+              h('span', { class: 'value' }, m.alert ? chip(number(m.value), 'bad', 'alert') : number(m.value)),
+              spark(m.series, { width: 96, height: 30, tone: m.alert ? 'bad' : 'accent', label: `${label(m.metric)}, ${m.series.length} số đo gần nhất: ${m.series.map(number).join(', ')}` }))))))
+      }
+
+      $('#app').replaceChildren(skeleton(4, 16))
+      server('/api/tong-quan')
+        .then((data) => render(data.items || []))
+        .catch((error) => {
+          const root = $('#app')
+          root.removeAttribute('aria-busy')
+          root.replaceChildren(h('p', { class: 'gd-note tone-bad', role: 'alert' }, icon('alert', 15), error.message || 'Không tải được số đo.'))
+        })
+    </script>
+  </body>
+</html>

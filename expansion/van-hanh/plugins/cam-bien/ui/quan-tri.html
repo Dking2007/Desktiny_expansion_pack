@@ -1,0 +1,176 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors -->
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Thiết bị cảm biến</title>
+    <link rel="stylesheet" href="chung.css" />
+    <link rel="stylesheet" href="giao-dien.css" />
+    <style>
+      input,
+      button {
+        box-sizing: border-box;
+        max-width: 100%;
+      }
+      .cb-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 10px;
+        align-items: end;
+      }
+      .cb-form input {
+        width: 100%;
+      }
+      .cb-key {
+        display: grid;
+        gap: 6px;
+        margin-top: 12px;
+      }
+      .cb-key input {
+        width: 100%;
+        font-family: ui-monospace, monospace;
+        font-size: 13px;
+      }
+      .cb-code {
+        font-family: ui-monospace, monospace;
+        font-size: 12.5px;
+      }
+      code {
+        padding: 1px 5px;
+        border-radius: 5px;
+        background: var(--gd-surface-2);
+        font-size: 12.5px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="gd-hero">
+      <div>
+        <h1>Thiết bị cảm biến</h1>
+        <p>Đăng ký thiết bị, cấp khoá gửi số đo, xem sự cố vượt ngưỡng và sự kiện chờ gửi tới Desktiny.</p>
+      </div>
+    </header>
+    <div id="stats" class="gd-stats" aria-busy="true"></div>
+    <p id="error" role="alert"></p>
+
+    <section class="gd-panel" aria-labelledby="add-title">
+      <div class="gd-panel-head"><h2 id="add-title">Đăng ký thiết bị</h2></div>
+      <div class="gd-panel-body">
+        <form id="add" class="cb-form">
+          <label>Mã thiết bị <input name="ma" required maxlength="40" pattern="[a-z0-9][a-z0-9_\-]*" placeholder="lo-say-1" autocomplete="off" /></label>
+          <label>Tên <input name="ten" required maxlength="120" placeholder="Lò sấy số 1" /></label>
+          <label>Vị trí <input name="vi_tri" maxlength="200" placeholder="Xưởng A" /></label>
+          <button type="submit">Đăng ký và cấp khoá</button>
+        </form>
+        <div id="key" class="cb-key" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="gd-panel" aria-labelledby="dev-title">
+      <div class="gd-panel-head"><h2 id="dev-title">Thiết bị</h2></div>
+      <div class="gd-scroll" id="devices"></div>
+    </section>
+
+    <div class="gd-cols">
+      <section class="gd-panel" aria-labelledby="inc-title">
+        <div class="gd-panel-head"><h2 id="inc-title">Sự cố gần đây</h2></div>
+        <div class="gd-scroll" id="incidents"></div>
+      </section>
+      <section class="gd-panel" aria-labelledby="set-title">
+        <div class="gd-panel-head"><h2 id="set-title">Ngưỡng và gửi số đo</h2></div>
+        <div class="gd-panel-body" id="setup"></div>
+      </section>
+    </div>
+
+    <script type="module">
+      import { $, desktiny, h, server } from './mo-rong.js'
+      import { chip, empty, icon, skeleton, stat } from './bieu-do.js'
+
+      const when = (iso) => (iso ? new Date(iso).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' }) : '—')
+
+      /** A key is shown here once: the server keeps only its hash. */
+      function showKey(ma, khoa) {
+        const field = h('input', { readonly: true, value: khoa, 'aria-label': `Khoá của thiết bị ${ma}`, onfocus: (e) => e.target.select() })
+        $('#key').replaceChildren(
+          h('p', { class: 'gd-note tone-warn' }, icon('lock', 15), `Khoá của “${ma}” chỉ hiện lần này. Chép vào thiết bị (tiêu đề X-Device-Key) ngay bây giờ.`),
+          field)
+        field.focus()
+      }
+
+      function render(data) {
+        const open = data.devices.reduce((n, d) => n + d.open, 0)
+        $('#stats').replaceChildren(
+          stat({ label: 'Thiết bị', value: data.devices.length, icon: 'settings' }),
+          stat({ label: 'Đang vượt ngưỡng', value: open, tone: open ? 'bad' : 'ok', icon: 'alert' }),
+          stat({ label: 'Sự kiện chờ gửi', value: data.pending, hint: data.pending ? 'Desktiny chưa nhận; tự gửi lại mỗi phút' : 'Đã gửi hết', tone: data.pending ? 'warn' : 'ok', icon: 'bell' }))
+        $('#stats').setAttribute('aria-busy', 'false')
+
+        $('#devices').replaceChildren(data.devices.length
+          ? h('table', { class: 'gd-table' },
+              h('thead', {}, h('tr', {}, ['Mã', 'Tên', 'Vị trí', 'Số đo gần nhất', 'Tình trạng', ''].map((t) => h('th', { scope: 'col' }, t)))),
+              h('tbody', {}, data.devices.map((d) => h('tr', {},
+                h('td', { class: 'cb-code' }, d.id), h('td', {}, d.name), h('td', {}, d.location || '—'), h('td', {}, when(d.last_at)),
+                h('td', {}, d.open ? chip(`${d.open} sự cố`, 'bad', 'alert') : chip('Bình thường', 'ok', 'check')),
+                h('td', {}, h('button', { type: 'button', class: 'secondary', onclick: () => rekey(d) }, 'Đổi khoá'))))))
+          : empty('Chưa có thiết bị', 'Đăng ký thiết bị ở trên để nhận khoá gửi số đo.', 'settings'))
+
+        $('#incidents').replaceChildren(data.incidents.length
+          ? h('table', { class: 'gd-table' },
+              h('thead', {}, h('tr', {}, ['Thiết bị', 'Chỉ số', 'Giá trị', 'Mở lúc', 'Đóng lúc'].map((t) => h('th', { scope: 'col' }, t)))),
+              h('tbody', {}, data.incidents.map((i) => h('tr', {},
+                h('td', { class: 'cb-code' }, i.device), h('td', {}, `${i.metric} ${i.rule}`), h('td', { class: 'num' }, i.value),
+                h('td', {}, when(i.opened_at)), h('td', {}, i.closed_at ? when(i.closed_at) : chip('Đang mở', 'bad'))))))
+          : empty('Chưa có sự cố', 'Số đo vượt ngưỡng sẽ hiện ở đây.', 'check'))
+
+        const rules = Object.entries(data.thresholds).flatMap(([metric, list]) => list.map(([sign, value]) => `${metric} ${sign} ${value}`))
+        $('#setup').replaceChildren(
+          h('p', {}, rules.length ? `Ngưỡng đang dùng: ${rules.join('; ')}.` : 'Chưa có ngưỡng hợp lệ: không số đo nào thành sự cố.',
+            ' Sửa ở Quản trị › Plugin › Cấu hình.'),
+          h('p', {}, 'Thiết bị gửi ', h('code', {}, 'POST /api/so-do'), ' với tiêu đề ', h('code', {}, 'X-Device-Key'), ' và nội dung ',
+            h('code', {}, '{"thiet_bi": "lo-say-1", "chi_so": "nhiet_do", "gia_tri": 85.5}'), `, tối đa ${data.rate} số đo mỗi phút.`),
+          ...data.failed.map((f) => h('p', { class: 'gd-note tone-bad' }, icon('alert', 15), `Desktiny từ chối ${f.key}: ${f.error}`)))
+      }
+
+      async function load() {
+        try {
+          render(await server('/api/quan-tri'))
+          $('#error').replaceChildren()
+        } catch (error) {
+          $('#error').replaceChildren(h('span', { class: 'gd-note tone-bad' }, icon('alert', 15), error.message))
+        }
+      }
+
+      async function rekey(device) {
+        if (!(await desktiny.confirm(`Cấp khoá mới cho “${device.name}”? Khoá cũ thôi dùng được ngay.`))) return
+        try {
+          const result = await server(`/api/quan-tri/thiet-bi/${encodeURIComponent(device.id)}/khoa`, { method: 'POST' })
+          showKey(result.ma, result.khoa)
+        } catch (error) {
+          desktiny.toast(error.message, 'error')
+        }
+      }
+
+      $('#add').addEventListener('submit', async (event) => {
+        event.preventDefault()
+        const form = new FormData(event.target)
+        const button = event.target.querySelector('button')
+        button.disabled = true
+        try {
+          const result = await server('/api/quan-tri/thiet-bi', { method: 'POST', body: Object.fromEntries(form) })
+          event.target.reset()
+          showKey(result.ma, result.khoa)
+          load()
+        } catch (error) {
+          desktiny.toast(error.message, 'error')
+        } finally {
+          button.disabled = false
+        }
+      })
+
+      $('#stats').replaceChildren(skeleton(2, 18))
+      load()
+    </script>
+  </body>
+</html>

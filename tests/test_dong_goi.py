@@ -32,7 +32,7 @@ def test_each_expansion_gets_its_pack_and_plugins_as_zips_with_an_install_guide(
     built = dong_goi.build(out=out)
     paths = {path for path, _, _ in built}
     assert not (out / "cu.txt").exists()  # the folder is emptied first
-    assert dong_goi.expansions() == ["mot-cua-xa", "nhan-su", "van-thu"]
+    assert dong_goi.expansions() == ["mot-cua-xa", "nhan-su", "van-hanh", "van-thu"]
     assert {
         "nhan-su/goi-nhan-su-1.1.0.zip", "nhan-su/plugin-cham-cong-1.1.0.zip", "nhan-su/plugin-luong-kpi-1.1.0.zip",
         "nhan-su/plugin-nhac-han-1.1.0.zip", "mot-cua-xa/goi-mot-cua-xa-1.1.0.zip", "mot-cua-xa/plugin-so-van-ban-1.1.0.zip",
@@ -40,7 +40,7 @@ def test_each_expansion_gets_its_pack_and_plugins_as_zips_with_an_install_guide(
         "mot-cua-xa/plugin-doc-giay-to-1.1.0.zip", "van-thu/goi-van-thu-1.0.0.zip", "van-thu/plugin-so-van-ban-den-1.1.0.zip",
         # Văn thư borrows these from Một cửa: the same zips are also in its own folder.
         "van-thu/plugin-so-van-ban-1.1.0.zip", "van-thu/plugin-ky-so-1.1.0.zip", "van-thu/plugin-tinh-han-1.1.0.zip",
-        "may-chu-plugin/may-chu-plugin-1.1.0.zip",
+        "van-hanh/goi-van-hanh-1.0.0.zip", "van-hanh/plugin-cam-bien-1.0.0.zip", "may-chu-plugin/may-chu-plugin-1.1.0.zip",
     } == paths  # fmt: skip
     guide = (out / "HUONG-DAN-CAI.txt").read_text(encoding="utf-8")
     assert all(path in guide for path in paths)
@@ -54,7 +54,10 @@ def test_each_expansion_gets_its_pack_and_plugins_as_zips_with_an_install_guide(
     assert names(out / "mot-cua-xa/plugin-so-van-ban-1.1.0.zip") == {"desktiny-plugin.json"}
     server = names(out / "may-chu-plugin/may-chu-plugin-1.1.0.zip")
     assert {"lib/mo_rong/server.py", "deploy/compose.yaml", "deploy/Dockerfile",
-            "expansion/mot-cua-xa/plugins/so-van-ban/server.py", "expansion/nhan-su/plugins/cham-cong/server.py"} <= server  # fmt: skip
+            "expansion/mot-cua-xa/plugins/so-van-ban/server.py", "expansion/nhan-su/plugins/cham-cong/server.py",
+            "expansion/van-hanh/plugins/cam-bien/server.py"} <= server  # fmt: skip
+    assert {"desktiny-pack.json", "processes/xu-ly-su-co-thiet-bi.json", "templates/su-co-cam-bien.json"} <= names(
+        out / "van-hanh/goi-van-hanh-1.0.0.zip")  # fmt: skip
     assert not any("tinh-han" in path or "packs/" in path for path in server)
     assert not any("__pycache__" in path or path == "deploy/.env" for path in server)
 
