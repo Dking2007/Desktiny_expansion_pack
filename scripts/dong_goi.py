@@ -215,6 +215,34 @@ def pack_problems(name: str) -> list[str]:
     return found
 
 
+# Steps a dossier flow may end on: an approval settles the dossier itself, a finish says the result.
+ENDS = {"finish", "approval"}
+
+
+def flow_notes(process: dict) -> list[str]:
+    """Paths of a dossier process that end on something other than a finish (or approval) step.
+
+    Not an error: Desktiny 3.2.0 and later close such a dossier on the last decision taken ("kết thúc ngầm"). But
+    Desktiny 3.1.0 leaves it "đang xử lý", and an explicit finish shows the ending on the canvas, so it is reported.
+    """
+    graph = process.get("graph") or {}
+    outgoing = {edge.get("source") for edge in graph.get("edges", [])}
+    return [
+        f"Bước “{node.get('label') or node.get('id')}” ({node.get('type')}) là điểm cuối, không có bước Kết thúc. "
+        "Desktiny 3.2.0 trở lên tự kết thúc hồ sơ theo quyết định cuối; 3.1.0 để hồ sơ ở “đang xử lý”. Nên thêm "
+        "bước Kết thúc."
+        for node in graph.get("nodes", [])
+        if node.get("id") not in outgoing and node.get("type") not in ENDS | {"trigger"}
+    ]
+
+
+def pack_warnings(name: str) -> list[str]:
+    """What is worth fixing in a pack but does not stop the build: processes without an explicit ending."""
+    base = pack_dir(name)
+    data = read_json(base / "desktiny-pack.json")
+    return [f"{path}: {note}" for path in data.get("processes", []) for note in flow_notes(read_json(base / path))]
+
+
 def layout_problems() -> dict[str, list[str]]:
     """No expansion at all, or a pack/plugin name used by two expansions (names must pick one folder)."""
     found: dict[str, list[str]] = {}
@@ -378,6 +406,9 @@ def build(host: str | None = None, out: Path = DIST, only: list[str] | None = No
     if issues:
         message = "\n".join(f"  {where}: {issue}" for where, found in issues.items() for issue in found)
         raise SystemExit(f"✗ Chưa đóng gói được, cần sửa:\n{message}")
+    for name in chosen.packs:
+        for note in pack_warnings(name):
+            print(f"⚠ {pack_dir(name).relative_to(ROOT).as_posix()}: {note}", file=sys.stderr)
     if out.exists():
         shutil.rmtree(out)
     built: list[tuple[str, str, str]] = []

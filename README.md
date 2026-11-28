@@ -153,12 +153,12 @@ diện trỏ tới (logo, quy trình, mẫu, kiến thức) có thật và đún
 dist/
 ├── HUONG-DAN-CAI.txt                       tệp nào tải lên đâu, theo thứ tự
 ├── nhan-su/
-│   ├── goi-nhan-su-1.2.0.zip               gói giao diện
+│   ├── goi-nhan-su-1.2.1.zip               gói giao diện
 │   ├── plugin-cham-cong-1.0.0.zip          plugin kết nối: chỉ manifest (trang do máy chủ plugin phục vụ)
 │   ├── plugin-luong-kpi-1.0.0.zip
 │   └── plugin-nhac-han-1.0.0.zip
 ├── mot-cua-xa/
-│   ├── goi-mot-cua-xa-1.2.0.zip
+│   ├── goi-mot-cua-xa-1.2.1.zip
 │   ├── plugin-tinh-han-1.0.0.zip           plugin đóng gói: manifest + trang + SDK khung
 │   ├── plugin-doc-giay-to-1.0.0.zip
 │   └── plugin-so-van-ban-1.0.0.zip, plugin-ky-so-1.0.0.zip, plugin-tiep-nhan-1.0.0.zip

@@ -2,7 +2,7 @@
   "schema": "desktiny-pack/1",
   "id": "vn.mo-rong.van-thu",
   "name": "Văn thư – điều hành",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "license": "Apache-2.0",
   "authors": ["Desktiny Expansion Pack contributors"],
   "description": "Gói cho công tác văn thư và điều hành của cơ quan: giao diện chàm, từ ngữ văn thư; quy trình xử lý văn bản đến (vào sổ, lãnh đạo chỉ đạo, giao xử lý, báo cáo kết quả), ban hành văn bản đi (kiểm tra nội dung và thể thức, ký ban hành), nộp lưu hồ sơ; luồng cảnh báo quá hạn; hướng dẫn văn thư cho trợ lý AI. Dùng cùng plugin Sổ văn bản đến, Sổ văn bản (cấp số đi), Ký số, Tính hạn. Tên cơ quan là tên giả.",

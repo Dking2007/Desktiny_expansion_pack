@@ -84,6 +84,19 @@
           ],
           "title": "Đã duyệt đổi ca: {title}"
         }
+      },
+      {
+        "id": "xong",
+        "type": "finish",
+        "label": "Hoàn tất",
+        "position": {
+          "x": 1020,
+          "y": 0
+        },
+        "data": {
+          "result": "approved",
+          "message": ""
+        }
       }
     ],
     "edges": [
@@ -98,6 +111,12 @@
         "source": "quan_ly",
         "target": "bao",
         "branch": "approve"
+      },
+      {
+        "id": "bao->xong",
+        "source": "bao",
+        "target": "xong",
+        "branch": null
       }
     ]
   },

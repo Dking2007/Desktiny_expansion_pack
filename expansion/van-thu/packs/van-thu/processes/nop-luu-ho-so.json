@@ -112,6 +112,19 @@
           ],
           "title": "Đã duyệt nộp lưu, chuyển hồ sơ cho lưu trữ cơ quan: {title}"
         }
+      },
+      {
+        "id": "xong",
+        "type": "finish",
+        "label": "Hoàn tất",
+        "position": {
+          "x": 980,
+          "y": 60
+        },
+        "data": {
+          "result": "approved",
+          "message": ""
+        }
       }
     ],
     "edges": [
@@ -126,6 +139,12 @@
         "source": "lanh_dao_don_vi",
         "target": "bao",
         "branch": "approve"
+      },
+      {
+        "id": "bao->xong",
+        "source": "bao",
+        "target": "xong",
+        "branch": null
       }
     ]
   },
