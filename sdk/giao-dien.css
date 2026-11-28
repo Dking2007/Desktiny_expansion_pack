@@ -165,9 +165,11 @@ textarea {
   white-space: nowrap;
 }
 
-/* In the dark theme the accent is a light colour: a plain (main) button takes dark text to stay readable. */
-:root[data-theme='dark'] button:not([class]),
-:root[data-theme='dark'] button.primary {
+/* In the dark theme the accent is a light colour: a plain (main) button takes dark text to stay readable.
+   Weighted like a bare `button` (:where), so it still beats chung.css's white text, while a page that gives its
+   own buttons a surface and ink (filter chips, month bars) keeps that ink instead of dark text on dark. */
+:where(:root[data-theme='dark']) button:where(:not([class])),
+:where(:root[data-theme='dark']) button.primary {
   color: var(--dk-canvas, #0b1220);
 }
 

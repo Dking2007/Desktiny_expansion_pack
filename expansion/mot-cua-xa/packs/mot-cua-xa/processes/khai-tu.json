@@ -156,6 +156,19 @@
           ],
           "title": "Đã có kết quả, mời đến nhận: {title}"
         }
+      },
+      {
+        "id": "xong",
+        "type": "finish",
+        "label": "Hoàn tất",
+        "position": {
+          "x": 1380,
+          "y": 0
+        },
+        "data": {
+          "result": "approved",
+          "message": ""
+        }
       }
     ],
     "edges": [
@@ -176,6 +189,12 @@
         "source": "ky",
         "target": "tra_ket_qua",
         "branch": "approve"
+      },
+      {
+        "id": "tra_ket_qua->xong",
+        "source": "tra_ket_qua",
+        "target": "xong",
+        "branch": null
       }
     ]
   },

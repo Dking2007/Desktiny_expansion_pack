@@ -199,10 +199,10 @@ names the file and writes nothing.
 ```
 dist/
 ├── HUONG-DAN-CAI.txt                       which file to upload where, in order
-├── nhan-su/            goi-nhan-su-1.1.0.zip, plugin-cham-cong, plugin-luong-kpi, plugin-nhac-han
-├── mot-cua-xa/         goi-mot-cua-xa-1.1.0.zip, plugin-tinh-han, plugin-doc-giay-to,
+├── nhan-su/            goi-nhan-su-1.2.1.zip, plugin-cham-cong, plugin-luong-kpi, plugin-nhac-han
+├── mot-cua-xa/         goi-mot-cua-xa-1.2.1.zip, plugin-tinh-han, plugin-doc-giay-to,
 │                       plugin-so-van-ban, plugin-ky-so, plugin-tiep-nhan
-├── van-thu/            goi-van-thu-1.0.0.zip, plugin-so-van-ban-den
+├── van-thu/            goi-van-thu-1.1.1.zip, plugin-so-van-ban-den
 │                       + copies of plugin-so-van-ban, plugin-ky-so, plugin-tinh-han (shared)
 ├── van-hanh/           goi-van-hanh-1.0.0.zip, plugin-cam-bien-1.0.0.zip
 ├── quan-tri-du-lieu/   plugin-luu-tru-lich-su-1.0.0.zip

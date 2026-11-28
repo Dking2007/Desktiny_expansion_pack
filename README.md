@@ -28,7 +28,7 @@ Gói giao diện và plugin cho nhân sự, một cửa cấp xã, văn thư, v�
 
 | Expansion Pack | Desktiny tối thiểu | Đã chạy thử |
 |---|---|---|
-| 1.1.0 | 3.1.0 | 28/11/2026: `tests/desktiny` (cài mọi gói và plugin rồi chạy luồng) đạt 5/5 với mã nguồn tag `v3.1.0`; 27/11/2026: cài thật 3 gói + 9 plugin vào Desktiny `main` (`c4ccb9f`), kiểm sức khỏe 7 máy chủ plugin đạt |
+| 1.1.0 | 3.1.0 | 28/11/2026, CI trên GitHub (job `cai-vao-desktiny`, [lần chạy 46137625759](https://github.com/Dking2007/Desktiny_expansion_pack/actions/runs/46137625759)) với Desktiny tag `v3.1.0`: 6 đạt, 2 bỏ qua (B1, B8: hai lỗi đã sửa sau 3.1.0); trên máy với Desktiny nhánh `tich-hop/olp-2026-11-28` (`610f2a3`): 8/8 đạt; 27/11/2026: cài thật 3 gói + 9 plugin vào Desktiny `main` (`c4ccb9f`), kiểm sức khỏe 7 máy chủ plugin đạt |
 
 > Chưa có bản phát hành trên GitHub (dự kiến `v1.1.0`). Hiện lấy các tệp `.zip` bằng cách đóng gói từ mã nguồn,
 > xem mục [Đóng gói](#đóng-gói).
@@ -216,10 +216,10 @@ mục nào thì lấy đủ tệp ở đó. Đóng gói tất cả (19 tệp):
 ```
 dist/
 ├── HUONG-DAN-CAI.txt                       tệp nào tải lên đâu, theo thứ tự
-├── nhan-su/            goi-nhan-su-1.1.0.zip, plugin-cham-cong, plugin-luong-kpi, plugin-nhac-han
-├── mot-cua-xa/         goi-mot-cua-xa-1.1.0.zip, plugin-tinh-han, plugin-doc-giay-to,
+├── nhan-su/            goi-nhan-su-1.2.1.zip, plugin-cham-cong, plugin-luong-kpi, plugin-nhac-han
+├── mot-cua-xa/         goi-mot-cua-xa-1.2.1.zip, plugin-tinh-han, plugin-doc-giay-to,
 │                       plugin-so-van-ban, plugin-ky-so, plugin-tiep-nhan
-├── van-thu/            goi-van-thu-1.0.0.zip, plugin-so-van-ban-den
+├── van-thu/            goi-van-thu-1.1.1.zip, plugin-so-van-ban-den
 │                       + bản sao plugin-so-van-ban, plugin-ky-so, plugin-tinh-han (dùng chung)
 ├── van-hanh/           goi-van-hanh-1.0.0.zip, plugin-cam-bien-1.0.0.zip
 ├── quan-tri-du-lieu/   plugin-luu-tru-lich-su-1.0.0.zip
@@ -322,6 +322,11 @@ Chi tiết và nguồn: [THIRD_PARTY.md](THIRD_PARTY.md), [NOTICE](NOTICE). Mọ
   khi dùng với dữ liệu thật.
 - **Ký số** là chữ ký mô phỏng bằng HMAC, không phải chữ ký số có giá trị pháp lý.
 - Quy chế, thủ tục, thời hạn, ngày lễ và mức tiền trong các bản mẫu chỉ để minh hoạ.
+- **Với Desktiny 3.1.0** còn hai lỗi phía Desktiny, đã sửa ở nhánh `tich-hop/olp-2026-11-28` (bản phát hành sau 3.1.0):
+  - Hồ sơ của các quy trình trong gói (kết thúc bằng bước thông báo, không có bước Kết thúc) kẹt ở “Đang xử lý” sau
+    bước duyệt cuối (B1).
+  - Chủ hồ sơ không trình được hồ sơ do bước **Tạo hồ sơ** của luồng tạo ra, nên sổ tiếp nhận trực tuyến không gắn được
+    hồ sơ (B8).
 
 ## Phát triển và kiểm thử
 

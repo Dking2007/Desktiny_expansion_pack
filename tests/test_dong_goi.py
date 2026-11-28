@@ -34,10 +34,10 @@ def test_each_expansion_gets_its_pack_and_plugins_as_zips_with_an_install_guide(
     assert not (out / "cu.txt").exists()  # the folder is emptied first
     assert dong_goi.expansions() == ["mot-cua-xa", "nhan-su", "quan-tri-du-lieu", "van-hanh", "van-thu"]
     assert {
-        "nhan-su/goi-nhan-su-1.1.0.zip", "nhan-su/plugin-cham-cong-1.1.0.zip", "nhan-su/plugin-luong-kpi-1.1.0.zip",
-        "nhan-su/plugin-nhac-han-1.1.0.zip", "mot-cua-xa/goi-mot-cua-xa-1.1.0.zip", "mot-cua-xa/plugin-so-van-ban-1.1.0.zip",
+        "nhan-su/goi-nhan-su-1.2.1.zip", "nhan-su/plugin-cham-cong-1.1.0.zip", "nhan-su/plugin-luong-kpi-1.1.0.zip",
+        "nhan-su/plugin-nhac-han-1.1.0.zip", "mot-cua-xa/goi-mot-cua-xa-1.2.1.zip", "mot-cua-xa/plugin-so-van-ban-1.1.0.zip",
         "mot-cua-xa/plugin-ky-so-1.1.0.zip", "mot-cua-xa/plugin-tiep-nhan-1.1.0.zip", "mot-cua-xa/plugin-tinh-han-1.1.0.zip",
-        "mot-cua-xa/plugin-doc-giay-to-1.1.0.zip", "van-thu/goi-van-thu-1.0.0.zip", "van-thu/plugin-so-van-ban-den-1.1.0.zip",
+        "mot-cua-xa/plugin-doc-giay-to-1.1.0.zip", "van-thu/goi-van-thu-1.1.1.zip", "van-thu/plugin-so-van-ban-den-1.1.0.zip",
         # Văn thư borrows these from Một cửa: the same zips are also in its own folder.
         "van-thu/plugin-so-van-ban-1.1.0.zip", "van-thu/plugin-ky-so-1.1.0.zip", "van-thu/plugin-tinh-han-1.1.0.zip",
         "van-hanh/goi-van-hanh-1.0.0.zip", "van-hanh/plugin-cam-bien-1.0.0.zip",
@@ -46,7 +46,7 @@ def test_each_expansion_gets_its_pack_and_plugins_as_zips_with_an_install_guide(
     guide = (out / "HUONG-DAN-CAI.txt").read_text(encoding="utf-8")
     assert all(path in guide for path in paths)
 
-    pack = out / "mot-cua-xa/goi-mot-cua-xa-1.1.0.zip"
+    pack = out / "mot-cua-xa/goi-mot-cua-xa-1.2.1.zip"
     assert {"desktiny-pack.json", "assets/logo.svg", "processes/khai-sinh.json"} <= names(pack)
     tinh_han = names(out / "mot-cua-xa/plugin-tinh-han-1.1.0.zip")
     assert {"desktiny-plugin.json", "ui/tinh-han.html", "ui/desktiny-plugin-sdk.js", "ui/chung.css"} <= tinh_han
@@ -97,7 +97,7 @@ def test_an_expansion_name_takes_all_of_it_and_goi_takes_only_the_pack(tmp_path)
     assert dong_goi.select(["goi-nhan-su"]).plugins == []
     # Packaged plugins only: no server bundle, no docker lines in the guide.
     built = {path for path, _, _ in dong_goi.build(out=tmp_path, only=["goi-mot-cua-xa", "doc-giay-to"])}
-    assert built == {"mot-cua-xa/goi-mot-cua-xa-1.1.0.zip", "mot-cua-xa/plugin-doc-giay-to-1.1.0.zip"}
+    assert built == {"mot-cua-xa/goi-mot-cua-xa-1.2.1.zip", "mot-cua-xa/plugin-doc-giay-to-1.1.0.zip"}
     assert "docker" not in (tmp_path / "HUONG-DAN-CAI.txt").read_text(encoding="utf-8")
 
 
@@ -162,3 +162,31 @@ def test_the_same_name_in_two_expansions_stops_the_build(tmp_path, monkeypatch):
     write_pack(root / "expansion/hai/packs/chung")
     with pytest.raises(SystemExit, match="trùng.*chung"):
         dong_goi.build(out=tmp_path / "dist")
+
+
+def test_a_settings_title_desktiny_would_refuse_stops_the_build(tmp_path, monkeypatch):
+    """Desktiny refuses a title over 80 characters; the build used to pass it (Ký số, 28/11/2026)."""
+    root = fake_root(tmp_path, monkeypatch)
+    folder = root / "expansion/thu/plugins/dai"
+    folder.mkdir(parents=True)
+    manifest = {"schema": "desktiny-plugin/1", "id": "vn.thu.dai", "name": "Dài", "version": "1.0.0", "license": "Apache-2.0",
+                "base_url": "http://localhost:9299", "settings_schema": {"type": "object", "properties": {
+                    "khoa": {"type": "string", "title": "Khoá ký của cơ quan dùng để ký phiếu xác nhận của mọi văn bản được ký số trong hệ thống"}}}}  # fmt: skip
+    (folder / "desktiny-plugin.json").write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
+    with pytest.raises(SystemExit, match="settings_schema › khoa: title"):
+        dong_goi.build(out=tmp_path / "dist")
+
+
+def test_a_dossier_flow_without_an_ending_is_reported_but_still_built(tmp_path, capsys):
+    import dong_goi
+
+    ends_on_notify = {"graph": {"nodes": [{"id": "t", "type": "trigger"}, {"id": "a", "type": "approval"}, {"id": "n", "type": "notify", "label": "Báo"}],
+                                "edges": [{"source": "t", "target": "a"}, {"source": "a", "target": "n"}]}}
+    notes = dong_goi.flow_notes(ends_on_notify)
+    assert len(notes) == 1 and "Báo" in notes[0] and "3.1.0" in notes[0]
+    finished = {"graph": {"nodes": [*ends_on_notify["graph"]["nodes"], {"id": "x", "type": "finish"}],
+                          "edges": [*ends_on_notify["graph"]["edges"], {"source": "n", "target": "x"}]}}
+    assert dong_goi.flow_notes(finished) == []
+    # Every shipped pack now ends each path explicitly.
+    for name in ("nhan-su", "mot-cua-xa", "van-thu", "van-hanh"):
+        assert dong_goi.pack_warnings(name) == [], name

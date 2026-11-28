@@ -2,7 +2,7 @@
   "schema": "desktiny-pack/1",
   "id": "vn.mo-rong.nhan-su",
   "name": "Nhân sự doanh nghiệp",
-  "version": "1.1.0",
+  "version": "1.2.1",
   "license": "Apache-2.0",
   "authors": [
     "Desktiny Expansion Pack contributors"
@@ -18,16 +18,42 @@
     "favicon": "assets/logo.svg",
     "colors": {
       "light": {
-        "teal": "#0f6b5c",
-        "teal-strong": "#0b5246",
-        "teal-soft": "#e3f2ef",
-        "teal-ink": "#0f6b5c",
-        "teal-line": "#bfe0d9"
+        "navy": "#0c241f",
+        "ink-2": "#2a4640",
+        "muted": "#4d6760",
+        "canvas": "#f3f9f8",
+        "surface": "#fdfefe",
+        "surface-2": "#edf6f3",
+        "surface-3": "#e1efeb",
+        "surface-4": "#c2d6d1",
+        "border": "#d2e2de",
+        "border-soft": "#e3eeeb",
+        "border-strong": "#bdd3ce",
+        "teal": "#005c4d",
+        "teal-strong": "#00483a",
+        "teal-soft": "#daf6ee",
+        "teal-ink": "#005748",
+        "teal-line": "#9cddce",
+        "focus": "#007b69"
       },
       "dark": {
-        "teal": "#6fd3bf",
-        "teal-ink": "#9fe3d5",
-        "teal-soft": "#12302b"
+        "navy": "#e4eeeb",
+        "ink-2": "#c2d2ce",
+        "muted": "#a5b5b1",
+        "canvas": "#08120f",
+        "surface": "#0e1b18",
+        "surface-2": "#142420",
+        "surface-3": "#1c2e2a",
+        "surface-4": "#304540",
+        "border": "#243733",
+        "border-soft": "#1a2a26",
+        "border-strong": "#38504a",
+        "teal": "#88c6b7",
+        "teal-strong": "#71b4a4",
+        "teal-soft": "#18342e",
+        "teal-ink": "#afdcd1",
+        "teal-line": "#355e55",
+        "focus": "#77baab"
       }
     },
     "font": "be-vietnam-pro",
@@ -37,10 +63,11 @@
       "style": "framed",
       "title": "Cổng nhân sự nội bộ",
       "subtitle": "Chấm công · Đơn từ · Lương · KPI",
-      "ground": "#0b4a40",
-      "ground_to": "#052520",
+      "ground": "#0d4138",
+      "ground_to": "#000f0b",
       "button_label": "Đăng nhập bằng tài khoản công ty",
-      "note": "Dùng tài khoản công ty để chấm công, gửi đơn và xem phiếu lương."
+      "note": "Dùng tài khoản công ty để chấm công, gửi đơn và xem phiếu lương.",
+      "effects": true
     },
     "terminology": {
       "Hồ sơ": "Đơn từ",

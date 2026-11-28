@@ -101,7 +101,7 @@ Khối trang chủ hiện đường số đo với đoạn vượt ngưỡng.
 - **Bộ giới hạn tần suất nằm trong bộ nhớ** của một tiến trình; khởi động lại thì đếm lại.
 - Sự kiện mở sự cố được gửi ngay trong lời gọi của thiết bị; Desktiny chậm thì lời đáp cho thiết bị đó chậm theo
   (tối đa 10 giây), nhưng sự kiện vẫn nằm trong hàng đợi.
-- Hồ sơ do luồng tạo là bản nháp chờ người bật luồng trình (cách Desktiny làm với bước *Tạo hồ sơ*). Trên Desktiny
-  dùng để thử (11/2026), trình bản nháp đó trả lỗi 404: dữ liệu biểu mẫu được tạo bằng danh tính dịch vụ của luồng nên
-  chủ hồ sơ chưa đọc được ở Core. Đây là việc phía Desktiny; cho tới khi sửa, hồ sơ sự cố vẫn được tạo và báo cho chủ
-  hồ sơ, nhưng bước giao người phụ trách chỉ chạy với hồ sơ trình được.
+- Hồ sơ do luồng tạo là bản nháp chờ người bật luồng trình (cách Desktiny làm với bước *Tạo hồ sơ*). Với Desktiny
+  3.1.0, trình bản nháp đó trả lỗi 404 (dữ liệu biểu mẫu tạo bằng danh tính dịch vụ của luồng nên chủ hồ sơ chưa đọc
+  được ở Core): hồ sơ sự cố vẫn được tạo và báo cho chủ hồ sơ, nhưng bước giao người phụ trách chỉ chạy với hồ sơ trình
+  được. Desktiny nhánh `tich-hop/olp-2026-11-28` đã sửa: chủ hồ sơ trình được bản nháp do luồng tạo.

@@ -61,7 +61,8 @@ export function pinSetup(holder, { change = false, onDone, onCancel } = {}) {
     }
   })
   holder.replaceChildren(form)
-  ;(old || pin).input.focus()
+  // Shown on load too: a frame nobody has clicked yet may not take focus (the browser blocks it and warns).
+  if (document.hasFocus()) (old || pin).input.focus()
 }
 
 /** The viewer, when their PIN is set; otherwise the PIN form in `holder`, and `onReady` once it is saved. */

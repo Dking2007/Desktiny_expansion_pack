@@ -31,6 +31,8 @@ Bản phát hành đầu tiên của Desktiny Expansion Pack. Cần Desktiny 3.1
   Đọc giấy tờ và Sổ văn bản đến.
 
 ### Changed
+- Một cửa (1.2.1), Nhân sự (1.2.1), Văn thư (1.1.1): 11 quy trình có nhánh kết thúc bằng "Gửi thông báo" nay có bước Kết thúc rõ ràng, hiện trên canvas và đóng hồ sơ cả trên Desktiny 3.1.0. `dong_goi.py` cảnh báo (không chặn) quy trình có nhánh không có bước Kết thúc.
+- Gói giao diện Một cửa (1.2.0), Nhân sự (1.2.0), Văn thư (1.1.0) làm lại cho hài hoà: bảng màu đầy đủ cho cả giao diện sáng và tối (nền, chữ, viền, màu nhấn cùng một sắc, đạt tương phản WCAG AA), logo mới cùng một họ (nền bo tròn chuyển màu, hình trắng, điểm nhấn vàng), nền trang đăng nhập theo màu gói, góc bo theo tính chất từng gói; tiêu đề đăng nhập Văn thư không còn trùng tên ứng dụng. Plugin nhận màu từ Desktiny nên đổi màu theo.
 - Bộ giới hạn tần suất `Window` chuyển vào `lib/mo_rong` để các plugin dùng chung.
 - Trang đăng nhập Một cửa đổi tiêu đề thành “Cổng làm việc của cán bộ” (không lặp tên ứng dụng).
 - Tách theo bản mở rộng: `expansion/<tên>/{packs,plugins}`; mỗi bản có README riêng.
@@ -38,6 +40,18 @@ Bản phát hành đầu tiên của Desktiny Expansion Pack. Cần Desktiny 3.1
 - Trình bày lại README (sơ đồ luồng dữ liệu, thẻ bản mở rộng, bảng công nghệ), thêm README_EN, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT và mẫu issue.
 
 ### Fixed
+- Bộ giao diện plugin: ở giao diện tối, nút lọc và nút tháng có nền riêng không còn bị tô chữ tối (gần như không đọc được); nút chính vẫn chữ tối trên nền nhấn sáng.
+- Ký số: khung đặt mã PIN hiện lúc mở trang không tự đặt focus khi người dùng chưa bấm vào khung (trình duyệt chặn và in cảnh
+  báo trên console).
+- Khung của plugin co lại vừa nội dung: chép SDK khung mới của Desktiny vào `sdk/` (bản cũ đo `scrollHeight` của `<html>`, giá
+  trị không bao giờ nhỏ hơn khung, nên khung chỉ giãn mà không co).
+- Sổ tiếp nhận trực tuyến ghi “Chưa trình hồ sơ” (thay cho “Chưa tạo hồ sơ”) khi luồng đã tạo bản nháp nhưng chưa trình:
+  plugin chỉ biết hồ sơ khi hồ sơ được trình. Test cài thật kiểm sổ gắn đúng hồ sơ sau khi trình (B8; cần Desktiny có bản
+  sửa “hồ sơ do luồng tạo trình được”).
+- Test cài thật chạy trọn một hồ sơ khai sinh của gói Một cửa: quy trình kết thúc bằng thông báo, hồ sơ phải đóng sau khi
+  duyệt (B1, cần Desktiny có bản sửa “nhánh quy trình hết bước thì hồ sơ kết thúc”).
+- Bước đóng gói kiểm độ dài tiêu đề, mô tả và cấu trúc ô cấu hình như Desktiny (chép `desktiny-plugin` mới vào
+  `lib/desktiny_plugin`), nên manifest qua bước đóng gói không còn bị từ chối khi cài.
 - Địa chỉ `/cong/` của cổng tiếp nhận chuyển tới trang nộp hồ sơ thay vì báo 404.
 - Máy chủ plugin từ chối `Content-Length` âm.
 - Tra cứu hồ sơ trên cổng trực tuyến có giới hạn tần suất.
