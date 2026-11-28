@@ -35,6 +35,7 @@ Bản phát hành đầu tiên của Desktiny Expansion Pack. Cần Desktiny 3.1
 - Trang đăng nhập Một cửa đổi tiêu đề thành “Cổng làm việc của cán bộ” (không lặp tên ứng dụng).
 - Tách theo bản mở rộng: `expansion/<tên>/{packs,plugins}`; mỗi bản có README riêng.
 - Máy chủ plugin trả mọi lỗi dạng JSON; lỗi ngoài dự kiến được ghi nhật ký, không lộ chi tiết.
+- Trình bày lại README (sơ đồ luồng dữ liệu, thẻ bản mở rộng, bảng công nghệ), thêm README_EN, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT và mẫu issue.
 
 ### Fixed
 - Địa chỉ `/cong/` của cổng tiếp nhận chuyển tới trang nộp hồ sơ thay vì báo 404.
