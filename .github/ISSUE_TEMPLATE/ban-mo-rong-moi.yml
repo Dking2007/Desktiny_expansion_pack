@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
+name: Bản mở rộng mới
+description: Đề xuất một bản mở rộng cho nghiệp vụ mới
+labels: [ban-mo-rong]
+body:
+  - type: input
+    id: ten
+    attributes:
+      label: Tên bản mở rộng
+      description: Chữ thường không dấu, nối bằng gạch ngang
+      placeholder: ke-toan
+    validations: { required: true }
+  - type: textarea
+    id: nghiep-vu
+    attributes:
+      label: Nghiệp vụ và người dùng
+      description: Ai dùng, quy trình hiện tại ra sao?
+    validations: { required: true }
+  - type: checkboxes
+    id: thanh-phan
+    attributes:
+      label: Thành phần dự kiến
+      options:
+        - label: Gói giao diện (quy trình, biểu mẫu, từ ngữ)
+        - label: Plugin đóng gói (chạy trên trình duyệt)
+        - label: Plugin kết nối (có máy chủ riêng)
+  - type: textarea
+    id: du-lieu
+    attributes:
+      label: Dữ liệu và quyền
+      description: Plugin cần đọc hoặc ghi gì; có dữ liệu cá nhân không?
+  - type: checkboxes
+    id: dong-gop
+    attributes:
+      label: Đóng góp
+      options:
+        - label: Tôi có thể tự làm và gửi pull request
+        - label: Tôi chỉ đề xuất, cần người khác làm

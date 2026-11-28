@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
+name: Đề xuất
+description: Đề xuất tính năng hoặc cải tiến cho gói, plugin hoặc công cụ đóng gói
+labels: [enhancement]
+body:
+  - type: textarea
+    id: nhu-cau
+    attributes:
+      label: Nhu cầu
+      description: Ai gặp việc gì, hiện làm thế nào?
+    validations: { required: true }
+  - type: textarea
+    id: de-xuat
+    attributes:
+      label: Đề xuất
+    validations: { required: true }
+  - type: textarea
+    id: thay-the
+    attributes:
+      label: Cách khác đã cân nhắc
+  - type: checkboxes
+    id: dong-gop
+    attributes:
+      label: Đóng góp
+      options:
+        - label: Tôi có thể tự làm và gửi pull request
