@@ -105,3 +105,28 @@ def test_lookups_are_limited_per_address_and_per_code(make_app):
     assert right.status == 429 and right.data["error"] == "too_many"
     statuses = {app.handle("GET", "/cong/api/tra-cuu?ma=TN-0000-AAAAAA&ma_bi_mat=1", client_ip="10.9.9.9").status for _ in range(30)}
     assert statuses == {404, 429}
+
+def test_a_request_is_kept_and_resent_when_desktiny_is_down(make_app, desktiny, monkeypatch):
+    from conftest import FakeClient
+
+    from desktiny_plugin import PluginError
+
+    app = make_app("tiep-nhan")
+    sent, down = [], [True]
+
+    def send_event(self, event_type, data=None, key=None):
+        if down[0]:
+            raise PluginError(503, "unavailable", "x")
+        sent.append((data["ma_tra_cuu"], key))
+        return {"accepted": True}
+
+    monkeypatch.setattr(FakeClient, "send_event", send_event)
+    _, check = answer(app)
+    filed = call(app, "POST", "/cong/api/nop", {**PERSON, **check})
+    assert filed.status == 200  # saved, so the citizen is not asked to file again
+    code = filed.data["ma_tra_cuu"]
+    assert app.store.all("SELECT code FROM pending") == [{"code": code}] and not sent
+    down[0] = False
+    app.flush()
+    assert sent == [(code, f"nop:{code}")] and app.store.all("SELECT code FROM pending") == []
+    assert app.store.one("SELECT COUNT(*) AS n FROM requests")["n"] == 1
