@@ -26,6 +26,7 @@ import re
 import sys
 import threading
 import time
+from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -104,6 +105,22 @@ class Route:
     signed: bool = False
     viewer: bool = False
     admin: bool = False
+
+
+class Window:
+    """At most `limit` hits per key (an address, a device) in `seconds`."""
+
+    def __init__(self, limit: int, seconds: int):
+        self.limit, self.seconds, self.hits = limit, seconds, {}
+
+    def allow(self, key: str) -> bool:
+        now, recent = time.monotonic(), self.hits.setdefault(key, deque())
+        while recent and recent[0] < now - self.seconds:
+            recent.popleft()
+        if len(recent) >= self.limit:
+            return False
+        recent.append(now)
+        return True
 
 
 class Settings:

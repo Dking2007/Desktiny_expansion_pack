@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
 """Shared kit for the connected plugins of the expansion pack."""
 
-from .server import App, HttpError, Request, Response, Settings, json_response
+from .server import App, HttpError, Request, Response, Settings, Window, json_response
 from .store import Store
 
-__all__ = ["App", "HttpError", "Request", "Response", "Settings", "Store", "json_response"]
+__all__ = ["App", "HttpError", "Request", "Response", "Settings", "Store", "Window", "json_response"]
