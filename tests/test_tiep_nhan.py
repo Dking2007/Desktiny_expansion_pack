@@ -91,3 +91,10 @@ def test_the_citizen_gets_a_guide_and_an_expected_date_and_the_lookup_still_show
     assert admin["today"] == "2026-11-27" and admin["items"][0]["expected"] == "2026-11-30"
     assert admin["items"][0]["case_code"] == "HS-000008" and "updated_at" in admin["items"][0]
     assert call(app, "GET", "/api/quan-tri?trang_thai=received", session="phien-qt").data["items"] == []
+
+
+def test_the_portal_root_leads_to_the_filing_page(make_app):
+    app = make_app("tiep-nhan")
+    for path in ("/cong", "/cong/"):
+        page = call(app, "GET", path)
+        assert page.status == 302 and page.headers["Location"] == "/cong/nop.html", path

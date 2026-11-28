@@ -155,6 +155,12 @@ def build(settings: Settings | None = None, store: Store | None = None, now=lamb
 
     # ---- Public pages ---------------------------------------------------------------------------
 
+    @app.route("GET", "/cong")
+    @app.route("GET", "/cong/")
+    def portal(request):
+        # People type the portal's address without a page name; send them to the filing page.
+        return Response(302, b"", "text/plain", {"Location": "/cong/nop.html"})
+
     @app.route("GET", "/cong/api/thong-tin")
     def info(request):
         challenge_id, a, b = secrets.token_hex(8), random.randint(1, 9), random.randint(1, 9)
