@@ -1,0 +1,69 @@
+{
+  "name": "Xử lý sự cố thiết bị",
+  "description": "Hồ sơ sự cố từ cảnh báo cảm biến (hoặc lập tay): người phụ trách ghi trong hồ sơ khắc phục và ghi nguyên nhân, biện pháp; trưởng bộ phận xác nhận đã xử lý xong.",
+  "form": {
+    "name": "Phiếu sự cố thiết bị",
+    "description": "Thiết bị, chỉ số vượt ngưỡng và người phụ trách xử lý.",
+    "fields": [
+      { "key": "thiet_bi", "label": "Mã thiết bị", "type": "text", "required": true },
+      { "key": "ten_thiet_bi", "label": "Tên thiết bị", "type": "text", "required": false },
+      { "key": "vi_tri", "label": "Vị trí", "type": "text", "required": false },
+      { "key": "chi_so", "label": "Chỉ số", "type": "text", "required": true },
+      { "key": "gia_tri", "label": "Giá trị đo", "type": "number", "required": false },
+      { "key": "nguong", "label": "Ngưỡng bị vượt", "type": "text", "required": false },
+      { "key": "thoi_diem", "label": "Thời điểm đo", "type": "text", "required": false },
+      { "key": "nguoi_phu_trach", "label": "Người xử lý (tài khoản hoặc họ tên)", "type": "text", "required": true },
+      { "key": "ghi_chu", "label": "Ghi chú", "type": "textarea", "required": false }
+    ]
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": { "x": 0, "y": 0 },
+        "data": { "event": "case.submitted", "form_id": null, "required_documents": [] }
+      },
+      {
+        "id": "khac_phuc",
+        "type": "input",
+        "label": "Khắc phục sự cố",
+        "position": { "x": 320, "y": 0 },
+        "data": {
+          "resolver": "form_field",
+          "form_field": "nguoi_phu_trach",
+          "user_id": null,
+          "user_ids": [],
+          "fields": [
+            { "key": "nguyen_nhan", "label": "Nguyên nhân", "type": "textarea", "required": true, "options": [] },
+            { "key": "bien_phap", "label": "Biện pháp đã làm", "type": "textarea", "required": true, "options": [] }
+          ],
+          "allow_files": true,
+          "due_in_days": 1,
+          "instructions": "Kiểm tra thiết bị tại chỗ, khắc phục rồi ghi nguyên nhân và biện pháp; đính kèm ảnh nếu có."
+        }
+      },
+      {
+        "id": "xac_nhan",
+        "type": "approval",
+        "label": "Trưởng bộ phận xác nhận đã xử lý",
+        "position": { "x": 680, "y": 0 },
+        "data": {
+          "resolver": "department_manager",
+          "user_id": null,
+          "allow_return": true,
+          "allow_reject": true,
+          "due_in_days": 1,
+          "instructions": ""
+        }
+      }
+    ],
+    "edges": [
+      { "id": "trigger->khac_phuc", "source": "trigger", "target": "khac_phuc", "branch": null },
+      { "id": "khac_phuc:submitted->xac_nhan", "source": "khac_phuc", "target": "xac_nhan", "branch": "submitted" }
+    ]
+  },
+  "allowed_roles": [],
+  "required_file_count": 0
+}

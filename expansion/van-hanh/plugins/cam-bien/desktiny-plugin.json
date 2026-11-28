@@ -1,0 +1,43 @@
+{
+  "schema": "desktiny-plugin/1",
+  "id": "vn.mo-rong.cam-bien",
+  "name": "Cảm biến thiết bị",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "authors": ["Desktiny Expansion Pack contributors"],
+  "description": "Nhận số đo từ thiết bị (nhiệt độ, độ ẩm, áp suất…) qua HTTP, mỗi thiết bị một khoá riêng. Số đo vượt ngưỡng cấu hình thành sự kiện “cảm biến vượt ngưỡng” (mỗi sự cố một lần, đến khi trở lại bình thường) để luồng tự động tạo hồ sơ sự cố và giao người xử lý. Khối trang chủ hiện số đo mới nhất kèm biểu đồ nhỏ.",
+  "base_url": "http://localhost:9208",
+  "requires": { "desktiny": ">=2" },
+  "permissions": [],
+  "events_endpoint": "/events",
+  "health_endpoint": "/health",
+  "emits": [
+    {
+      "type": "canh_bao_cam_bien",
+      "title": "Cảm biến vượt ngưỡng",
+      "fields": {
+        "thiet_bi": "string",
+        "ten_thiet_bi": "string",
+        "vi_tri": "string",
+        "chi_so": "string",
+        "gia_tri": "number",
+        "nguong": "string",
+        "thoi_diem": "string",
+        "nguoi_phu_trach": "string"
+      }
+    }
+  ],
+  "settings_schema": {
+    "type": "object",
+    "properties": {
+      "nguong": { "type": "string", "title": "Ngưỡng cảnh báo theo chỉ số (ví dụ: nhiet_do>80; nhiet_do<5; do_am>90)", "default": "nhiet_do>80; do_am>90" },
+      "nguoi_phu_trach": { "type": "string", "title": "Người xử lý sự cố (tài khoản hoặc họ tên, ghi vào hồ sơ sự cố)" },
+      "luu_ngay": { "type": "number", "title": "Giữ số đo bao nhiêu ngày", "default": 30 }
+    },
+    "required": []
+  },
+  "ui": [
+    { "slot": "home.widget", "title": "Cảm biến thiết bị", "url": "/ui/widget.html", "height": 360 },
+    { "slot": "admin.page", "title": "Thiết bị cảm biến", "url": "/ui/quan-tri.html", "height": 1000 }
+  ]
+}

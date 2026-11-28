@@ -1,0 +1,37 @@
+{
+  "key": "mo-rong-su-co-cam-bien",
+  "title": "Cảm biến vượt ngưỡng → hồ sơ sự cố",
+  "description": "Khi plugin Cảm biến thiết bị báo vượt ngưỡng: tạo hồ sơ theo biểu mẫu “Phiếu sự cố thiết bị” (chọn biểu mẫu ở bước Tạo hồ sơ), điền sẵn thiết bị, số đo và người phụ trách.",
+  "graph": {
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "trigger",
+        "label": "",
+        "position": { "x": 0, "y": 0 },
+        "data": { "event": "plugin.vn.mo-rong.cam-bien.canh_bao_cam_bien" }
+      },
+      {
+        "id": "tao_ho_so",
+        "type": "create_case",
+        "label": "Tạo hồ sơ sự cố",
+        "position": { "x": 320, "y": 0 },
+        "data": {
+          "form_id": null,
+          "title": "Sự cố {trigger.ten_thiet_bi}: {trigger.chi_so} = {trigger.gia_tri} (ngưỡng {trigger.nguong})",
+          "answers": {
+            "thiet_bi": "{trigger.thiet_bi}",
+            "ten_thiet_bi": "{trigger.ten_thiet_bi}",
+            "vi_tri": "{trigger.vi_tri}",
+            "chi_so": "{trigger.chi_so}",
+            "gia_tri": "{trigger.gia_tri}",
+            "nguong": "{trigger.nguong}",
+            "thoi_diem": "{trigger.thoi_diem}",
+            "nguoi_phu_trach": "{trigger.nguoi_phu_trach}"
+          }
+        }
+      }
+    ],
+    "edges": [{ "id": "trigger->tao_ho_so", "source": "trigger", "target": "tao_ho_so", "branch": null }]
+  }
+}

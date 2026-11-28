@@ -23,7 +23,6 @@ import re
 import secrets
 import sys
 import time
-from collections import deque
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
@@ -31,7 +30,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[3] / "lib"))
 
 from desktiny_plugin import PluginError  # noqa: E402
-from mo_rong import App, HttpError, Response, Settings, Store  # noqa: E402
+from mo_rong import App, HttpError, Response, Settings, Store, Window  # noqa: E402
 
 VN = timezone(timedelta(hours=7))
 SCHEMA = """
@@ -94,22 +93,6 @@ def expected(procedure: str, filed: str) -> str | None:
         day += timedelta(days=1)
         days -= day.weekday() < 5
     return day.isoformat()
-
-
-class Window:
-    """At most `limit` submissions per address in `seconds`."""
-
-    def __init__(self, limit: int, seconds: int):
-        self.limit, self.seconds, self.hits = limit, seconds, {}
-
-    def allow(self, key: str) -> bool:
-        now, recent = time.monotonic(), self.hits.setdefault(key, deque())
-        while recent and recent[0] < now - self.seconds:
-            recent.popleft()
-        if len(recent) >= self.limit:
-            return False
-        recent.append(now)
-        return True
 
 
 def build(settings: Settings | None = None, store: Store | None = None, now=lambda: datetime.now(VN)) -> App:

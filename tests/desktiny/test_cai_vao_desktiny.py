@@ -338,3 +338,49 @@ def test_an_incoming_document_is_registered_by_its_flow_and_shown_on_the_documen
     assert shown.status == 200, shown.body
     assert shown.data["entry"]["status"] == "open"
     desktiny_plugins.use_transport(None)
+
+
+def test_a_sensor_past_its_threshold_becomes_an_incident_dossier_for_the_configured_person(world, tmp_path):  # noqa: F811
+    world[8].plugin_allowed_hosts = "localhost"
+    sensors, manifest = install_connected(world, "cam-bien", tmp_path)
+    serve({9208: sensors})
+    director = as_(world, "director")
+    files = dong_goi.pack_files("van-hanh")
+    installed = upload(director, "/packs", "van-hanh.zip", dong_goi.zipped(files))
+    assert installed.status_code == 201, installed.text
+    rule = next(r for r in director.get(API + "/automations?limit=200").json()["items"] if r["name"] == "Xử lý sự cố thiết bị")
+    template = json.loads(files["templates/su-co-cam-bien.json"])
+    graph = template["graph"]
+    graph["nodes"][1]["data"]["form_id"] = rule["form_id"]  # what the organisation picks on the canvas
+    enable_flow(world, template["title"], graph)
+    staff_name = next(u["display_name"] for u in director.get(API + "/users").json()["items"] if u["id"] == world[7]["staff"])
+    saved = director.put(f"{API}/plugins/{manifest['id']}/settings",
+                         json={"expected_revision": 0, "values": {"nguong": "nhiet_do>80", "nguoi_phu_trach": staff_name}})  # fmt: skip
+    assert saved.status_code == 200, saved.text
+    session = director.post(API + "/plugin-sessions", json={"plugin_id": manifest["id"], "slot": "admin.page"}).json()
+    added = sensors.handle("POST", "/api/quan-tri/thiet-bi", {"X-Desktiny-Session": session["token"]},
+                           json.dumps({"ma": "lo-say-1", "ten": "Lò sấy số 1"}).encode())  # fmt: skip
+    assert added.status == 200, added.body
+    headers = {"X-Device-Key": added.data["khoa"], "Content-Type": "application/json"}
+    for value in (70, 92, 95):
+        sent = sensors.handle("POST", "/api/so-do", headers, json.dumps({"thiet_bi": "lo-say-1", "chi_so": "nhiet_do", "gia_tri": value}).encode())
+        assert sent.status == 200, sent.body
+    drain(world, rounds=40)
+    made = [c for c in director.get(API + "/cases?limit=50").json()["items"] if c["title"].startswith("Sự cố Lò sấy số 1")]
+    assert len(made) == 1, [c["title"] for c in made]  # 92 and 95 are the same incident
+    case = director.get(f"{API}/cases/{made[0]['id']}").json()
+    assert case["payload"]["gia_tri"] == 92 and case["payload"]["nguoi_phu_trach"] == staff_name
+    assert case["status"] == "draft" and case["owner_id"] == world[7]["director"]  # for the flow's owner to check and submit
+    # Submitted with that payload, the process asks the person the plugin's settings name. (A draft made by a flow
+    # cannot be submitted in this in-memory Desktiny: its Core record is not granted to the owner, so the same payload
+    # goes through a dossier made by hand.)
+    payload = {k: v for k, v in case["payload"].items() if v not in (None, "")}
+    filed = director.post(API + "/cases", json={"title": case["title"], "form_id": rule["form_id"], "payload": payload},
+                          headers={"Idempotency-Key": "su-co"}).json()  # fmt: skip
+    submitted = director.post(f"{API}/cases/{filed['id']}/submit", json={"expected_revision": filed["revision"]},
+                              headers={"Idempotency-Key": "su-co-s"})  # fmt: skip
+    assert submitted.status_code == 202, submitted.text
+    drain(world, rounds=40)
+    asked = as_(world, "staff").get(API + "/approval-tasks").json()["items"]
+    assert [t for t in asked if t.get("case_id") == filed["id"]], asked
+    desktiny_plugins.use_transport(None)

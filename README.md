@@ -12,7 +12,7 @@ tệp `.zip`.
 
 Repo này có:
 
-- **Ba bản mẫu** dùng thử được ngay, để xem một bản mở rộng hoàn chỉnh trông thế nào.
+- **Bốn bản mẫu** dùng thử được ngay, để xem một bản mở rộng hoàn chỉnh trông thế nào.
 - **Công cụ đóng gói**: bấm đúp `build.bat` là có các tệp `.zip` để cài.
 - **Bộ khung** để tự viết plugin: máy chủ plugin dựng sẵn, SDK cho trang, cấu hình Docker và test.
 - **Hướng dẫn tự tạo** bản mở rộng cho nghiệp vụ của bạn (mục [Tự tạo bản mở rộng](#tự-tạo-bản-mở-rộng)).
@@ -78,6 +78,7 @@ Plugin chỉ làm được những gì quản trị viên đã duyệt khi cài.
 | [**Nhân sự doanh nghiệp**](expansion/nhan-su/README.md) `nhan-su` | Bộ phận nhân sự của doanh nghiệp, cơ quan nhỏ | Nhân sự doanh nghiệp: 7 quy trình đơn từ, 3 luồng tự động, quy chế cho trợ lý AI | Chấm công GPS, Tiền lương và KPI, Nhắc hạn hồ sơ |
 | [**Một cửa cấp xã**](expansion/mot-cua-xa/README.md) `mot-cua-xa` | Bộ phận một cửa của UBND cấp xã | Một cửa cấp xã: 6 thủ tục hộ tịch, chứng thực, hoà giải; 3 luồng tự động | Sổ văn bản, Ký số, Tiếp nhận trực tuyến, Tính hạn, Đọc giấy tờ |
 | [**Văn thư – điều hành**](expansion/van-thu/README.md) `van-thu` | Văn thư, văn phòng của cơ quan | Văn thư – điều hành: xử lý văn bản đến, ban hành văn bản đi, nộp lưu hồ sơ; 3 luồng tự động; hướng dẫn văn thư cho trợ lý AI | Sổ văn bản đến; dùng chung Sổ văn bản, Ký số, Tính hạn của bản Một cửa |
+| [**Vận hành – giám sát thiết bị**](expansion/van-hanh/README.md) `van-hanh` | Bộ phận vận hành, kỹ thuật có thiết bị cần theo dõi | Quy trình xử lý sự cố thiết bị; mẫu luồng “cảm biến vượt ngưỡng → hồ sơ sự cố”; không đổi giao diện | Cảm biến thiết bị (nhận số đo qua HTTP, cảnh báo vượt ngưỡng) |
 
 Mỗi bản mẫu có README riêng: nội dung, cách cài, cấu hình, luồng gợi ý và những gì cần sửa trước khi dùng thật. Tên
 cơ quan trong bản mẫu là tên giả; quy chế, thời hạn và mức tiền chỉ để minh hoạ.
@@ -391,7 +392,7 @@ def build(settings: Settings | None = None, store: Store | None = None) -> App:
 
 
 if __name__ == "__main__":
-    build().run(9208)
+    build().run(9209)
 ```
 
 Trang gọi máy chủ của chính plugin bằng `sdk/mo-rong.js`: `import { server } from './mo-rong.js'`, rồi
@@ -401,8 +402,8 @@ Trang gọi máy chủ của chính plugin bằng `sdk/mo-rong.js`: `import { se
 - một dịch vụ trong `deploy/compose.yaml` (chép dịch vụ có sẵn, đổi `PLUGIN`, `PORT`, tên biến, volume);
 - cặp biến `<TÊN>_TOKEN`, `<TÊN>_SECRET` trong `deploy/.env.example`.
 
-Cổng trong `base_url`, `server.py` và `compose.yaml` phải trùng nhau. Bản mẫu đang dùng 9201–9207, nên plugin mới bắt
-đầu từ 9208.
+Cổng trong `base_url`, `server.py` và `compose.yaml` phải trùng nhau. Bản mẫu đang dùng 9201–9208, nên plugin mới bắt
+đầu từ 9209.
 
 Manifest của plugin kết nối có thể khai thêm:
 - `events` (nhận sự kiện của Desktiny), `emits` (phát sự kiện riêng);
@@ -464,7 +465,7 @@ Mọi bản mở rộng, kể cả bản bạn tự tạo, đều được hư�
 build.bat, build.sh     nút đóng gói (gọi scripts/dong_goi.py)
 scripts/dong_goi.py     kiểm manifest rồi đóng gói vào dist/
 expansion/<bản>/        các bản mở rộng (README.md, packs/, plugins/)
-lib/mo_rong/            bộ khung máy chủ plugin: định tuyến, kiểm chữ ký, phiên người xem, SQLite, tệp Word, tiện ích tiếng Việt
+lib/mo_rong/            bộ khung máy chủ plugin: định tuyến, kiểm chữ ký, phiên người xem, giới hạn tần suất, SQLite, tệp Word, tiện ích tiếng Việt
 lib/desktiny_plugin/    bản sao SDK Python của Desktiny (packages/desktiny-plugin), cập nhật cùng Desktiny
 sdk/                    SDK khung của Desktiny, mo-rong.js (trang gọi máy chủ plugin), chung.css
 tests/                  test máy chủ plugin (Desktiny giả), test đóng gói, tests/js (Node), tests/desktiny (Desktiny thật)
