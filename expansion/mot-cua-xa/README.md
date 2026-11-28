@@ -35,7 +35,7 @@ này thì nhớ kiểm tra cả bản đó.
 
 | Phần | Nội dung |
 |---|---|
-| Giao diện | Màu đỏ – vàng, logo, trang đăng nhập “Bộ phận Một cửa điện tử” với nút “Đăng nhập cán bộ” và ghi chú cho người dân. Đổi “Hồ sơ” thành “Hồ sơ thủ tục”. Ẩn Nhắn tin. |
+| Giao diện | Màu đỏ – vàng, logo, trang đăng nhập “Cổng làm việc của cán bộ” với nút “Đăng nhập cán bộ” và ghi chú cho người dân. Đổi “Hồ sơ” thành “Hồ sơ thủ tục”. Ẩn Nhắn tin. |
 | Quy trình và biểu mẫu | Đăng ký khai sinh, kết hôn, khai tử; Chứng thực bản sao; Xác nhận tình trạng hôn nhân; Hoà giải ở cơ sở; mẫu “Lấy ý kiến ban, ngành” |
 | Luồng tự động (cài ở trạng thái **tắt**) | Nhắc hồ sơ bị trả lại mà 1 ngày chưa bổ sung; Cảnh báo hồ sơ quá hạn; Báo lãnh đạo khi hồ sơ bị từ chối |
 | Kiến thức cho trợ lý AI | Hướng dẫn tiếp nhận, thời hạn giải quyết, hồ sơ nộp trực tuyến |
