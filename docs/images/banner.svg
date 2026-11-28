@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="320" viewBox="0 0 1280 320" role="img" aria-labelledby="t d">
+  <title id="t">Desktiny Expansion Pack: đưa Desktiny vào nghiệp vụ mới bằng một tệp .zip</title>
+  <desc id="d">Logo Desktiny và tên repo bên trái; bên phải năm bản mở rộng mẫu (Nhân sự, Một cửa, Văn thư, Vận hành, Quản trị dữ liệu) cắm xuống khối Desktiny qua gói giao diện và plugin.</desc>
+  <style>
+    .noi { animation: noi 3.2s ease-in-out infinite; transform-box: fill-box; }
+    @keyframes noi { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
+    @media (prefers-reduced-motion: reduce) { .noi { animation: none } animate { display: none } }
+  </style>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0F172A"/><stop offset="1" stop-color="#1E3A5F"/></linearGradient>
+  </defs>
+  <rect width="1280" height="320" fill="url(#bg)"/>
+  <svg x="64" y="60" width="104" height="104" viewBox="0 0 112 112"><defs>
+    <linearGradient id="dk-nen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d3a5e"/><stop offset="1" stop-color="#101f35"/></linearGradient>
+    <radialGradient id="dk-sang" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#F7C65A" stop-opacity=".5"/><stop offset="1" stop-color="#F7C65A" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect x=".75" y=".75" width="110.5" height="110.5" rx="28" fill="url(#dk-nen)" stroke="#2c4a70" stroke-width="1.5"/>
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <g transform="rotate(-28 56 56)"><ellipse cx="56" cy="56" rx="47" ry="25" fill="none" stroke="#12A894" stroke-width="3.4"/></g>
+    <path d="M35 27h28l13 13v38a5 5 0 0 1-5 5H35a5 5 0 0 1-5-5V32a5 5 0 0 1 5-5z" fill="#FFFFFF" stroke="#E9EFF6" stroke-width="4.5"/>
+    <path d="M63 27v9a4 4 0 0 0 4 4h9" fill="none" stroke="#E9EFF6" stroke-width="3.4"/>
+    <path d="M38 47h22M38 53.5h26M38 60h16" stroke="#64748B" stroke-width="2.6"/>
+    <circle cx="70" cy="71" r="11" fill="#FFFFFF" stroke="#12A894" stroke-width="3.2"/>
+    <circle cx="70" cy="71" r="7" fill="none" stroke="#E5A943" stroke-width="1.6" stroke-dasharray=".1 2.6"/>
+    <path d="m65.6 71.3 2.97 2.97 5.49 -6.03" fill="none" stroke="#0F9A87" stroke-width="2.6"/>
+    <path d="M39.70 86.98 L38.35 87.09 L37.02 87.17 L35.71 87.20 L34.43 87.21 L33.17 87.17 L31.94 87.11 L30.74 87.00 L29.56 86.86 L28.42 86.68 L27.31 86.47 L26.23 86.22 L25.18 85.94 L24.17 85.62 L23.20 85.27 L22.27 84.88 L21.37 84.47 L20.52 84.01 L19.71 83.53 L18.93 83.01 L18.21 82.47 L17.52 81.89 L16.88 81.28 L16.29 80.64 L15.74 79.97 L15.23 79.28 L14.78 78.56 L14.37 77.81 L14.01 77.04 L13.70 76.24 L13.44 75.42 L13.23 74.58 L13.06 73.72 L12.95 72.83 L12.89 71.93 L12.88 71.01 L12.91 70.07 L13.00 69.11 L13.13 68.14 L13.32 67.15 L13.56 66.16" fill="none" stroke="#18304f" stroke-width="8"/>
+    <path d="M39.70 86.98 L38.35 87.09 L37.02 87.17 L35.71 87.20 L34.43 87.21 L33.17 87.17 L31.94 87.11 L30.74 87.00 L29.56 86.86 L28.42 86.68 L27.31 86.47 L26.23 86.22 L25.18 85.94 L24.17 85.62 L23.20 85.27 L22.27 84.88 L21.37 84.47 L20.52 84.01 L19.71 83.53 L18.93 83.01 L18.21 82.47 L17.52 81.89 L16.88 81.28 L16.29 80.64 L15.74 79.97 L15.23 79.28 L14.78 78.56 L14.37 77.81 L14.01 77.04 L13.70 76.24 L13.44 75.42 L13.23 74.58 L13.06 73.72 L12.95 72.83 L12.89 71.93 L12.88 71.01 L12.91 70.07 L13.00 69.11 L13.13 68.14 L13.32 67.15 L13.56 66.16" fill="none" stroke="#12A894" stroke-width="3.6"/>
+    <circle cx="94.15" cy="29.83" r="12" fill="url(#dk-sang)"/>
+    <path d="M94.15 20.83 L96.19 27.79 L103.15 29.83 L96.19 31.86 L94.15 38.83 L92.12 31.86 L85.15 29.83 L92.12 27.79Z" fill="#F2B43C" stroke="#18304f" stroke-width="1.8"/>
+  </g></svg>
+  <g font-family="'Be Vietnam Pro','Segoe UI','Helvetica Neue',Arial,sans-serif" fill="#FFFFFF">
+    <text x="190" y="104" font-size="24" fill="#5EEAD4" font-weight="600">Desktiny</text>
+    <text x="190" y="150" font-size="50" font-weight="700">Expansion Pack</text>
+    <text x="64" y="218" font-size="22" fill="#E9EEF5">Đưa Desktiny vào nghiệp vụ mới bằng một tệp .zip</text>
+    <text x="64" y="252" font-size="16" fill="#CBD5E1">Không sửa mã Desktiny · gói giao diện · plugin · bộ khung máy chủ plugin · SDK</text>
+  </g>
+  <g font-family="'Be Vietnam Pro','Segoe UI','Helvetica Neue',Arial,sans-serif">
+  <g class="noi" style="animation-delay:0.00s">
+    <line x1="746" y1="152" x2="746" y2="196" stroke="#94A3B8" stroke-width="2" stroke-dasharray="5 5"><animate attributeName="stroke-dashoffset" from="20" to="0" dur="1.6s" repeatCount="indefinite"/></line>
+    <svg x="714" y="64" width="64" height="64" viewBox="0 0 64 64"><defs><linearGradient id="nhan-su-nen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#005c4d"/><stop offset="1" stop-color="#00483a"/></linearGradient><linearGradient id="nhan-su-sang" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#nhan-su-nen)"/><rect x="1" y="1" width="62" height="62" rx="15" fill="url(#nhan-su-sang)"/><rect x=".75" y=".75" width="62.5" height="62.5" rx="15.25" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="1.5"/><circle cx="41" cy="23.5" r="5.6" fill="#fff" fill-opacity=".55"/><path d="M33.5 44.5c.8-7.2 3.8-11 8.4-11 4.8 0 8.1 4 8.6 11z" fill="#fff" fill-opacity=".55"/><circle cx="27" cy="25" r="7.4" fill="#fff"/><path d="M13.5 49c.9-9.6 5.8-14.6 13.5-14.6S39.6 39.4 40.5 49z" fill="#fff"/><circle cx="48" cy="46" r="6.5" fill="#f3c252"/><path d="M45 46.2l2.1 2.1 4-4.3" fill="none" stroke="#00483a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <text x="746" y="146" font-size="13" fill="#CBD5E1" text-anchor="middle">Nhân sự</text>
+  </g>
+  <g class="noi" style="animation-delay:0.45s">
+    <line x1="848" y1="152" x2="848" y2="196" stroke="#94A3B8" stroke-width="2" stroke-dasharray="5 5"><animate attributeName="stroke-dashoffset" from="20" to="0" dur="1.6s" repeatCount="indefinite"/></line>
+    <svg x="816" y="64" width="64" height="64" viewBox="0 0 64 64"><defs><linearGradient id="mot-cua-nen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8d1a1e"/><stop offset="1" stop-color="#73000d"/></linearGradient><linearGradient id="mot-cua-sang" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#mot-cua-nen)"/><rect x="1" y="1" width="62" height="62" rx="15" fill="url(#mot-cua-sang)"/><rect x=".75" y=".75" width="62.5" height="62.5" rx="15.25" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="1.5"/><path d="M14 49h36" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/><path d="M20 49V35a12 12 0 0 1 24 0v14" fill="none" stroke="#fff" stroke-width="3.6" stroke-linejoin="round"/><path d="M26 49V37a6 6 0 0 1 12 0v12z" fill="#fff" fill-opacity=".22"/><path d="M32 31v18" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M32 8l1.7 3.5 3.9.6-2.8 2.7.7 3.9-3.5-1.8-3.5 1.8.7-3.9-2.8-2.7 3.9-.6z" fill="#f3c252"/></svg>
+    <text x="848" y="146" font-size="13" fill="#CBD5E1" text-anchor="middle">Một cửa</text>
+  </g>
+  <g class="noi" style="animation-delay:0.90s">
+    <line x1="950" y1="152" x2="950" y2="196" stroke="#94A3B8" stroke-width="2" stroke-dasharray="5 5"><animate attributeName="stroke-dashoffset" from="20" to="0" dur="1.6s" repeatCount="indefinite"/></line>
+    <svg x="918" y="64" width="64" height="64" viewBox="0 0 64 64"><defs><linearGradient id="van-thu-nen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3c3e9c"/><stop offset="1" stop-color="#2c2b82"/></linearGradient><linearGradient id="van-thu-sang" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#van-thu-nen)"/><rect x="1" y="1" width="62" height="62" rx="15" fill="url(#van-thu-sang)"/><rect x=".75" y=".75" width="62.5" height="62.5" rx="15.25" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="1.5"/><path d="M19 12h19l9 9v29a3 3 0 0 1-3 3H19a3 3 0 0 1-3-3V15a3 3 0 0 1 3-3z" fill="#fff"/><path d="M38 12v6a3 3 0 0 0 3 3h6" fill="#e9edff"/><path d="M22 27h16M22 33h18M22 39h10" stroke="#3c3e9c" stroke-width="2.6" stroke-linecap="round" stroke-opacity=".75"/><circle cx="44" cy="45" r="8.5" fill="#f3c252" stroke="#2c2b82" stroke-width="2"/><circle cx="44" cy="45" r="5" fill="none" stroke="#2c2b82" stroke-width="1.2" stroke-opacity=".6"/><path d="M41 45.2l2.1 2.1 4-4.3" fill="none" stroke="#2c2b82" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <text x="950" y="146" font-size="13" fill="#CBD5E1" text-anchor="middle">Văn thư</text>
+  </g>
+  <g class="noi" style="animation-delay:1.35s">
+    <line x1="1052" y1="152" x2="1052" y2="196" stroke="#94A3B8" stroke-width="2" stroke-dasharray="5 5"><animate attributeName="stroke-dashoffset" from="20" to="0" dur="1.6s" repeatCount="indefinite"/></line>
+    <svg x="1020" y="64" width="64" height="64" viewBox="0 0 64 64"><defs><linearGradient id="van-hanh-sang" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient><linearGradient id="van-hanh-nen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a5401b"/><stop offset="1" stop-color="#7c2d12"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#van-hanh-nen)"/><rect x="1" y="1" width="62" height="62" rx="15" fill="url(#van-hanh-sang)"/><rect x=".75" y=".75" width="62.5" height="62.5" rx="15.25" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="1.5"/><path d="M13 44a19 19 0 0 1 38 0" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="M43.4 30.6A19 19 0 0 1 51 44" fill="none" stroke="#f3c252" stroke-width="4" stroke-linecap="round"/><path d="M19 37l2.6 1.5M32 25v3M45 37l-2.6 1.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-opacity=".7"/><path d="M32 44l9.5-11" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/><circle cx="32" cy="44" r="4" fill="#fff"/><path d="M14 52h7l2.5-4 3 6 2.5-4H50" fill="none" stroke="#f3c252" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <text x="1052" y="146" font-size="13" fill="#CBD5E1" text-anchor="middle">Vận hành</text>
+  </g>
+  <g class="noi" style="animation-delay:1.80s">
+    <line x1="1154" y1="152" x2="1154" y2="196" stroke="#94A3B8" stroke-width="2" stroke-dasharray="5 5"><animate attributeName="stroke-dashoffset" from="20" to="0" dur="1.6s" repeatCount="indefinite"/></line>
+    <svg x="1122" y="64" width="64" height="64" viewBox="0 0 64 64"><defs><linearGradient id="du-lieu-sang" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient><linearGradient id="du-lieu-nen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6d28a8"/><stop offset="1" stop-color="#4c1d80"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#du-lieu-nen)"/><rect x="1" y="1" width="62" height="62" rx="15" fill="url(#du-lieu-sang)"/><rect x=".75" y=".75" width="62.5" height="62.5" rx="15.25" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="1.5"/><path d="M14 18v26c0 3.9 7.2 7 16 7s16-3.1 16-7V18" fill="#fff" fill-opacity=".18" stroke="#fff" stroke-width="3"/><ellipse cx="30" cy="18" rx="16" ry="6.5" fill="#fff"/><path d="M14 27c0 3.9 7.2 7 16 7s16-3.1 16-7M14 36c0 3.9 7.2 7 16 7s16-3.1 16-7" fill="none" stroke="#fff" stroke-width="2.6"/><circle cx="46" cy="46" r="9" fill="#f3c252" stroke="#4c1d80" stroke-width="2"/><path d="M42.6 46.3l2.4 2.4 4.4-4.8" fill="none" stroke="#4c1d80" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <text x="1154" y="146" font-size="13" fill="#CBD5E1" text-anchor="middle">Quản trị dữ liệu</text>
+  </g>
+    <rect x="706" y="196" width="512" height="64" rx="14" fill="#12A894" fill-opacity=".16" stroke="#12A894" stroke-width="2"/>
+    <text x="962" y="226" font-size="20" font-weight="700" fill="#FFFFFF" text-anchor="middle">Desktiny</text>
+    <text x="962" y="247" font-size="13" fill="#CBD5E1" text-anchor="middle">cài .zip ở Quản trị › Gói giao diện và Quản trị › Plugin</text>
+  </g>
+</svg>

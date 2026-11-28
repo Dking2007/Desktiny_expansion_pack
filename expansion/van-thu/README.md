@@ -3,6 +3,8 @@ SPDX-License-Identifier: Apache-2.0
 SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
 -->
 
+<img src="packs/van-thu/assets/logo.svg" width="72" align="right" alt="Logo">
+
 # Bản mẫu: Văn thư – điều hành
 
 > Gói `vn.mo-rong.van-thu` **1.1.1** · **1** plugin riêng + **3** dùng chung · Cần Desktiny **3.1.0** trở lên · Giấy phép Apache-2.0

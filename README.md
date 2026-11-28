@@ -5,6 +5,12 @@ SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
 
 Tiếng Việt | [English](README_EN.md)
 
+<p align="center">
+<img src="docs/images/banner.svg" width="100%" alt="Desktiny Expansion Pack: năm bản mở rộng mẫu (Nhân sự, Một cửa, Văn thư, Vận hành, Quản trị dữ liệu) cắm vào Desktiny qua gói giao diện và plugin">
+</p>
+
+<p align="center"><img src="docs/images/desktiny-logo.svg" width="96" alt="Logo Desktiny"></p>
+
 <h1 align="center">Desktiny Expansion Pack</h1>
 
 <p align="center">
@@ -26,9 +32,14 @@ Gói giao diện và plugin cho nhân sự, một cửa cấp xã, văn thư, v�
 <a href="sdk">SDK</a>
 </p>
 
+<p align="center">
+<img src="docs/images/hero-ghep.jpg" width="100%" alt="Các màn hình Desktiny sau khi cài bản mở rộng: trang chủ với gói Một cửa, Văn thư, Nhân sự; plugin Cảm biến thiết bị; cổng nộp hồ sơ trên điện thoại (dữ liệu mẫu giả)"><br>
+<sub>Desktiny sau khi cài các bản mở rộng mẫu (dữ liệu mẫu giả).</sub>
+</p>
+
 | Expansion Pack | Desktiny tối thiểu | Đã chạy thử |
 |---|---|---|
-| 1.1.0 | 3.1.0 | 28/11/2026, CI trên GitHub (job `cai-vao-desktiny`, [lần chạy 46137625759](https://github.com/Dking2007/Desktiny_expansion_pack/actions/runs/46137625759)) với Desktiny tag `v3.1.0`: 6 đạt, 2 bỏ qua (B1, B8: hai lỗi đã sửa sau 3.1.0); trên máy với Desktiny nhánh `tich-hop/olp-2026-11-28` (`610f2a3`): 8/8 đạt; 27/11/2026: cài thật 3 gói + 9 plugin vào Desktiny `main` (`c4ccb9f`), kiểm sức khỏe 7 máy chủ plugin đạt |
+| 1.1.0 | 3.1.0 | 28/11/2026: job CI `cai-vao-desktiny` trên GitHub cài mọi gói và plugin vào Desktiny tag `v3.1.0` rồi chạy luồng ([lần chạy 46137625759](https://github.com/Dking2007/Desktiny_expansion_pack/actions/runs/46137625759)): 6 đạt, 2 bỏ qua (B1, B8: hai lỗi Desktiny đã sửa sau 3.1.0); với Desktiny `main` (bản sẽ phát hành 3.2.0) chạy đủ trên máy; cùng ngày duyệt tay một hồ sơ Một cửa trên bản Desktiny dựng từ `main`, hồ sơ đóng đúng |
 
 > Chưa có bản phát hành trên GitHub (dự kiến `v1.1.0`). Hiện lấy các tệp `.zip` bằng cách đóng gói từ mã nguồn,
 > xem mục [Đóng gói](#đóng-gói).
@@ -177,10 +188,10 @@ Dữ liệu trong mọi ảnh và GIF là dữ liệu mẫu giả.
 | <img src="expansion/nhan-su/packs/nhan-su/assets/logo.svg" width="56" alt="Logo Nhân sự"><br>[**Nhân sự doanh nghiệp**](expansion/nhan-su/README.md) `nhan-su` | Bộ phận nhân sự của doanh nghiệp, cơ quan nhỏ | 7 quy trình đơn từ, 3 luồng tự động, quy chế cho trợ lý AI | Chấm công GPS, Tiền lương và KPI, Nhắc hạn hồ sơ |
 | <img src="expansion/mot-cua-xa/packs/mot-cua-xa/assets/logo.svg" width="56" alt="Logo Một cửa"><br>[**Một cửa cấp xã**](expansion/mot-cua-xa/README.md) `mot-cua-xa` | Bộ phận một cửa của UBND cấp xã | 6 thủ tục hộ tịch, chứng thực, hoà giải; 3 luồng tự động | Sổ văn bản, Ký số, Tiếp nhận trực tuyến, Tính hạn, Đọc giấy tờ |
 | <img src="expansion/van-thu/packs/van-thu/assets/logo.svg" width="56" alt="Logo Văn thư"><br>[**Văn thư – điều hành**](expansion/van-thu/README.md) `van-thu` | Văn thư, văn phòng của cơ quan | Xử lý văn bản đến, ban hành văn bản đi, nộp lưu hồ sơ; 3 luồng tự động; hướng dẫn văn thư cho trợ lý AI | Sổ văn bản đến; dùng chung Sổ văn bản, Ký số, Tính hạn của bản Một cửa |
-| [**Vận hành – giám sát thiết bị**](expansion/van-hanh/README.md) `van-hanh` | Bộ phận vận hành, kỹ thuật có thiết bị cần theo dõi | Quy trình xử lý sự cố thiết bị; mẫu luồng “cảm biến vượt ngưỡng → hồ sơ sự cố”; không đổi giao diện | Cảm biến thiết bị (nhận số đo qua HTTP, cảnh báo vượt ngưỡng) |
-| [**Quản trị dữ liệu**](expansion/quan-tri-du-lieu/README.md) `quan-tri-du-lieu` (minh hoạ) | Người quản trị Desktiny | Không có | Lưu trữ lịch sử hồ sơ: chép hồ sơ đã duyệt, kết thúc (đã che CCCD, số điện thoại, email) ra tệp tháng có chuỗi băm; kiểm toàn vẹn, truy nguồn về hồ sơ gốc |
+| <img src="expansion/van-hanh/logo.svg" width="56" alt="Logo Vận hành"><br>[**Vận hành – giám sát thiết bị**](expansion/van-hanh/README.md) `van-hanh` | Bộ phận vận hành, kỹ thuật có thiết bị cần theo dõi | Quy trình xử lý sự cố thiết bị; mẫu luồng “cảm biến vượt ngưỡng → hồ sơ sự cố”; không đổi giao diện | Cảm biến thiết bị (nhận số đo qua HTTP, cảnh báo vượt ngưỡng) |
+| <img src="expansion/quan-tri-du-lieu/logo.svg" width="56" alt="Logo Quản trị dữ liệu"><br>[**Quản trị dữ liệu**](expansion/quan-tri-du-lieu/README.md) `quan-tri-du-lieu` (minh hoạ) | Người quản trị Desktiny | Không có | Lưu trữ lịch sử hồ sơ: chép hồ sơ đã duyệt, kết thúc (đã che CCCD, số điện thoại, email) ra tệp tháng có chuỗi băm; kiểm toàn vẹn, truy nguồn về hồ sơ gốc |
 
-Bản Vận hành và Quản trị dữ liệu chưa có logo riêng. Mỗi bản mẫu có README riêng: nội dung, cách cài, cấu hình, luồng
+Mỗi bản mẫu có README riêng: nội dung, cách cài, cấu hình, luồng
 gợi ý và những gì cần sửa trước khi dùng thật. Tên cơ quan trong bản mẫu là tên giả; quy chế, thời hạn và mức tiền chỉ
 để minh hoạ.
 
@@ -378,13 +389,13 @@ Chi tiết và nguồn: [THIRD_PARTY.md](THIRD_PARTY.md), [NOTICE](NOTICE). Mọ
 ```
 build.bat, build.sh     nút đóng gói (gọi scripts/dong_goi.py)
 scripts/                dong_goi.py (kiểm manifest, đóng gói), kiem_phien_ban.py, gia_lap_cam_bien.py
-expansion/<bản>/        các bản mở rộng (README.md, packs/, plugins/)
+expansion/<bản>/        các bản mở rộng (README.md, logo, packs/, plugins/, dung-chung.json)
 lib/mo_rong/            bộ khung máy chủ plugin: định tuyến, kiểm chữ ký, phiên người xem, giới hạn tần suất, SQLite, tệp Word, tiện ích tiếng Việt
 lib/desktiny_plugin/    bản sao SDK Python của Desktiny, cập nhật cùng Desktiny
 sdk/                    SDK khung của Desktiny, mo-rong.js (trang gọi máy chủ plugin), chung.css, phông chữ
 tests/                  test máy chủ plugin (Desktiny giả), test đóng gói, tests/js (Node), tests/desktiny (Desktiny thật)
 deploy/                 Dockerfile, compose.yaml, .env.example
-docs/                   hướng dẫn tự tạo bản mở rộng, ảnh và GIF trong README
+docs/                   hướng dẫn tự tạo bản mở rộng; images/ (banner, logo Desktiny, ảnh, sơ đồ động), media/ (GIF)
 ```
 
 ### Kiểm thử

@@ -3,6 +3,8 @@ SPDX-License-Identifier: Apache-2.0
 SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
 -->
 
+<img src="logo.svg" width="72" align="right" alt="Logo">
+
 # Bản minh hoạ: Quản trị dữ liệu
 
 > **1** plugin riêng · Cần Desktiny **3.1.0** trở lên · Giấy phép Apache-2.0

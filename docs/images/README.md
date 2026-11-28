@@ -12,6 +12,9 @@ trong ảnh là **dữ liệu mẫu giả**: tên người, cơ quan, số CCCD,
 
 | Tệp | Nội dung | Dùng ở | Nguồn |
 |---|---|---|---|
+| `banner.svg` | Banner đầu trang: logo Desktiny, tên repo, năm bản mẫu cắm vào Desktiny; chuyển động nhẹ, tắt khi giảm chuyển động | [README](../../README.md), [README_EN](../../README_EN.md) đầu trang | Vẽ tay SVG, nhúng logo các bản mẫu và logo Desktiny, 28/11/2026 |
+| `desktiny-logo.svg` | Logo Desktiny "Văn bản đã duyệt" | README, README_EN đầu trang (banner nhúng bản nền tối của cùng logo) | Chép nguyên từ `design-system/desktiny/logo/` của [Desktiny](https://github.com/Dking2007/DXOS_Desktiny) (Apache-2.0, Desktiny contributors); cập nhật khi logo gốc đổi |
+| `hero-ghep.jpg` | Ảnh ghép: trang chủ với gói Một cửa, Văn thư, Nhân sự; plugin Cảm biến; cổng nộp trên điện thoại | README, README_EN đầu trang | Ghép bằng Playwright (HTML) từ các ảnh chụp trong thư mục này, dữ liệu mẫu giả, 28/11/2026 |
 | `vong-doi-ban-mo-rong-dong.svg` | Vòng đời bản mở rộng: đóng gói, cài và duyệt quyền, Desktiny chạy cùng máy chủ plugin và nguồn bên ngoài | [README](../../README.md), [README_EN](../../README_EN.md) mục Luồng dữ liệu | Vẽ tay SVG, 2026 |
 | `luong-cam-bien-dong.svg` | Số đo vượt ngưỡng thành hồ sơ sự cố (hàng đợi, thử lại); hồ sơ kết thúc thành dòng JSONL nối sha256 | như trên, mục Các bản mẫu | Vẽ tay SVG, 2026 |
 | `plugin-so-van-ban.png` | Plugin Sổ văn bản | như trên | Playwright, demo, 28/11/2026 |

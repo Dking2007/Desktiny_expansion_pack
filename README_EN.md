@@ -5,6 +5,12 @@ SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
 
 [Tiếng Việt](README.md) | English
 
+<p align="center">
+<img src="docs/images/banner.svg" width="100%" alt="Desktiny Expansion Pack: five sample expansions (HR, One-stop, Records office, Operations, Data governance) plugging into Desktiny through packs and plugins">
+</p>
+
+<p align="center"><img src="docs/images/desktiny-logo.svg" width="96" alt="Desktiny logo"></p>
+
 <h1 align="center">Desktiny Expansion Pack</h1>
 
 <p align="center">
@@ -26,9 +32,14 @@ Theme packs and plugins for HR, commune one-stop service, records office, equipm
 <a href="sdk">SDK</a>
 </p>
 
+<p align="center">
+<img src="docs/images/hero-ghep.jpg" width="100%" alt="Desktiny screens after installing the expansions: home page with the One-stop, Records office and HR packs; the equipment sensor plugin; the public intake page on a phone (fake sample data)"><br>
+<sub>Desktiny with the sample expansions installed (fake sample data).</sub>
+</p>
+
 | Expansion Pack | Minimum Desktiny | Tested |
 |---|---|---|
-| 1.1.0 | 3.1.0 | 28 Nov 2026: `tests/desktiny` (installs every pack and plugin, then runs the flows) passes 5/5 against the `v3.1.0` source tag; 27 Nov 2026: installed 3 packs + 9 plugins into Desktiny `main` (`c4ccb9f`), health check of 7 plugin servers passed |
+| 1.1.0 | 3.1.0 | 28 Nov 2026: the GitHub CI job `cai-vao-desktiny` installs every pack and plugin into Desktiny tag `v3.1.0` and runs the flows ([run 46137625759](https://github.com/Dking2007/Desktiny_expansion_pack/actions/runs/46137625759)): 6 passed, 2 skipped (B1, B8: two Desktiny bugs fixed after 3.1.0); against Desktiny `main` (to be released as 3.2.0) all pass locally; the same day a One-stop dossier was approved by hand on a Desktiny built from `main` and closed as expected |
 
 > There is no GitHub release yet (`v1.1.0` is planned). For now, get the `.zip` files by building from source, see
 > [Packaging](#packaging). Most documents linked below are in Vietnamese.
@@ -179,10 +190,10 @@ All data in the images and GIFs is fake sample data.
 | <img src="expansion/nhan-su/packs/nhan-su/assets/logo.svg" width="56" alt="HR logo"><br>[**Enterprise HR**](expansion/nhan-su/README.md) `nhan-su` | HR department of a company or small agency | 7 request workflows, 3 automations, policies for the AI assistant | GPS timekeeping, Payroll and KPI, Document deadline reminders |
 | <img src="expansion/mot-cua-xa/packs/mot-cua-xa/assets/logo.svg" width="56" alt="One-stop logo"><br>[**Commune one-stop**](expansion/mot-cua-xa/README.md) `mot-cua-xa` | One-stop desk of a commune People's Committee | 6 procedures (civil registration, certification, mediation); 3 automations | Document register, Digital signing, Online intake, Deadline calculation, Document reading |
 | <img src="expansion/van-thu/packs/van-thu/assets/logo.svg" width="56" alt="Records office logo"><br>[**Records office**](expansion/van-thu/README.md) `van-thu` | Records clerks and administrative office | Handling incoming documents, issuing outgoing documents, filing; 3 automations; records guidance for the AI assistant | Incoming document register; shares the Document register, Digital signing and Deadline calculation plugins of the one-stop expansion |
-| [**Operations: equipment monitoring**](expansion/van-hanh/README.md) `van-hanh` | Operations and technical teams with equipment to watch | An equipment-incident workflow; a flow template "sensor over threshold → incident case"; no change to the look | Device sensors (receive readings over HTTP, alert on threshold) |
-| [**Data governance**](expansion/quan-tri-du-lieu/README.md) `quan-tri-du-lieu` (illustration) | Desktiny administrators | None | Case history archive: copies approved and closed cases (national ID, phone and email masked) into monthly files with a hash chain; integrity check, lineage back to the source case |
+| <img src="expansion/van-hanh/logo.svg" width="56" alt="Operations logo"><br>[**Operations: equipment monitoring**](expansion/van-hanh/README.md) `van-hanh` | Operations and technical teams with equipment to watch | An equipment-incident workflow; a flow template "sensor over threshold → incident case"; no change to the look | Device sensors (receive readings over HTTP, alert on threshold) |
+| <img src="expansion/quan-tri-du-lieu/logo.svg" width="56" alt="Data governance logo"><br>[**Data governance**](expansion/quan-tri-du-lieu/README.md) `quan-tri-du-lieu` (illustration) | Desktiny administrators | None | Case history archive: copies approved and closed cases (national ID, phone and email masked) into monthly files with a hash chain; integrity check, lineage back to the source case |
 
-The Operations and Data governance expansions have no logo of their own yet. Each sample has its own README (in
+Each sample has its own README (in
 Vietnamese): contents, installation, configuration, suggested flows and what to change before real use. Agency names in
 the samples are made up; regulations, deadlines and amounts are illustrations only.
 
@@ -336,13 +347,13 @@ Details and sources: [THIRD_PARTY.md](THIRD_PARTY.md), [NOTICE](NOTICE). Every f
 ```
 build.bat, build.sh     packaging button (calls scripts/dong_goi.py)
 scripts/                dong_goi.py (validate, package), kiem_phien_ban.py, gia_lap_cam_bien.py
-expansion/<name>/       the expansions (README.md, packs/, plugins/)
+expansion/<name>/       the expansions (README.md, logo, packs/, plugins/, dung-chung.json)
 lib/mo_rong/            plugin server kit: routing, signature checks, viewer sessions, rate limits, SQLite, Word files, Vietnamese helpers
 lib/desktiny_plugin/    copy of Desktiny's Python SDK, updated together with Desktiny
 sdk/                    Desktiny's frame SDK, mo-rong.js (pages call the plugin server), chung.css, fonts
 tests/                  plugin server tests (fake Desktiny), packaging tests, tests/js (Node), tests/desktiny (real Desktiny)
 deploy/                 Dockerfile, compose.yaml, .env.example
-docs/                   build-your-own guide, images and GIFs used in the README
+docs/                   build-your-own guide; images/ (banner, Desktiny logo, screenshots, animated diagrams), media/ (GIFs)
 ```
 
 | Command | Checks | Needs |

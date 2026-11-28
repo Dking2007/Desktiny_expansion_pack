@@ -3,7 +3,7 @@
 version = 1
 
 [[annotations]]
-path = ["**/*.json", "**/*.md", "**/*.svg", "**/*.png", "**/*.gif", "**/*.webp", ".gitignore", ".mailmap", "deploy/.env.example"]
+path = ["**/*.json", "**/*.md", "**/*.svg", "**/*.png", "**/*.jpg", "**/*.gif", "**/*.webp", ".gitignore", ".mailmap", "deploy/.env.example"]
 precedence = "closest"
 SPDX-FileCopyrightText = "2026 Desktiny Expansion Pack contributors"
 SPDX-License-Identifier = "Apache-2.0"
