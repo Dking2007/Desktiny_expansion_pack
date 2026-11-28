@@ -5,13 +5,15 @@ SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
 
 # Nguồn gốc ảnh và GIF
 
-Mọi ảnh được chụp tự động bằng Playwright từ bản demo Desktiny đã cài các bản mở rộng, ngày 28/11/2026. Dữ liệu trong
-ảnh là **dữ liệu mẫu giả**: tên người, cơ quan, số CCCD, số điện thoại và số hồ sơ đều không có thật.
+Mọi ảnh chụp được chụp tự động bằng Playwright từ bản demo Desktiny đã cài các bản mở rộng, ngày 28/11/2026. Dữ liệu
+trong ảnh là **dữ liệu mẫu giả**: tên người, cơ quan, số CCCD, số điện thoại và số hồ sơ đều không có thật. Hai sơ đồ
+`*-dong.svg` vẽ tay, chuyển động bằng CSS và SMIL, không có script, phông hay ảnh ngoài; khi người xem bật giảm chuyển
+động thì chỉ còn sơ đồ tĩnh.
 
 | Tệp | Nội dung | Dùng ở | Nguồn |
 |---|---|---|---|
-| `mot-cua-trang-chu.png` | Trang chủ Desktiny sau khi cài gói Một cửa cấp xã | [README](../../README.md), [README_EN](../../README_EN.md) mục Giao diện | Playwright, demo, 28/11/2026 |
-| `goi-giao-dien.png` | Cùng Desktiny trước và sau khi cài gói giao diện | như trên | Playwright, demo, 28/11/2026 |
+| `vong-doi-ban-mo-rong-dong.svg` | Vòng đời bản mở rộng: đóng gói, cài và duyệt quyền, Desktiny chạy cùng máy chủ plugin và nguồn bên ngoài | [README](../../README.md), [README_EN](../../README_EN.md) mục Luồng dữ liệu | Vẽ tay SVG, 2026 |
+| `luong-cam-bien-dong.svg` | Số đo vượt ngưỡng thành hồ sơ sự cố (hàng đợi, thử lại); hồ sơ kết thúc thành dòng JSONL nối sha256 | như trên, mục Các bản mẫu | Vẽ tay SVG, 2026 |
 | `plugin-so-van-ban.png` | Plugin Sổ văn bản | như trên | Playwright, demo, 28/11/2026 |
 | `plugin-cham-cong.png` | Plugin Chấm công | như trên | Playwright, demo, 28/11/2026 |
 | `plugin-cam-bien.png` | Plugin Cảm biến thiết bị | như trên | Playwright, demo, 28/11/2026 |
@@ -19,6 +21,11 @@ Mọi ảnh được chụp tự động bằng Playwright từ bản demo Deskt
 | `cong-nop-dien-thoai.png` | Cổng nộp hồ sơ trực tuyến trên màn hình điện thoại | như trên | Playwright, demo, 28/11/2026 |
 | `../media/gif-doi-nghiep-vu.gif` | Quản trị viên cài một gói, Desktiny đổi nghiệp vụ | như trên | Playwright (chuỗi khung hình), demo, 28/11/2026 |
 | `../media/gif-cong-dan-nop.gif` | Người dân nộp hồ sơ, cán bộ nhận | như trên | Playwright (chuỗi khung hình), demo, 28/11/2026 |
+| `goi-truoc-sau.png` | Trước và sau khi cài gói Một cửa | README, README_EN | Ghép bằng Pillow từ ảnh chụp Playwright, dữ liệu mẫu giả |
+| `goi-mot-cua.png` | Trang chủ với gói Một cửa cấp xã | README, README_EN | Chụp bằng Playwright từ bản demo (mã nhánh tích hợp ngày 28/11/2026), dữ liệu mẫu giả |
+| `goi-nhan-su.png` | Trang chủ với gói Nhân sự doanh nghiệp | README, README_EN | Chụp bằng Playwright từ bản demo (mã nhánh tích hợp ngày 28/11/2026), dữ liệu mẫu giả |
+| `goi-van-thu.png` | Trang chủ với gói Văn thư – điều hành | README, README_EN | Chụp bằng Playwright từ bản demo (mã nhánh tích hợp ngày 28/11/2026), dữ liệu mẫu giả |
+| `../media/gif-canh-bao-cam-bien.gif` | Cảm biến vượt ngưỡng tạo hồ sơ sự cố | README, README_EN | Chụp bằng Playwright từ bản demo (mã nhánh tích hợp ngày 28/11/2026), dữ liệu mẫu giả |
 
 ## Ảnh trong README của từng bản mở rộng
 

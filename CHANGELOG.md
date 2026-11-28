@@ -13,6 +13,7 @@ SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
 Bản phát hành đầu tiên của Desktiny Expansion Pack. Cần Desktiny 3.1.0 trở lên.
 
 ### Added
+- README: hai sơ đồ động vẽ tay bằng SVG (vòng đời bản mở rộng; cảm biến vượt ngưỡng và lưu trữ lịch sử) trong `docs/images/*-dong.svg`; sơ đồ Mermaid giữ lại trong mục thu gọn *Sơ đồ dạng chữ*.
 - Bản mở rộng Vận hành – giám sát thiết bị: plugin Cảm biến thiết bị (cổng 9208) nhận số đo qua HTTP có khóa thiết bị, vượt ngưỡng thì gửi sự kiện (giữ hàng chờ khi Desktiny lỗi) để mẫu luồng tạo hồ sơ sự cố; `scripts/gia_lap_cam_bien.py` giả lập số đo.
 - Bản minh họa Quản trị dữ liệu: plugin Lưu trữ lịch sử hồ sơ (cổng 9209) chép hồ sơ đã duyệt, kết thúc (đã che CCCD, số điện thoại, email) ra tệp JSONL theo tháng có chuỗi băm sha256; kiểm toàn vẹn, truy nguồn về hồ sơ gốc, đánh dấu tháng cần chuyển kho lạnh.
 - `scripts/kiem_phien_ban.py`: workflow phát hành kiểm số phiên bản theo SemVer; gói, plugin đổi nội dung phải tăng `version`.

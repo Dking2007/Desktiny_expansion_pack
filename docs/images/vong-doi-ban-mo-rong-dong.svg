@@ -1,0 +1,165 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 770" width="1120" height="770" role="img" aria-labelledby="tt dd">
+<title id="tt">Vòng đời một bản mở rộng Desktiny: đóng gói, cài, chạy</title>
+<desc id="dd">Phần 1, đóng gói và cài: mã nguồn trong expansion/ được đóng gói bằng build.bat hoặc scripts/dong_goi.py, bước này kiểm mọi manifest; kết quả là các tệp .zip trong dist/: gói giao diện goi-*.zip, plugin plugin-*.zip và may-chu-plugin-*.zip. Quản trị viên tải .zip lên Desktiny, xem trước, duyệt quyền; Desktiny hiện token và khoá ký đúng một lần, quản trị viên chép vào deploy/.env. Phần 2, đang chạy: Desktiny có gói giao diện, plugin đóng gói trong khung sandbox, outbox gửi sự kiện ký HMAC, bước quy trình plugin_action, API plugin với token có phạm vi, luồng tự động nhận sự kiện của plugin. Máy chủ plugin chạy bằng Docker Compose, chín plugin kết nối ở cổng 9201 đến 9209, mỗi plugin một volume SQLite. Bên ngoài: người dân nộp ở /cong/ của plugin Tiếp nhận trực tuyến; thiết bị gửi số đo tới /api/so-do của plugin Cảm biến kèm khoá thiết bị.</desc>
+<style>
+svg{font-family:'Be Vietnam Pro','Segoe UI',Arial,sans-serif}
+text{fill:#0F172A;font-size:14px}
+.t{font-size:26px;font-weight:700}
+.h{font-size:16px;font-weight:700}
+.k{font-size:14px;font-weight:700;fill:#475569;letter-spacing:.5px}
+.m{fill:#475569}
+.w{fill:#fff}.wm{fill:#D6E0EC}
+.c{font-family:Consolas,'Courier New',monospace}
+.b{font-weight:700}
+.mid{text-anchor:middle}
+.band{fill:#F4F7FA;stroke:#CBD5E1;stroke-width:1.5}
+.box{fill:#fff;stroke:#94A3B8;stroke-width:1.5}
+.own{fill:#1E3A5F}
+.chip{fill:#fff;stroke:#CBD5E1}
+.zip{fill:#F0ECFB;stroke:#D6CDF3}
+.l{fill:none;stroke-width:2.2}
+.rq{stroke:#2563EB}.wr{stroke:#15803D}.ev{stroke:#92600A}.fi{stroke:#5D43B5}.gy{stroke:#94A3B8;stroke-dasharray:6 4}
+.ring{fill:none;stroke:#F1B862;stroke-width:5}
+.cap,.ring{opacity:0;animation:hien 12s linear infinite}
+@keyframes hien{0%,15.8%{opacity:1}16.6%,100%{opacity:0}}
+.s2{animation-delay:2s}.s3{animation-delay:4s}.s4{animation-delay:6s}.s5{animation-delay:8s}.s6{animation-delay:10s}
+.dot{stroke:#fff;stroke-width:2}
+.tinh{display:none}
+@media (prefers-reduced-motion:reduce){.dong,.cap,.ring{display:none}.tinh{display:inline}}
+</style>
+<defs>
+<marker id="aq" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#2563EB"/></marker>
+<marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#15803D"/></marker>
+<marker id="ae" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#92600A"/></marker>
+<marker id="af" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#5D43B5"/></marker>
+<marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#94A3B8"/></marker>
+</defs>
+<rect width="1120" height="770" rx="16" fill="#F8FAFC"/>
+<text x="24" y="44" class="t">Một bản mở rộng: đóng gói, cài, chạy</text>
+<text x="24" y="70" class="m" font-size="15">Không sửa mã Desktiny · plugin chỉ làm được phần quản trị viên đã duyệt</text>
+
+<!-- phần 1 -->
+<rect x="20" y="88" width="1080" height="146" rx="12" class="band"/>
+<text x="36" y="112" class="k">1 · ĐÓNG GÓI VÀ CÀI</text>
+<rect x="36" y="124" width="200" height="94" rx="10" class="box"/>
+<text x="136" y="150" class="h mid">Mã nguồn</text>
+<text x="136" y="174" class="c mid">expansion/&lt;bản&gt;/</text>
+<text x="136" y="196" class="m mid">gói, plugin, README</text>
+<rect x="286" y="124" width="222" height="94" rx="10" class="box"/>
+<text x="397" y="150" class="h mid">Đóng gói</text>
+<text x="397" y="174" class="c mid">build.bat · dong_goi.py</text>
+<text x="397" y="196" class="m mid">kiểm mọi manifest trước</text>
+<rect x="558" y="124" width="222" height="94" rx="10" class="box"/>
+<text x="574" y="146" class="h c">dist/</text>
+<rect x="566" y="154" width="206" height="18" rx="4" class="zip"/><text x="572" y="168" class="c" font-size="14">goi-*.zip, plugin-*.zip</text>
+<rect x="566" y="178" width="206" height="18" rx="4" class="zip"/><text x="572" y="192" class="c" font-size="14">may-chu-plugin-*.zip</text>
+<text x="574" y="212" class="m">cùng mã nguồn, cùng tệp</text>
+<rect x="830" y="124" width="254" height="94" rx="10" class="own"/>
+<text x="957" y="150" class="h mid w">Quản trị Desktiny</text>
+<text x="957" y="174" class="mid wm">xem trước → duyệt quyền</text>
+<text x="957" y="196" class="mid wm">token, khoá ký hiện một lần</text>
+
+<path d="M236,171H284" class="l fi" marker-end="url(#af)"/>
+<path d="M508,171H556" class="l fi" marker-end="url(#af)"/>
+<path d="M780,171H828" class="l fi" marker-end="url(#af)"/>
+
+<!-- phần 2 -->
+<rect x="20" y="250" width="1080" height="394" rx="12" class="band"/>
+<text x="36" y="274" class="k">2 · ĐANG CHẠY</text>
+
+<rect x="36" y="290" width="372" height="338" rx="10" class="own"/>
+<text x="52" y="316" class="h w">Desktiny ≥ 3.1.0</text>
+<rect x="52" y="330" width="340" height="34" rx="8" class="chip"/><text x="64" y="352"><tspan class="b">Gói giao diện:</tspan> từ ngữ, màu, quy trình</text>
+<rect x="52" y="374" width="340" height="34" rx="8" class="chip"/><text x="64" y="396"><tspan class="b">Plugin đóng gói:</tspan> trang trong sandbox</text>
+<rect x="52" y="418" width="340" height="34" rx="8" class="chip"/><text x="64" y="440"><tspan class="b">Outbox:</tspan> sự kiện ký HMAC-SHA256</text>
+<rect x="52" y="462" width="340" height="34" rx="8" class="chip"/><text x="64" y="484"><tspan class="b">Bước quy trình</tspan> <tspan class="c">plugin_action</tspan></text>
+<rect x="52" y="506" width="340" height="34" rx="8" class="chip"/><text x="64" y="528"><tspan class="b">API plugin:</tspan> token có phạm vi</text>
+<rect x="52" y="550" width="340" height="34" rx="8" class="chip"/><text x="64" y="572"><tspan class="b">Luồng tự động</tspan> ← sự kiện plugin</text>
+<text x="52" y="612" class="wm">mọi lời gọi plugin ghi vào nhật ký plugin</text>
+
+<rect x="520" y="290" width="280" height="338" rx="10" class="box"/>
+<text x="660" y="316" class="h mid">Máy chủ plugin</text>
+<text x="660" y="338" class="m mid">Docker Compose, một image</text>
+<g class="c">
+<text x="560" y="368">9201 cham-cong</text>
+<text x="560" y="392">9202 luong-kpi</text>
+<text x="560" y="416">9203 so-van-ban</text>
+<text x="560" y="440">9204 ky-so</text>
+<text x="560" y="464">9205 nhac-han</text>
+<text x="560" y="488" class="b">9206 tiep-nhan</text>
+<text x="560" y="512">9207 so-van-ban-den</text>
+<text x="560" y="536" class="b">9208 cam-bien</text>
+<text x="560" y="560">9209 luu-tru-lich-su</text>
+</g>
+<text x="660" y="604" class="m mid">mỗi plugin một volume SQLite</text>
+
+<rect x="880" y="310" width="204" height="100" rx="10" class="box"/>
+<text x="982" y="336" class="h mid">Người dân</text>
+<text x="982" y="358" class="c mid">/cong/nop.html</text>
+<text x="982" y="380" class="m mid">không cần tài khoản,</text>
+<text x="982" y="398" class="m mid">tra cứu bằng mã</text>
+<rect x="880" y="440" width="204" height="100" rx="10" class="box"/>
+<text x="982" y="466" class="h mid">Thiết bị</text>
+<text x="982" y="488" class="c mid">POST /api/so-do</text>
+<text x="982" y="510" class="c mid">X-Device-Key</text>
+<text x="982" y="530" class="m mid">30 số đo/phút</text>
+
+<!-- mũi tên phần 2 -->
+<path d="M600,218V288" class="l fi" marker-end="url(#af)"/>
+<text x="610" y="244" class="m">giải nén,</text>
+<text x="610" y="264" class="c">docker compose up</text>
+<path d="M957,218V256H760V288" class="l gy" marker-end="url(#ag)"/>
+<text x="967" y="240" class="m">chép tay vào</text><text x="967" y="258" class="c">deploy/.env</text>
+<path d="M392,435H518" class="l ev" marker-end="url(#ae)"/>
+<path d="M392,479H518" class="l rq" marker-end="url(#aq)"/>
+<path d="M520,523H394" class="l rq" marker-end="url(#aq)"/>
+<path d="M520,567H394" class="l ev" marker-end="url(#ae)"/>
+<text x="456" y="428" class="mid m">sự kiện</text>
+<text x="456" y="516" class="mid m">gọi API</text>
+<path d="M880,360H840V483H802" class="l rq" marker-end="url(#aq)"/>
+<path d="M880,490H860V531H802" class="l rq" marker-end="url(#aq)"/>
+
+<!-- vòng sáng -->
+<rect x="282" y="120" width="230" height="102" rx="12" class="ring"/>
+<rect x="826" y="120" width="262" height="102" rx="12" class="ring s2"/>
+<rect x="516" y="286" width="288" height="346" rx="12" class="ring s3"/>
+<rect x="876" y="306" width="212" height="238" rx="12" class="ring s4"/>
+<rect x="48" y="546" width="348" height="42" rx="10" class="ring s5"/>
+<rect x="48" y="414" width="348" height="42" rx="10" class="ring s6"/>
+<rect x="48" y="502" width="348" height="42" rx="10" class="ring s6"/>
+
+<!-- chấm chạy -->
+<g class="dong">
+<circle r="7" class="dot" fill="#5D43B5" opacity="0"><animateMotion dur="12s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.01;.06;1" calcMode="linear" path="M236,171H286"/><animate attributeName="opacity" dur="12s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.01;.065"/></circle>
+<circle r="7" class="dot" fill="#5D43B5" opacity="0"><animateMotion dur="12s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.09;.14;1" calcMode="linear" path="M508,171H558"/><animate attributeName="opacity" dur="12s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.09;.145"/></circle>
+<circle r="7" class="dot" fill="#5D43B5" opacity="0"><animateMotion dur="12s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.17;.22;1" calcMode="linear" path="M780,171H830"/><animate attributeName="opacity" dur="12s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.17;.225"/></circle>
+<circle r="7" class="dot" fill="#5D43B5" opacity="0"><animateMotion dur="12s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.34;.40;1" calcMode="linear" path="M600,218V290"/><animate attributeName="opacity" dur="12s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.34;.405"/></circle>
+<circle r="7" class="dot" fill="#94A3B8" opacity="0"><animateMotion dur="12s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.41;.48;1" calcMode="linear" path="M957,218V256H760V290"/><animate attributeName="opacity" dur="12s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.41;.485"/></circle>
+<circle r="7" class="dot" fill="#2563EB" opacity="0"><animateMotion dur="12s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.505;.57;1" calcMode="linear" path="M880,360H840V483H802"/><animate attributeName="opacity" dur="12s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.505;.575"/></circle>
+<circle r="7" class="dot" fill="#2563EB" opacity="0"><animateMotion dur="12s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.58;.64;1" calcMode="linear" path="M880,490H860V531H802"/><animate attributeName="opacity" dur="12s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.58;.645"/></circle>
+<circle r="7" class="dot" fill="#F1B862" stroke="#92600A" opacity="0"><animateMotion dur="12s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.68;.74;1" calcMode="linear" path="M520,567H392"/><animate attributeName="opacity" dur="12s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.68;.745"/></circle>
+<circle r="7" class="dot" fill="#F1B862" stroke="#92600A" opacity="0"><animateMotion dur="12s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.84;.89;1" calcMode="linear" path="M392,435H520"/><animate attributeName="opacity" dur="12s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.84;.895"/></circle>
+<circle r="7" class="dot" fill="#2563EB" opacity="0"><animateMotion dur="12s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.91;.96;1" calcMode="linear" path="M520,523H392"/><animate attributeName="opacity" dur="12s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;.91;.965"/></circle>
+</g>
+
+<!-- chú thích -->
+<rect x="20" y="660" width="1080" height="44" rx="10" fill="#fff" stroke="#CBD5E1"/>
+<text x="40" y="688" class="cap"><tspan class="b">Đóng gói:</tspan> kiểm mọi manifest theo quy tắc Desktiny dùng khi tải lên; có lỗi thì báo tệp nào, không ghi gì.</text>
+<text x="40" y="688" class="cap s2"><tspan class="b">Cài:</tspan> quản trị viên tải .zip lên, xem trước, duyệt quyền; plugin kết nối nhận token và khoá ký.</text>
+<text x="40" y="688" class="cap s3"><tspan class="b">Máy chủ plugin:</tspan> giải nén, chép token và khoá ký vào deploy/.env, chạy docker compose up.</text>
+<text x="40" y="688" class="cap s4"><tspan class="b">Bên ngoài:</tspan> người dân nộp ở /cong/, thiết bị gửi số đo kèm khoá riêng; không ai gọi thẳng Desktiny.</text>
+<text x="40" y="688" class="cap s5"><tspan class="b">Sự kiện của plugin:</tspan> plugin gửi sự kiện bằng token cài đặt, luồng tự động của Desktiny bắt đầu.</text>
+<text x="40" y="688" class="cap s6"><tspan class="b">Desktiny gọi plugin:</tspan> sự kiện ký HMAC; plugin gọi lại API trong phạm vi đã duyệt.</text>
+<text x="40" y="688" class="tinh"><tspan class="b">Đọc từ trên xuống:</tspan> đóng gói thành .zip, cài và duyệt quyền, rồi Desktiny và máy chủ plugin chạy cùng nhau.</text>
+
+<!-- chú giải -->
+<g transform="translate(20,724)">
+<path d="M0,10H34" class="l rq" marker-end="url(#aq)"/><text x="44" y="15">yêu cầu / phản hồi</text>
+<path d="M190,10H224" class="l wr" marker-end="url(#aw)"/><text x="234" y="15">ghi dữ liệu</text>
+<path d="M340,10H374" class="l ev" marker-end="url(#ae)"/><text x="384" y="15">sự kiện, tín hiệu</text>
+<path d="M520,10H554" class="l fi" marker-end="url(#af)"/><text x="564" y="15">tệp</text>
+<path d="M612,10H646" class="l gy" marker-end="url(#ag)"/><text x="656" y="15">thao tác tay</text>
+<rect x="780" y="1" width="24" height="18" rx="4" class="own"/><text x="812" y="15">Desktiny</text>
+<rect x="900" y="1" width="24" height="18" rx="4" class="box"/><text x="932" y="15">repo này, bên ngoài</text>
+</g>
+</svg>
