@@ -28,6 +28,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import dong_goi  # noqa: E402
 import httpx  # noqa: E402
 from conftest import load  # noqa: E402  (the expansion pack's own test helpers)
+from dx_workspace import automations as desktiny_automations  # noqa: E402
 from dx_workspace import plugins as desktiny_plugins  # noqa: E402
 from test_workspace import drain  # noqa: E402
 from test_workspace import world as world  # noqa: E402,F401  (Desktiny's two-service fixture)
@@ -386,6 +387,8 @@ def test_a_sensor_past_its_threshold_becomes_an_incident_dossier_for_the_configu
     desktiny_plugins.use_transport(None)
 
 
+@pytest.mark.skipif(not hasattr(desktiny_automations, "ending_outcome"),
+                    reason="Desktiny này chưa có bản sửa B1 (nhánh hết bước thì hồ sơ kết thúc); 3.1.0 còn kẹt hồ sơ.")
 def test_a_pack_dossier_whose_flow_ends_with_a_notice_closes_once_approved(world):  # noqa: F811
     """B1: the packs end their processes with a notice ("Báo người nộp"), not an ending step; the dossier must still
     close after the last approval instead of staying "đang xử lý" for good."""
