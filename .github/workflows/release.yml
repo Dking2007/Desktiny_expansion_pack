@@ -11,8 +11,13 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
       - uses: actions/setup-python@v5
         with: { python-version: "3.13" }
+      - name: Kiểm số phiên bản theo SemVer (kho, CHANGELOG, từng gói và plugin)
+        run: |
+          PREVIOUS="$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' "${GITHUB_REF_NAME}^" 2>/dev/null || true)"
+          python scripts/kiem_phien_ban.py --tag "${GITHUB_REF_NAME}" ${PREVIOUS:+--since "${PREVIOUS}"}
       - name: Đóng gói mã nguồn và các gói cài
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
