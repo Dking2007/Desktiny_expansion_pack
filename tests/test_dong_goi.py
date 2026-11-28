@@ -34,10 +34,10 @@ def test_each_expansion_gets_its_pack_and_plugins_as_zips_with_an_install_guide(
     assert not (out / "cu.txt").exists()  # the folder is emptied first
     assert dong_goi.expansions() == ["mot-cua-xa", "nhan-su", "quan-tri-du-lieu", "van-hanh", "van-thu"]
     assert {
-        "nhan-su/goi-nhan-su-1.1.0.zip", "nhan-su/plugin-cham-cong-1.1.0.zip", "nhan-su/plugin-luong-kpi-1.1.0.zip",
-        "nhan-su/plugin-nhac-han-1.1.0.zip", "mot-cua-xa/goi-mot-cua-xa-1.1.0.zip", "mot-cua-xa/plugin-so-van-ban-1.1.0.zip",
+        "nhan-su/goi-nhan-su-1.2.0.zip", "nhan-su/plugin-cham-cong-1.1.0.zip", "nhan-su/plugin-luong-kpi-1.1.0.zip",
+        "nhan-su/plugin-nhac-han-1.1.0.zip", "mot-cua-xa/goi-mot-cua-xa-1.2.0.zip", "mot-cua-xa/plugin-so-van-ban-1.1.0.zip",
         "mot-cua-xa/plugin-ky-so-1.1.0.zip", "mot-cua-xa/plugin-tiep-nhan-1.1.0.zip", "mot-cua-xa/plugin-tinh-han-1.1.0.zip",
-        "mot-cua-xa/plugin-doc-giay-to-1.1.0.zip", "van-thu/goi-van-thu-1.0.0.zip", "van-thu/plugin-so-van-ban-den-1.1.0.zip",
+        "mot-cua-xa/plugin-doc-giay-to-1.1.0.zip", "van-thu/goi-van-thu-1.1.0.zip", "van-thu/plugin-so-van-ban-den-1.1.0.zip",
         # Văn thư borrows these from Một cửa: the same zips are also in its own folder.
         "van-thu/plugin-so-van-ban-1.1.0.zip", "van-thu/plugin-ky-so-1.1.0.zip", "van-thu/plugin-tinh-han-1.1.0.zip",
         "van-hanh/goi-van-hanh-1.0.0.zip", "van-hanh/plugin-cam-bien-1.0.0.zip",
@@ -46,7 +46,7 @@ def test_each_expansion_gets_its_pack_and_plugins_as_zips_with_an_install_guide(
     guide = (out / "HUONG-DAN-CAI.txt").read_text(encoding="utf-8")
     assert all(path in guide for path in paths)
 
-    pack = out / "mot-cua-xa/goi-mot-cua-xa-1.1.0.zip"
+    pack = out / "mot-cua-xa/goi-mot-cua-xa-1.2.0.zip"
     assert {"desktiny-pack.json", "assets/logo.svg", "processes/khai-sinh.json"} <= names(pack)
     tinh_han = names(out / "mot-cua-xa/plugin-tinh-han-1.1.0.zip")
     assert {"desktiny-plugin.json", "ui/tinh-han.html", "ui/desktiny-plugin-sdk.js", "ui/chung.css"} <= tinh_han
@@ -97,7 +97,7 @@ def test_an_expansion_name_takes_all_of_it_and_goi_takes_only_the_pack(tmp_path)
     assert dong_goi.select(["goi-nhan-su"]).plugins == []
     # Packaged plugins only: no server bundle, no docker lines in the guide.
     built = {path for path, _, _ in dong_goi.build(out=tmp_path, only=["goi-mot-cua-xa", "doc-giay-to"])}
-    assert built == {"mot-cua-xa/goi-mot-cua-xa-1.1.0.zip", "mot-cua-xa/plugin-doc-giay-to-1.1.0.zip"}
+    assert built == {"mot-cua-xa/goi-mot-cua-xa-1.2.0.zip", "mot-cua-xa/plugin-doc-giay-to-1.1.0.zip"}
     assert "docker" not in (tmp_path / "HUONG-DAN-CAI.txt").read_text(encoding="utf-8")
 
 

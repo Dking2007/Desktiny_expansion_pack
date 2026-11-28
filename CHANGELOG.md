@@ -31,12 +31,14 @@ Bản phát hành đầu tiên của Desktiny Expansion Pack. Cần Desktiny 3.1
   Đọc giấy tờ và Sổ văn bản đến.
 
 ### Changed
+- Gói giao diện Một cửa (1.2.0), Nhân sự (1.2.0), Văn thư (1.1.0) làm lại cho hài hoà: bảng màu đầy đủ cho cả giao diện sáng và tối (nền, chữ, viền, màu nhấn cùng một sắc, đạt tương phản WCAG AA), logo mới cùng một họ (nền bo tròn chuyển màu, hình trắng, điểm nhấn vàng), nền trang đăng nhập theo màu gói, góc bo theo tính chất từng gói; tiêu đề đăng nhập Văn thư không còn trùng tên ứng dụng. Plugin nhận màu từ Desktiny nên đổi màu theo.
 - Bộ giới hạn tần suất `Window` chuyển vào `lib/mo_rong` để các plugin dùng chung.
 - Trang đăng nhập Một cửa đổi tiêu đề thành “Cổng làm việc của cán bộ” (không lặp tên ứng dụng).
 - Tách theo bản mở rộng: `expansion/<tên>/{packs,plugins}`; mỗi bản có README riêng.
 - Máy chủ plugin trả mọi lỗi dạng JSON; lỗi ngoài dự kiến được ghi nhật ký, không lộ chi tiết.
 
 ### Fixed
+- Bộ giao diện plugin: ở giao diện tối, nút lọc và nút tháng có nền riêng không còn bị tô chữ tối (gần như không đọc được); nút chính vẫn chữ tối trên nền nhấn sáng.
 - Ký số: khung đặt mã PIN hiện lúc mở trang không tự đặt focus khi người dùng chưa bấm vào khung (trình duyệt chặn và in cảnh
   báo trên console).
 - Khung của plugin co lại vừa nội dung: chép SDK khung mới của Desktiny vào `sdk/` (bản cũ đo `scrollHeight` của `<html>`, giá

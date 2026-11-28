@@ -2,7 +2,7 @@
   "schema": "desktiny-pack/1",
   "id": "vn.mo-rong.mot-cua-xa",
   "name": "Một cửa cấp xã",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "license": "Apache-2.0",
   "authors": [
     "Desktiny Expansion Pack contributors"
@@ -18,29 +18,56 @@
     "favicon": "assets/logo.svg",
     "colors": {
       "light": {
-        "teal": "#9b1c1c",
-        "teal-strong": "#7f1515",
-        "teal-soft": "#fbeaea",
-        "teal-ink": "#9b1c1c",
-        "teal-line": "#f0c7c7"
+        "navy": "#271c1b",
+        "ink-2": "#4a3c3a",
+        "muted": "#6a5d5b",
+        "canvas": "#faf7f6",
+        "surface": "#fffefe",
+        "surface-2": "#f7f2f1",
+        "surface-3": "#f1e9e8",
+        "surface-4": "#d9cecd",
+        "border": "#e5dcdb",
+        "border-soft": "#efeae9",
+        "border-strong": "#d7cac9",
+        "teal": "#8d1a1e",
+        "teal-strong": "#73000d",
+        "teal-soft": "#ffe7e4",
+        "teal-ink": "#861118",
+        "teal-line": "#f9bdb7",
+        "focus": "#b53434"
       },
       "dark": {
-        "teal": "#f08a8a",
-        "teal-ink": "#f6b0b0",
-        "teal-soft": "#3a1a1a"
+        "navy": "#efeae9",
+        "ink-2": "#d4cbca",
+        "muted": "#b8aead",
+        "canvas": "#130e0d",
+        "surface": "#1d1616",
+        "surface-2": "#261e1d",
+        "surface-3": "#312827",
+        "surface-4": "#473d3c",
+        "border": "#3a302f",
+        "border-soft": "#2d2423",
+        "border-strong": "#544746",
+        "teal": "#f79a93",
+        "teal-strong": "#e6857e",
+        "teal-soft": "#47211e",
+        "teal-ink": "#ffbcb6",
+        "teal-line": "#7d423e",
+        "focus": "#ed8c84"
       }
     },
     "font": "be-vietnam-pro",
     "density": "comfortable",
-    "radius": "small",
+    "radius": "medium",
     "login": {
       "style": "framed",
       "title": "Cổng làm việc của cán bộ",
       "subtitle": "Tiếp nhận · Xử lý · Trả kết quả",
-      "ground": "#6e1414",
-      "ground_to": "#2b0707",
+      "ground": "#5f201e",
+      "ground_to": "#1b0303",
       "button_label": "Đăng nhập cán bộ",
-      "note": "Dành cho cán bộ, công chức. Người dân nộp và tra cứu hồ sơ ở cổng trực tuyến của xã."
+      "note": "Dành cho cán bộ, công chức. Người dân nộp và tra cứu hồ sơ ở cổng trực tuyến của xã.",
+      "effects": true
     },
     "terminology": {
       "Hồ sơ": "Hồ sơ thủ tục",
