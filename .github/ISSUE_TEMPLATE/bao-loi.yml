@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
+name: Báo lỗi
+description: Báo một lỗi của gói giao diện, plugin hoặc công cụ đóng gói
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Lỗ hổng bảo mật **không** báo ở đây, xem [SECURITY.md](https://github.com/Dking2007/Desktiny_expansion_pack/blob/main/SECURITY.md).
+        Đừng dán mật khẩu, token, khóa ký hay dữ liệu cá nhân thật.
+  - type: dropdown
+    id: ban-mo-rong
+    attributes:
+      label: Bản mở rộng liên quan
+      options: [nhan-su, mot-cua-xa, van-thu, van-hanh, quan-tri-du-lieu, công cụ đóng gói, khác]
+    validations: { required: true }
+  - type: input
+    id: plugin
+    attributes:
+      label: Gói hoặc plugin
+      placeholder: ví dụ cham-cong
+  - type: textarea
+    id: mo-ta
+    attributes:
+      label: Mô tả lỗi
+    validations: { required: true }
+  - type: textarea
+    id: tai-hien
+    attributes:
+      label: Các bước tái hiện
+      placeholder: |
+        1.
+        2.
+    validations: { required: true }
+  - type: textarea
+    id: ket-qua
+    attributes:
+      label: Kết quả mong đợi và thực tế
+    validations: { required: true }
+  - type: input
+    id: moi-truong
+    attributes:
+      label: Môi trường
+      description: Hệ điều hành, phiên bản Desktiny, phiên bản hoặc commit của repo này
+    validations: { required: true }
+  - type: textarea
+    id: nhat-ky
+    attributes:
+      label: Nhật ký hoặc ảnh chụp (đã xóa thông tin nhạy cảm)
+      render: text

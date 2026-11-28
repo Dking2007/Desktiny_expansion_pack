@@ -3,40 +3,56 @@ SPDX-License-Identifier: Apache-2.0
 SPDX-FileCopyrightText: 2026 Desktiny Expansion Pack contributors
 -->
 
-# Desktiny Expansion Pack
+Tiếng Việt | [English](README_EN.md)
 
-Bộ mở rộng cho [Desktiny](https://github.com/Dking2007/DXOS_Desktiny) (sản phẩm chính). Repo này:
-https://github.com/Dking2007/Desktiny_expansion_pack.
+<h1 align="center">Desktiny Expansion Pack</h1>
+
+<p align="center">
+<b>Đưa Desktiny vào một nghiệp vụ mới bằng một tệp .zip, không sửa mã.</b><br>
+Gói giao diện và plugin cho nhân sự, một cửa cấp xã, văn thư, vận hành thiết bị và quản trị dữ liệu.
+</p>
+
+<p align="center">
+<a href="LICENSE"><img alt="Giấy phép Apache-2.0" src="https://img.shields.io/badge/gi%E1%BA%A5y%20ph%C3%A9p-Apache--2.0-blue"></a>
+<a href="https://github.com/Dking2007/Desktiny_expansion_pack/actions/workflows/ci.yml"><img alt="CI nhánh main" src="https://github.com/Dking2007/Desktiny_expansion_pack/actions/workflows/ci.yml/badge.svg?branch=main"></a>
+<a href="https://github.com/Dking2007/Desktiny_expansion_pack/releases"><img alt="Bản phát hành mới nhất" src="https://img.shields.io/github/v/release/Dking2007/Desktiny_expansion_pack?label=phi%C3%AAn%20b%E1%BA%A3n"></a>
+<img alt="Cần Desktiny từ 3.1.0" src="https://img.shields.io/badge/c%E1%BA%A7n%20Desktiny-%E2%89%A5%203.1.0-informational">
+</p>
+
+<p align="center">
+<a href="https://github.com/Dking2007/DXOS_Desktiny">Sản phẩm chính</a> ·
+<a href="#đóng-gói">Tải / đóng gói bản mở rộng</a> ·
+<a href="#tự-tạo-bản-mở-rộng">Tự tạo bản mở rộng</a> ·
+<a href="sdk">SDK</a>
+</p>
 
 | Expansion Pack | Desktiny tối thiểu | Đã chạy thử |
 |---|---|---|
 | 1.1.0 | 3.1.0 | 28/11/2026, CI trên GitHub (job `cai-vao-desktiny`, [lần chạy 46137625759](https://github.com/Dking2007/Desktiny_expansion_pack/actions/runs/46137625759)) với Desktiny tag `v3.1.0`: 6 đạt, 2 bỏ qua (B1, B8: hai lỗi đã sửa sau 3.1.0); trên máy với Desktiny nhánh `tich-hop/olp-2026-11-28` (`610f2a3`): 8/8 đạt; 27/11/2026: cài thật 3 gói + 9 plugin vào Desktiny `main` (`c4ccb9f`), kiểm sức khỏe 7 máy chủ plugin đạt |
 
-**Các bản mở rộng của Desktiny.** Một bản mở rộng đưa Desktiny vào một nghiệp vụ cụ thể (nhân sự, một cửa, kế toán,
-trường học…) mà **không sửa mã của Desktiny**. Nó gồm một **gói giao diện** (màu sắc, từ ngữ, quy trình, biểu mẫu,
-kiến thức cho trợ lý AI) và các **plugin** thêm chức năng mới. Tất cả được cài qua trang quản trị của Desktiny bằng
-tệp `.zip`.
-
-Repo này có:
-
-- **Bốn bản mẫu** dùng thử được ngay, để xem một bản mở rộng hoàn chỉnh trông thế nào.
-- **Công cụ đóng gói**: bấm đúp `build.bat` là có các tệp `.zip` để cài.
-- **Bộ khung** để tự viết plugin: máy chủ plugin dựng sẵn, SDK cho trang, cấu hình Docker và test.
-- **Hướng dẫn tự tạo** bản mở rộng cho nghiệp vụ của bạn (mục [Tự tạo bản mở rộng](#tự-tạo-bản-mở-rộng)).
+> Chưa có bản phát hành trên GitHub (dự kiến `v1.1.0`). Hiện lấy các tệp `.zip` bằng cách đóng gói từ mã nguồn,
+> xem mục [Đóng gói](#đóng-gói).
 
 ## Mục lục
 
-1. [Bản mở rộng gồm những gì](#bản-mở-rộng-gồm-những-gì)
-2. [Các bản mẫu](#các-bản-mẫu)
-3. [Đóng gói](#đóng-gói)
-4. [Cài vào Desktiny](#cài-vào-desktiny)
-5. [Tự tạo bản mở rộng](#tự-tạo-bản-mở-rộng)
-6. [An toàn](#an-toàn)
-7. [Giới hạn](#giới-hạn)
-8. [Phát triển và kiểm thử](#phát-triển-và-kiểm-thử)
-9. [Đóng góp](#đóng-góp)
+[Bản mở rộng là gì](#bản-mở-rộng-là-gì) · [Giao diện](#giao-diện) · [Các bản mẫu](#các-bản-mẫu) ·
+[Đóng gói](#đóng-gói) · [Cài vào Desktiny](#cài-vào-desktiny) · [Tự tạo bản mở rộng](#tự-tạo-bản-mở-rộng) ·
+[An toàn](#an-toàn) · [Công nghệ và giấy phép](#công-nghệ-và-giấy-phép) · [Giới hạn](#giới-hạn) ·
+[Phát triển và kiểm thử](#phát-triển-và-kiểm-thử) · [Đóng góp](#đóng-góp) · [Đội](#đội) · [Giấy phép](#giấy-phép)
 
-## Bản mở rộng gồm những gì
+## Bản mở rộng là gì
+
+Một bản mở rộng đưa [Desktiny](https://github.com/Dking2007/DXOS_Desktiny) vào một nghiệp vụ cụ thể (nhân sự, một
+cửa, văn thư, vận hành thiết bị…) mà **không sửa mã của Desktiny**. Nó gồm một **gói giao diện** (màu sắc, từ ngữ, quy
+trình, biểu mẫu, kiến thức cho trợ lý AI) và các **plugin** thêm chức năng mới. Tất cả cài qua trang quản trị của
+Desktiny bằng tệp `.zip`.
+
+Repo này có:
+
+- **Năm bản mẫu** dùng thử được ngay, để xem một bản mở rộng hoàn chỉnh trông thế nào.
+- **Công cụ đóng gói**: bấm đúp `build.bat` là có các tệp `.zip` để cài.
+- **Bộ khung** để tự viết plugin: máy chủ plugin dựng sẵn (`lib/mo_rong`), SDK cho trang, cấu hình Docker và test.
+- **Hướng dẫn tự tạo** bản mở rộng cho nghiệp vụ của bạn ([`docs/tu-tao-ban-mo-rong.md`](docs/tu-tao-ban-mo-rong.md)).
 
 Mỗi bản mở rộng là một thư mục trong `expansion/`:
 
@@ -48,50 +64,97 @@ expansion/<tên bản mở rộng>/
 └── dung-chung.json          plugin mượn của bản mở rộng khác (không bắt buộc)
 ```
 
-Bên trong có ba loại thành phần:
-
 | Thành phần | Là gì | Cần biết lập trình? | Cần máy chủ riêng? |
 |---|---|---|---|
 | **Gói giao diện** (`desktiny-pack/1`) | Dữ liệu thuần: tên, logo, màu, trang đăng nhập, từ ngữ, menu, trang chủ, quy trình và biểu mẫu, luồng tự động, kiến thức cho trợ lý AI | Không: tạo được ngay trong Desktiny rồi xuất ra | Không |
 | **Plugin đóng gói** (`desktiny-plugin/2`) | Trang web (HTML, JS) chạy trong khung cách ly của Desktiny, tính toán ngay trên trình duyệt | HTML và JavaScript | Không |
 | **Plugin kết nối** (`desktiny-plugin/1`) | Trang web cùng một máy chủ riêng (Python, SQLite). Desktiny gọi máy chủ khi có sự kiện, bước quy trình hay câu hỏi của trợ lý AI | Python | Có, chạy bằng Docker Compose |
 
+Một plugin gắn vào Desktiny ở nhiều chỗ: trang riêng trên thanh bên; khung hoặc tab trên hồ sơ, công việc; nút thao
+tác; khối trên trang chủ; bước trong quy trình; sự kiện để luồng tự động bắt đầu; công cụ cho trợ lý AI. Plugin chỉ
+làm được những gì quản trị viên đã duyệt khi cài.
+
+### Luồng dữ liệu
+
+```mermaid
+flowchart LR
+    subgraph EP["Expansion Pack: tệp .zip"]
+        GP["Gói giao diện<br/>từ ngữ, màu, quy trình, biểu mẫu, kiến thức trợ lý"]
+        PD["Plugin đóng gói<br/>trang, khung tĩnh"]
+        PK["Plugin kết nối<br/>manifest + máy chủ plugin"]
+    end
+    QT["Quản trị viên"] -- "cài ở Quản trị" --> W
+    GP --> W
+    PD --> W
+    subgraph W["Desktiny"]
+        OB["Sự kiện"]
+        PA["API plugin<br/>token có phạm vi"]
+        WF["Bước quy trình plugin_action"]
+    end
+    OB -- "sự kiện ký HMAC" --> SV["Máy chủ plugin<br/>lib/mo_rong + SQLite"]
+    WF -- "HTTP ký HMAC" --> SV
+    SV -- "đọc/ghi trong phạm vi đã duyệt" --> PA
+    SV -- "sự kiện vào quy trình" --> W
+    PK --> SV
+    EXT["Thiết bị, cổng nộp hồ sơ, trình duyệt người dân"] --> SV
 ```
-                 ┌──────────── Desktiny ────────────┐
- người dùng ───▶ │ giao diện (gói)  khung plugin ◀──┼── trang plugin (ui/)
-                 │ quy trình, sự kiện, trợ lý AI ───┼──▶ máy chủ plugin kết nối
-                 └──────────────────────────────────┘          ▲
- người ngoài ─────────────── trang công khai (nếu plugin có) ──┘
+
+Không sửa mã Desktiny. Phạm vi của plugin là phần quyền quản trị viên đã duyệt khi cài.
+
+### Từ mã nguồn đến Desktiny
+
+```mermaid
+flowchart LR
+    A["expansion/*"] --> B["build.bat / build.sh<br/>kiểm manifest"]
+    B --> C["dist/*.zip"]
+    C --> D["Quản trị Desktiny<br/>Gói giao diện, Plugin"]
+    C --> E["may-chu-plugin.zip<br/>docker compose up"]
+    E -- "token và khoá ký" --> D
 ```
 
-Một plugin gắn vào Desktiny ở nhiều chỗ:
-- trang riêng trên thanh bên;
-- khung hoặc tab trên hồ sơ, công việc;
-- nút thao tác;
-- khối trên trang chủ;
-- bước trong quy trình;
-- sự kiện để luồng tự động bắt đầu;
-- công cụ cho trợ lý AI.
+**Yêu cầu:** Desktiny **3.1.0** trở lên (bản 3.0.0 chưa cài được plugin `.zip` và bỏ qua các tuỳ biến đăng nhập
+mới); Python 3.11+ để đóng gói; Docker cho máy chủ plugin kết nối.
 
-Plugin chỉ làm được những gì quản trị viên đã duyệt khi cài.
+## Giao diện
 
-**Yêu cầu:**
-- Desktiny **3.1.0** trở lên. Bản 3.0.0 chưa cài được plugin `.zip` và bỏ qua các tuỳ biến đăng nhập mới.
-- **Python 3.11+** để đóng gói.
-- **Docker** cho máy chủ plugin kết nối.
+Ảnh chụp từ bản demo với dữ liệu mẫu giả (nguồn: [`docs/images/README.md`](docs/images/README.md)).
+
+| ![Trang chủ Desktiny sau khi cài gói Một cửa cấp xã](docs/images/mot-cua-trang-chu.png) | ![Desktiny trước và sau khi cài gói giao diện](docs/images/goi-giao-dien.png) |
+|---|---|
+| Cán bộ một cửa mở trang chủ đã đổi từ ngữ, màu và khối việc cần làm | Quản trị viên cài một gói và cả giao diện, từ ngữ, quy trình đổi theo |
+| ![Plugin Sổ văn bản](docs/images/plugin-so-van-ban.png) | ![Plugin Chấm công](docs/images/plugin-cham-cong.png) |
+| Văn thư cấp số văn bản đi liên tục, không nhảy số | Nhân viên chấm công bằng vị trí trên điện thoại |
+| ![Plugin Cảm biến](docs/images/plugin-cam-bien.png) | ![Plugin Lưu trữ lịch sử](docs/images/plugin-luu-tru.png) |
+| Người phụ trách thấy chỉ số nào đang vượt ngưỡng | Quản trị viên kiểm tra chuỗi băm của hồ sơ đã lưu trữ |
+
+<p align="center">
+<img src="docs/images/cong-nop-dien-thoai.png" alt="Cổng nộp hồ sơ trực tuyến trên điện thoại" width="220"><br>
+Người dân nộp hồ sơ ngay trên điện thoại.
+</p>
+
+![Đổi nghiệp vụ bằng cách cài gói](docs/media/gif-doi-nghiep-vu.gif)
+
+*Quản trị viên cài một gói và Desktiny chuyển sang nghiệp vụ mới.*
+
+![Người dân nộp hồ sơ, cán bộ nhận](docs/media/gif-cong-dan-nop.gif)
+
+*Người dân nộp hồ sơ qua cổng công khai, hồ sơ xuất hiện cho cán bộ xử lý.*
+
+Dữ liệu trong mọi ảnh và GIF là dữ liệu mẫu giả.
 
 ## Các bản mẫu
 
 | Bản mẫu | Dành cho | Gói giao diện | Plugin |
 |---|---|---|---|
-| [**Nhân sự doanh nghiệp**](expansion/nhan-su/README.md) `nhan-su` | Bộ phận nhân sự của doanh nghiệp, cơ quan nhỏ | Nhân sự doanh nghiệp: 7 quy trình đơn từ, 3 luồng tự động, quy chế cho trợ lý AI | Chấm công GPS, Tiền lương và KPI, Nhắc hạn hồ sơ |
-| [**Một cửa cấp xã**](expansion/mot-cua-xa/README.md) `mot-cua-xa` | Bộ phận một cửa của UBND cấp xã | Một cửa cấp xã: 6 thủ tục hộ tịch, chứng thực, hoà giải; 3 luồng tự động | Sổ văn bản, Ký số, Tiếp nhận trực tuyến, Tính hạn, Đọc giấy tờ |
-| [**Văn thư – điều hành**](expansion/van-thu/README.md) `van-thu` | Văn thư, văn phòng của cơ quan | Văn thư – điều hành: xử lý văn bản đến, ban hành văn bản đi, nộp lưu hồ sơ; 3 luồng tự động; hướng dẫn văn thư cho trợ lý AI | Sổ văn bản đến; dùng chung Sổ văn bản, Ký số, Tính hạn của bản Một cửa |
+| <img src="expansion/nhan-su/packs/nhan-su/assets/logo.svg" width="56" alt="Logo Nhân sự"><br>[**Nhân sự doanh nghiệp**](expansion/nhan-su/README.md) `nhan-su` | Bộ phận nhân sự của doanh nghiệp, cơ quan nhỏ | 7 quy trình đơn từ, 3 luồng tự động, quy chế cho trợ lý AI | Chấm công GPS, Tiền lương và KPI, Nhắc hạn hồ sơ |
+| <img src="expansion/mot-cua-xa/packs/mot-cua-xa/assets/logo.svg" width="56" alt="Logo Một cửa"><br>[**Một cửa cấp xã**](expansion/mot-cua-xa/README.md) `mot-cua-xa` | Bộ phận một cửa của UBND cấp xã | 6 thủ tục hộ tịch, chứng thực, hoà giải; 3 luồng tự động | Sổ văn bản, Ký số, Tiếp nhận trực tuyến, Tính hạn, Đọc giấy tờ |
+| <img src="expansion/van-thu/packs/van-thu/assets/logo.svg" width="56" alt="Logo Văn thư"><br>[**Văn thư – điều hành**](expansion/van-thu/README.md) `van-thu` | Văn thư, văn phòng của cơ quan | Xử lý văn bản đến, ban hành văn bản đi, nộp lưu hồ sơ; 3 luồng tự động; hướng dẫn văn thư cho trợ lý AI | Sổ văn bản đến; dùng chung Sổ văn bản, Ký số, Tính hạn của bản Một cửa |
 | [**Vận hành – giám sát thiết bị**](expansion/van-hanh/README.md) `van-hanh` | Bộ phận vận hành, kỹ thuật có thiết bị cần theo dõi | Quy trình xử lý sự cố thiết bị; mẫu luồng “cảm biến vượt ngưỡng → hồ sơ sự cố”; không đổi giao diện | Cảm biến thiết bị (nhận số đo qua HTTP, cảnh báo vượt ngưỡng) |
 | [**Quản trị dữ liệu**](expansion/quan-tri-du-lieu/README.md) `quan-tri-du-lieu` (minh hoạ) | Người quản trị Desktiny | Không có | Lưu trữ lịch sử hồ sơ: chép hồ sơ đã duyệt, kết thúc (đã che CCCD, số điện thoại, email) ra tệp tháng có chuỗi băm; kiểm toàn vẹn, truy nguồn về hồ sơ gốc |
 
-Mỗi bản mẫu có README riêng: nội dung, cách cài, cấu hình, luồng gợi ý và những gì cần sửa trước khi dùng thật. Tên
-cơ quan trong bản mẫu là tên giả; quy chế, thời hạn và mức tiền chỉ để minh hoạ.
+Bản Vận hành và Quản trị dữ liệu chưa có logo riêng. Mỗi bản mẫu có README riêng: nội dung, cách cài, cấu hình, luồng
+gợi ý và những gì cần sửa trước khi dùng thật. Tên cơ quan trong bản mẫu là tên giả; quy chế, thời hạn và mức tiền chỉ
+để minh hoạ.
 
 ## Đóng gói
 
@@ -147,28 +210,25 @@ diện trỏ tới (logo, quy trình, mẫu, kiến thức) có thật và đún
 
 ### Kết quả trong `dist/`
 
-`dist/` được làm trống rồi ghi lại mỗi lần đóng gói (chỉ còn những gì vừa chọn). Mỗi bản mở rộng một thư mục, cài thư mục nào thì lấy đủ tệp ở đó:
+`dist/` được làm trống rồi ghi lại mỗi lần đóng gói (chỉ còn những gì vừa chọn). Mỗi bản mở rộng một thư mục, cài thư
+mục nào thì lấy đủ tệp ở đó. Đóng gói tất cả (19 tệp):
 
 ```
 dist/
 ├── HUONG-DAN-CAI.txt                       tệp nào tải lên đâu, theo thứ tự
-├── nhan-su/
-│   ├── goi-nhan-su-1.2.1.zip               gói giao diện
-│   ├── plugin-cham-cong-1.0.0.zip          plugin kết nối: chỉ manifest (trang do máy chủ plugin phục vụ)
-│   ├── plugin-luong-kpi-1.0.0.zip
-│   └── plugin-nhac-han-1.0.0.zip
-├── mot-cua-xa/
-│   ├── goi-mot-cua-xa-1.2.1.zip
-│   ├── plugin-tinh-han-1.0.0.zip           plugin đóng gói: manifest + trang + SDK khung
-│   ├── plugin-doc-giay-to-1.0.0.zip
-│   └── plugin-so-van-ban-1.0.0.zip, plugin-ky-so-1.0.0.zip, plugin-tiep-nhan-1.0.0.zip
-└── may-chu-plugin/
-    └── may-chu-plugin-1.1.0.zip            mã máy chủ 6 plugin kết nối + Dockerfile + compose.yaml
+├── nhan-su/            goi-nhan-su-1.2.1.zip, plugin-cham-cong, plugin-luong-kpi, plugin-nhac-han
+├── mot-cua-xa/         goi-mot-cua-xa-1.2.1.zip, plugin-tinh-han, plugin-doc-giay-to,
+│                       plugin-so-van-ban, plugin-ky-so, plugin-tiep-nhan
+├── van-thu/            goi-van-thu-1.1.1.zip, plugin-so-van-ban-den
+│                       + bản sao plugin-so-van-ban, plugin-ky-so, plugin-tinh-han (dùng chung)
+├── van-hanh/           goi-van-hanh-1.0.0.zip, plugin-cam-bien-1.0.0.zip
+├── quan-tri-du-lieu/   plugin-luu-tru-lich-su-1.0.0.zip
+└── may-chu-plugin/     may-chu-plugin-1.1.0.zip   mã máy chủ 9 plugin kết nối + Dockerfile + compose.yaml
 ```
 
-Đóng gói tất cả thì gói máy chủ chứa mọi plugin kết nối; chọn riêng một bản mở rộng thì chỉ chứa plugin của bản đó.
-
-Tên tệp có phiên bản lấy từ manifest (`version`). Cùng mã nguồn luôn cho ra cùng tệp .zip.
+Plugin kết nối chỉ có manifest trong `.zip` (trang do máy chủ plugin phục vụ); plugin đóng gói có cả manifest, trang và
+SDK khung. Tên tệp có phiên bản lấy từ manifest (`version`). Cùng mã nguồn luôn cho ra cùng tệp .zip. Chọn riêng một
+bản mở rộng thì gói máy chủ chỉ chứa plugin kết nối của bản đó.
 
 ## Cài vào Desktiny
 
@@ -209,263 +269,50 @@ quản trị thì mở từ nút tương ứng trên dòng plugin.
 
 ## Tự tạo bản mở rộng
 
-Không cần làm tất cả. Phần lớn nhu cầu chỉ cần **bước 1–2** (gói giao diện), mà không phải viết dòng mã nào. Chỉ thêm
-plugin khi Desktiny chưa có sẵn chức năng bạn cần.
+Không cần làm tất cả. Phần lớn nhu cầu chỉ cần gói giao diện, mà không phải viết dòng mã nào. Chỉ thêm plugin khi
+Desktiny chưa có sẵn chức năng bạn cần. Hướng dẫn đầy đủ có mã mẫu: **[`docs/tu-tao-ban-mo-rong.md`](docs/tu-tao-ban-mo-rong.md)**.
 
-### Bước 1. Tạo thư mục
-
-Đặt tên bằng chữ thường không dấu, nối bằng gạch ngang, ví dụ `ke-toan`:
-
-```
-expansion/ke-toan/
-├── README.md
-├── packs/ke-toan/
-└── plugins/
-```
-
-Cách nhanh nhất là **chép một bản mẫu** gần với nghiệp vụ của bạn rồi sửa. Tên gói và tên plugin không được trùng giữa
-các bản mở rộng. Bước đóng gói tự tìm thư mục mới; không phải khai báo ở đâu cả.
-
-Cần một plugin mà bản mở rộng khác đã có (ví dụ Sổ văn bản, Ký số)? Đừng chép mã. Hãy khai nó trong
-`dung-chung.json`:
-
-```json
-{ "plugins": ["so-van-ban", "ky-so"] }
-```
-
-Khi đóng gói bản của bạn, các plugin này được đóng gói kèm vào `dist/<tên bản>/`, nên thư mục đó vẫn đủ để cài. Bản
-Văn thư là ví dụ.
-
-### Bước 2. Gói giao diện
-
-**Cách 1 (khuyên dùng): tạo ngay trong Desktiny rồi xuất ra.**
-
-1. Trong Desktiny, dựng sẵn những gì bản mở rộng cần:
-   - biểu mẫu và quy trình (**Quy trình nghiệp vụ**, vẽ trên canvas);
-   - luồng tự động;
-   - bài kiến thức cho trợ lý AI.
-2. **Quản trị › Gói giao diện › Tạo gói của cơ quan**:
-   - chọn tên, logo, màu, trang đăng nhập, từ ngữ, menu và trang chủ (có xem trước);
-   - tick các quy trình, luồng và bài kiến thức muốn mang theo;
-   - **Lưu gói**.
-3. Bấm **Xuất** ở dòng gói đó để tải về tệp `.zip`.
-4. Giải nén vào `expansion/ke-toan/packs/ke-toan/`. Mở `desktiny-pack.json` và sửa:
-   - đổi `id` từ `local.…` sang mã riêng, ví dụ `vn.co-quan.ke-toan` (chữ thường, có ít nhất một dấu chấm);
-   - điền `description`, `authors`;
-   - đặt `version` (`1.0.0`, tăng lên mỗi lần phát hành).
-
-**Cách 2: viết tay.** `desktiny-pack.json` tối thiểu:
-
-```json
-{
-  "schema": "desktiny-pack/1",
-  "id": "vn.co-quan.ke-toan",
-  "name": "Kế toán nội bộ",
-  "version": "1.0.0",
-  "license": "Apache-2.0",
-  "authors": ["Phòng CNTT"],
-  "description": "Giao diện và quy trình cho phòng kế toán.",
-  "appearance": {
-    "app_name": "Kế toán số",
-    "org_name": "Công ty ABC",
-    "logo": "assets/logo.svg",
-    "colors": { "light": { "teal": "#1d4ed8", "teal-strong": "#1e40af", "teal-soft": "#e8eefc" } },
-    "login": { "style": "framed", "title": "Phòng Kế toán", "button_label": "Đăng nhập", "note": "Chỉ dành cho nhân viên." },
-    "terminology": { "Hồ sơ": "Chứng từ" },
-    "menu": { "hide": ["feed"] }
-  },
-  "processes": ["processes/de-nghi-thanh-toan.json"],
-  "automations": [],
-  "knowledge": ["knowledge/quy-che-chi-tieu.md"]
-}
-```
-
-Mỗi tệp mà gói trỏ tới là một phần:
-
-| Thư mục | Nội dung |
-|---|---|
-| `assets/` | logo, ảnh nền đăng nhập (SVG, PNG) |
-| `processes/*.json` | một quy trình kèm biểu mẫu của nó (`name`, `form.fields`, `graph`) |
-| `automations/*.json` | một luồng tự động (`name`, `graph`), cài ở trạng thái tắt |
-| `knowledge/*.md` | bài kiến thức cho trợ lý AI, viết bằng Markdown |
-
-Tệp quy trình và luồng có cấu trúc dài, nên hãy vẽ trên Desktiny rồi xuất (cách 1) thay vì viết tay. Có thể mở các
-tệp trong bản mẫu ra để xem cấu trúc. Đặc tả đầy đủ có trong `docs/packs.md` của Desktiny.
-
-Một số giới hạn Desktiny kiểm tra khi cài:
-- màu nền trang đăng nhập phải đủ tối để chữ trắng đọc được (tương phản ≥ 4,5:1);
-- chỉ ẩn được các phân hệ Công việc, Hồ sơ, Nhắn tin, Bảng tin, Tài liệu, Báo cáo;
-- gói không chứa mã chạy được.
-
-### Bước 3. Plugin đóng gói (khi cần một trang hoặc khung tính toán)
-
-Dùng plugin đóng gói khi chức năng chạy được hoàn toàn trên trình duyệt (tính toán, tra cứu, điền sẵn), không cần lưu
-dữ liệu riêng. Ví dụ: `expansion/mot-cua-xa/plugins/tinh-han/`.
-
-```
-plugins/tinh-tam-ung/
-├── desktiny-plugin.json
-└── ui/
-    └── tinh-tam-ung.html
-```
-
-```json
-{
-  "schema": "desktiny-plugin/2",
-  "id": "vn.co-quan.tinh-tam-ung",
-  "name": "Tính tạm ứng",
-  "version": "1.0.0",
-  "license": "Apache-2.0",
-  "authors": ["Phòng CNTT"],
-  "description": "Khung trên chứng từ: số tiền tạm ứng còn lại.",
-  "permissions": ["cases.read"],
-  "ui": [{ "slot": "case.side", "title": "Tạm ứng", "url": "/ui/tinh-tam-ung.html", "height": 180 }]
-}
-```
-
-Trang gọi Desktiny qua SDK. Bước đóng gói tự chép `desktiny-plugin-sdk.js` và `chung.css` vào cạnh trang:
-
-```html
-<link rel="stylesheet" href="chung.css" />
-<div id="out" class="muted">Đang tính…</div>
-<script type="module">
-  import { connect } from './desktiny-plugin-sdk.js'
-  const desktiny = connect()
-  const context = await desktiny.context                        // hồ sơ / công việc đang mở
-  const dossier = await desktiny.api(`/cases/${context.record.case_id}`)
-  document.getElementById('out').textContent = `Đề nghị: ${dossier.payload.so_tien ?? 0} đ`
-</script>
-```
-
-Các chỗ gắn (`slot`):
-
-| Slot | Ở đâu |
-|---|---|
-| `page` | trang riêng có mục trên thanh bên |
-| `admin.page` | trang quản trị của plugin |
-| `case.side` | khung trên hồ sơ |
-| `case.tab` | tab trên hồ sơ |
-| `case.action` | nút thao tác trên hồ sơ |
-| `task.side` | khung trên công việc |
-| `task.action` | nút thao tác trên công việc |
-| `home.widget` | khối trên trang chủ |
-
-Chỉ xin những quyền (`permissions`) thật sự cần. Quản trị viên sẽ thấy và duyệt từng quyền.
-
-### Bước 4. Plugin kết nối (khi cần lưu dữ liệu, chạy nền, nhận sự kiện)
-
-Dùng plugin kết nối khi chức năng cần một trong các việc sau:
-- lưu dữ liệu riêng;
-- chạy theo lịch;
-- nhận sự kiện của Desktiny;
-- làm một bước trong quy trình;
-- trả lời trợ lý AI;
-- có trang công khai cho người ngoài.
-
-Ví dụ gọn: `expansion/nhan-su/plugins/nhac-han/`, `expansion/van-thu/plugins/so-van-ban-den/`.
-
-```
-plugins/so-quy/
-├── desktiny-plugin.json     có "base_url" — đó là dấu hiệu plugin kết nối
-├── server.py
-└── ui/so-quy.html
-```
-
-`server.py` dùng bộ khung `lib/mo_rong`. Bộ khung đã lo kiểm chữ ký, xác định người đang xem, lưu SQLite và trả lỗi
-dạng JSON:
-
-```python
-import sys
-from pathlib import Path
-
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parents[3] / "lib"))
-
-from mo_rong import App, Response, Settings, Store  # noqa: E402
-
-SCHEMA = "CREATE TABLE IF NOT EXISTS phieu (id INTEGER PRIMARY KEY, noi_dung TEXT NOT NULL, so_tien INTEGER NOT NULL);"
-
-
-def build(settings: Settings | None = None, store: Store | None = None) -> App:
-    app = App("so-quy", HERE, settings)
-    db = store or Store(app.settings.data_dir / "so-quy.sqlite3", SCHEMA)
-
-    @app.route("GET", "/api/phieu", viewer=True)        # gọi từ trang plugin, bằng phiên người đang xem
-    def danh_sach(request):
-        return {"items": db.all("SELECT * FROM phieu ORDER BY id DESC")}
-
-    @app.route("POST", "/events", signed=True)          # Desktiny gọi tới, có chữ ký HMAC
-    def su_kien(request):
-        return Response(202, b"{}")
-
-    return app
-
-
-if __name__ == "__main__":
-    build().run(9209)
-```
-
-Trang gọi máy chủ của chính plugin bằng `sdk/mo-rong.js`: `import { server } from './mo-rong.js'`, rồi
-`await server('api/phieu')`.
-
-Để chạy cùng các plugin khác, cần thêm:
-- một dịch vụ trong `deploy/compose.yaml` (chép dịch vụ có sẵn, đổi `PLUGIN`, `PORT`, tên biến, volume);
-- cặp biến `<TÊN>_TOKEN`, `<TÊN>_SECRET` trong `deploy/.env.example`.
-
-Cổng trong `base_url`, `server.py` và `compose.yaml` phải trùng nhau. Bản mẫu đang dùng 9201–9208, nên plugin mới bắt
-đầu từ 9209.
-
-Manifest của plugin kết nối có thể khai thêm:
-- `events` (nhận sự kiện của Desktiny), `emits` (phát sự kiện riêng);
-- `nodes` (bước quy trình, kể cả bước chạy lâu);
-- `assistant_tools` (công cụ cho trợ lý AI);
-- `settings_schema` (cấu hình theo cơ quan);
-- `health_endpoint`.
-
-Đặc tả có trong `docs/plugins.md` của Desktiny; các plugin kết nối trong bản mẫu dùng đủ các loại này.
-
-Lưu ý khi ghi vào biểu mẫu (quyền `cases.fields.write`): Desktiny chỉ cho plugin ghi trường **trong phiên của một
-người dùng**, tức từ nút hay khung mà người đó đang mở. Trong bước quy trình, plugin chạy bằng token cài đặt nên không
-ghi được. Hãy trả giá trị ra làm đầu ra của bước, rồi để quy trình ghi bằng bước **Cập nhật hồ sơ** có sẵn (ví dụ
-`form.so_den` = `{vao_so.so_den}`).
-
-### Bước 5. Đóng gói, thử, viết README
-
-1. `build.bat ke-toan`. Bước đóng gói kiểm mọi manifest theo đúng quy tắc của Desktiny; có lỗi thì báo tệp nào, cần
-   sửa gì.
-2. Cài thử vào một Desktiny thử nghiệm theo mục [Cài vào Desktiny](#cài-vào-desktiny).
-3. Viết test cho máy chủ plugin trong `tests/`. `tests/conftest.py` có sẵn một Desktiny giả để gọi thử sự kiện, bước
-   và trang. Chạy `make test`.
-4. Viết `expansion/ke-toan/README.md`: dành cho ai, có gì, cài và cấu hình thế nào, cần sửa gì trước khi dùng thật.
-   Có thể theo mẫu README của hai bản mẫu.
-
-### Danh sách kiểm tra trước khi phát hành
-
-- [ ] `id` riêng, không bắt đầu bằng `local.`; `version` đã tăng so với bản trước.
-- [ ] Gói không chứa tên, số liệu hay tài liệu nội bộ không được phép chia sẻ.
-- [ ] Plugin chỉ xin quyền cần dùng; trang không gửi dữ liệu ra ngoài máy chủ của plugin.
-- [ ] Mã trường biểu mẫu mà plugin đọc/ghi khớp với biểu mẫu trong gói.
-- [ ] `make test` và `make lint` qua; đã cài thử trên Desktiny thật.
-- [ ] README của bản mở rộng đã ghi rõ những gì chỉ là mẫu.
+1. **Tạo thư mục** `expansion/<tên>/` (chép một bản mẫu gần nghiệp vụ nhất rồi sửa).
+2. **Gói giao diện**: dựng trong Desktiny rồi xuất `.zip`, hoặc viết `desktiny-pack.json` tay.
+3. **Plugin đóng gói** khi cần một trang hoặc khung tính toán chạy trên trình duyệt.
+4. **Plugin kết nối** khi cần lưu dữ liệu, chạy nền, nhận sự kiện hay làm bước quy trình (dùng `lib/mo_rong`).
+5. **Đóng gói, thử, viết README**: `build.bat <tên>`, cài thử, viết test, rồi theo danh sách kiểm tra trước phát hành.
 
 ## An toàn
 
-Mọi bản mở rộng, kể cả bản bạn tự tạo, đều được hưởng các cơ chế sau của Desktiny và của bộ khung:
+Mọi bản mở rộng, kể cả bản bạn tự tạo, đều được hưởng các cơ chế sau của Desktiny và của bộ khung.
 
-- Plugin chỉ có những quyền quản trị viên đã duyệt. Token cài đặt chỉ tới được hồ sơ mà plugin được báo, hoặc hồ sơ
-  thuộc quy trình được chọn.
-- Trang của plugin chạy trong khung cách ly. Máy chủ plugin xác định người đang xem bằng **token phiên** của Desktiny
-  (`GET /plugin/v1/me`). Đường dẫn `admin=True` chỉ nhận phiên từ khung `admin.page` (chỉ người quản lý tổ chức mở
-  được).
-- Mọi lời Desktiny gọi tới (sự kiện, bước, công cụ trợ lý) đều được kiểm **chữ ký HMAC**. Báo kết quả của bước chạy
-  lâu cũng được ký.
-- Máy chủ plugin trả mọi lỗi dạng JSON. Lỗi ngoài dự kiến được ghi vào nhật ký của container, không lộ chi tiết ra
-  trang. Chỉ đọc `X-Forwarded-For` khi bật `TRUST_PROXY=1` (máy chủ đặt sau reverse proxy).
-- Container máy chủ plugin chạy bằng người dùng thường, hệ tệp chỉ đọc, `no-new-privileges`. Gói máy chủ không bao giờ
-  chứa `deploy/.env`.
+| Kênh | Xác thực | Phạm vi |
+|---|---|---|
+| Desktiny gọi plugin: sự kiện, bước `plugin_action`, công cụ trợ lý | Chữ ký HMAC-SHA256 của `<thời điểm>.<nội dung>` (`X-Desktiny-Signature`, `X-Desktiny-Timestamp`), có kiểm tuổi lời gọi. Báo kết quả của bước chạy lâu cũng được ký | Chỉ những gì Desktiny ký bằng khoá ký của đúng plugin |
+| Plugin gọi API Desktiny | Token cài đặt (`Bearer`), cấp một lần khi duyệt quyền | Giao của quyền quản trị viên đã duyệt và token; chỉ hồ sơ plugin được báo hoặc thuộc quy trình được chọn; ghi trường biểu mẫu chỉ trong phiên một người dùng |
+| Trang plugin gọi máy chủ plugin | Token phiên của khung (`X-Desktiny-Session`); máy chủ hỏi Desktiny người xem là ai (`GET /plugin/v1/me`) | Theo quyền của người xem; đường dẫn `admin=True` chỉ nhận phiên từ khung `admin.page` (người quản lý tổ chức) |
+| Thiết bị gửi số đo (plugin Cảm biến) | Khoá thiết bị `X-Device-Key`, chỉ lưu mã băm SHA-256 | Một thiết bị đã đăng ký, giới hạn 30 số đo mỗi phút |
+
+Các biện pháp khác:
+
+- Trang của plugin chạy trong khung cách ly, không có `alert/prompt` và không tải tệp về được.
+- Máy chủ plugin trả mọi lỗi dạng JSON; lỗi ngoài dự kiến chỉ ghi vào nhật ký container. Chỉ đọc `X-Forwarded-For`
+  khi bật `TRUST_PROXY=1`.
+- Container chạy bằng người dùng thường, hệ tệp chỉ đọc, `no-new-privileges`. Gói máy chủ không chứa `deploy/.env`.
 - Gói giao diện là dữ liệu thuần, không chứa mã. Gỡ gói thì Desktiny trở về giao diện và nghiệp vụ mặc định.
-- Khung plugin không có hộp thoại `alert/prompt` và không tải tệp về được. Hãy dùng hộp thoại xác nhận của Desktiny
-  (`desktiny.confirm`) và hiện nội dung để người dùng sao chép.
+
+Báo lỗ hổng: xem [SECURITY.md](SECURITY.md).
+
+## Công nghệ và giấy phép
+
+| Lớp | Thành phần | Phiên bản | Giấy phép (SPDX) | Vai trò | Cách dùng |
+|---|---|---|---|---|---|
+| Máy chủ plugin | Thư viện chuẩn Python (`http.server`) | Python ≥ 3.11 (CI dùng 3.13) | PSF (ngôn ngữ) | Máy chủ HTTP, định tuyến, kiểm chữ ký (`lib/mo_rong`) | Không có phụ thuộc pip |
+| Dữ liệu | SQLite (thư viện chuẩn) | theo Python | Phạm vi công cộng | Dữ liệu riêng của từng plugin, một volume mỗi plugin | Nhúng trong tiến trình |
+| Triển khai | Docker Compose, ảnh `python:3.13.5-slim-bookworm` | 3.13.5 | Giấy phép của ảnh nền | Một ảnh chung cho mọi plugin kết nối | Dịch vụ riêng |
+| SDK Python | `lib/desktiny_plugin` | bản sao SDK của Desktiny | Apache-2.0 | Ký, kiểm chữ ký, gọi API plugin | Mã đi kèm |
+| SDK trang | `sdk/desktiny-plugin-sdk.js`, `mo-rong.js`, `bieu-do.js`, `chung.css` | cùng bản repo | Apache-2.0 | Trang plugin nói chuyện với khung Desktiny và máy chủ plugin | Mã đi kèm |
+| Phông chữ | Be Vietnam Pro, Source Sans 3 (`sdk/phong-chu/`) | tập con latin, vietnamese | OFL-1.1 | Chữ cho trang plugin | Tệp `.woff2` đi kèm |
+| Công cụ | pytest ≥ 8, ruff ≥ 0.6, Node 22 (`node --test`) | xem `pyproject.toml` | MIT / MIT / MIT | Kiểm thử, lint | Không đi vào sản phẩm |
+
+Chi tiết và nguồn: [THIRD_PARTY.md](THIRD_PARTY.md), [NOTICE](NOTICE). Mọi tệp có khai báo giấy phép theo chuẩn
+[REUSE](https://reuse.software/).
 
 ## Giới hạn
 
@@ -474,6 +321,7 @@ Mọi bản mở rộng, kể cả bản bạn tự tạo, đều được hư�
 - **Cổng tiếp nhận trực tuyến** lưu số CCCD và số điện thoại không mã hóa, chưa có thời hạn lưu giữ. Cần bổ sung trước
   khi dùng với dữ liệu thật.
 - **Ký số** là chữ ký mô phỏng bằng HMAC, không phải chữ ký số có giá trị pháp lý.
+- Quy chế, thủ tục, thời hạn, ngày lễ và mức tiền trong các bản mẫu chỉ để minh hoạ.
 - **Với Desktiny 3.1.0** còn hai lỗi phía Desktiny, đã sửa ở nhánh `tich-hop/olp-2026-11-28` (bản phát hành sau 3.1.0):
   - Hồ sơ của các quy trình trong gói (kết thúc bằng bước thông báo, không có bước Kết thúc) kẹt ở “Đang xử lý” sau
     bước duyệt cuối (B1).
@@ -486,26 +334,30 @@ Mọi bản mở rộng, kể cả bản bạn tự tạo, đều được hư�
 
 ```
 build.bat, build.sh     nút đóng gói (gọi scripts/dong_goi.py)
-scripts/dong_goi.py     kiểm manifest rồi đóng gói vào dist/
+scripts/                dong_goi.py (kiểm manifest, đóng gói), kiem_phien_ban.py, gia_lap_cam_bien.py
 expansion/<bản>/        các bản mở rộng (README.md, packs/, plugins/)
 lib/mo_rong/            bộ khung máy chủ plugin: định tuyến, kiểm chữ ký, phiên người xem, giới hạn tần suất, SQLite, tệp Word, tiện ích tiếng Việt
-lib/desktiny_plugin/    bản sao SDK Python của Desktiny (packages/desktiny-plugin), cập nhật cùng Desktiny
-sdk/                    SDK khung của Desktiny, mo-rong.js (trang gọi máy chủ plugin), chung.css
+lib/desktiny_plugin/    bản sao SDK Python của Desktiny, cập nhật cùng Desktiny
+sdk/                    SDK khung của Desktiny, mo-rong.js (trang gọi máy chủ plugin), chung.css, phông chữ
 tests/                  test máy chủ plugin (Desktiny giả), test đóng gói, tests/js (Node), tests/desktiny (Desktiny thật)
 deploy/                 Dockerfile, compose.yaml, .env.example
+docs/                   hướng dẫn tự tạo bản mở rộng, ảnh và GIF trong README
 ```
 
 ### Kiểm thử
 
-```sh
-make test            # test máy chủ plugin và đóng gói (Python 3.11+, pytest)
-make test-js         # test mã trang của plugin đóng gói (Node 22)
-make test-desktiny   # cài mọi gói và plugin vào Desktiny thật (DESKTINY_DIR, mặc định thư mục cha) rồi chạy luồng
-make lint            # ruff
-```
+| Lệnh | Kiểm gì | Cần gì |
+|---|---|---|
+| `make test` | Máy chủ plugin và đóng gói | Python 3.11+, pytest |
+| `make test-js` | Mã trang của plugin đóng gói | Node 22 |
+| `make test-desktiny` | Cài mọi gói và plugin vào Desktiny thật rồi chạy luồng | Mã nguồn Desktiny (`DESKTINY_DIR`, mặc định thư mục cha) |
+| `make lint` | Phong cách và lỗi mã Python | ruff |
+| `make dist` | Đóng gói thử vào `dist/` | Python 3.11+ |
+| `reuse lint` | Mọi tệp có khai báo giấy phép | công cụ `reuse` |
 
 Không có `make` (Windows): `set PYTHONPATH=lib` rồi `python -m pytest -q tests --ignore=tests/desktiny`;
-`node --test tests/js/*.test.mjs`. Trong VS Code: tác vụ “Kiểm thử”. CI chạy lint, test, test-js và đóng gói.
+`node --test tests/js/*.test.mjs`. Trong VS Code: tác vụ “Kiểm thử”. CI chạy lint, test, test-js, đóng gói, và cài thử
+vào Desktiny `v3.1.0`.
 
 ### Chạy thử một plugin
 
@@ -518,9 +370,21 @@ Lệnh thứ hai đóng vai Desktiny: ký và gửi một lời gọi bước qu
 
 ## Đóng góp
 
-Xem [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md) và [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
-Thành phần bên thứ ba (phông chữ) ở [THIRD_PARTY.md](THIRD_PARTY.md).
+Quy trình: mở issue (có mẫu) → nhánh `feat/<số>-<tên>` → pull request có người khác duyệt → CI xanh mới gộp. Xem
+[CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Lỗi và đề xuất
+gửi ở [Issues](https://github.com/Dking2007/Desktiny_expansion_pack/issues); lỗ hổng gửi riêng qua
+[Security Advisory](https://github.com/Dking2007/Desktiny_expansion_pack/security/advisories/new).
+
+## Đội
+
+Phụ trách ghi theo lịch sử commit của repo này (`git log --no-merges`).
+
+| GitHub | Commit | Phụ trách chính |
+|---|---|---|
+| [@Dking2007](https://github.com/Dking2007) | 36 | Plugin Cảm biến và Lưu trữ lịch sử hồ sơ, sửa lỗi phân quyền, bảo mật và độ bền của các plugin Một cửa và Nhân sự, CI cài thử vào Desktiny và kiểm phiên bản, CHANGELOG và tệp cộng đồng |
+| [@Mai1174](https://github.com/Mai1174) | 17 | Bộ khung máy chủ plugin, các plugin đầu tiên (Chấm công, Lương và KPI, Sổ văn bản, Ký số, Nhắc hạn, Tiếp nhận, Tính hạn, Đọc giấy tờ), gói Nhân sự, Một cửa và Văn thư, đóng gói và triển khai |
+| [@Raphael-Fug](https://github.com/Raphael-Fug) | 5 | Giao diện trực quan cho các plugin, chọn gói và plugin khi đóng gói, bố cục thư mục theo bản mở rộng |
 
 ## Giấy phép
 
-Apache-2.0 (`LICENSE`).
+Apache-2.0 ([LICENSE](LICENSE)). Phông chữ đi kèm theo SIL OFL 1.1; xem [THIRD_PARTY.md](THIRD_PARTY.md).
