@@ -130,3 +130,9 @@ def test_a_request_is_kept_and_resent_when_desktiny_is_down(make_app, desktiny, 
     app.flush()
     assert sent == [(code, f"nop:{code}")] and app.store.all("SELECT code FROM pending") == []
     assert app.store.one("SELECT COUNT(*) AS n FROM requests")["n"] == 1
+
+def test_the_portal_root_leads_to_the_filing_page(make_app):
+    app = make_app("tiep-nhan")
+    for path in ("/cong", "/cong/"):
+        page = call(app, "GET", path)
+        assert page.status == 302 and page.headers["Location"] == "/cong/nop.html", path
