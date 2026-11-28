@@ -10,7 +10,7 @@ https://github.com/Dking2007/Desktiny_expansion_pack.
 
 | Expansion Pack | Desktiny tối thiểu | Đã chạy thử |
 |---|---|---|
-| 1.1.0 | 3.1.0 | 27/11/2026: cài 3 gói + 9 plugin vào Desktiny `main` (`c4ccb9f`) và chạy, kiểm sức khỏe 7 máy chủ plugin đạt |
+| 1.1.0 | 3.1.0 | 28/11/2026: `tests/desktiny` (cài mọi gói và plugin rồi chạy luồng) đạt 5/5 với mã nguồn tag `v3.1.0`; 27/11/2026: cài thật 3 gói + 9 plugin vào Desktiny `main` (`c4ccb9f`), kiểm sức khỏe 7 máy chủ plugin đạt |
 
 **Các bản mở rộng của Desktiny.** Một bản mở rộng đưa Desktiny vào một nghiệp vụ cụ thể (nhân sự, một cửa, kế toán,
 trường học…) mà **không sửa mã của Desktiny**. Nó gồm một **gói giao diện** (màu sắc, từ ngữ, quy trình, biểu mẫu,
